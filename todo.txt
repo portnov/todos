@@ -1,0 +1,43 @@
+Даты                             TODO  ?   Поддержка дат  
+  в т.ч. разные форматы дат      -     -    
+Написать TodoManager               TODO  X   depends:Даты
+  Запросы                          TODO  +     
+    По глубине вложенности         -  +      
+    По тегам                       -  +      
+    По тексту                      -  +    
+      в т.ч. по регэкспам          -  +    
+    По статусу                     -  +    
+    Комбинации запросов (and/or/not)  -  -    
+    Язык запросов                  -  ?    
+      или ключи ком.строки         -  +    
+  Формат тудушек                   -  :   depends:Даты
+    всё кроме описания сделать необязательным  -  -    
+    баги с синтаксисом             -  :  
+      spaces                       -  ?   Trailing spaces !?
+  Баги                             BUG  :  
+    синтаксис                      BUG  -  
+    ссылки на произвольное место   BUG  -  
+    grep не ищет по верхнему уровню  BUG  -  
+First                              -     :  
+  Second'                          Tag2  Y    
+    THird                          Tag2  +    
+  Second                           Tag1  Y   depends:Last  
+Купить конфет                      НГ Tag1  *    
+Fyy                                Tag1  X    
+  Sxx                              Tag2  !  
+    Tyy                            TODO  X  
+    Tzz                            Tag1  Y  
+Last                               Tag2  X  
+Test Todo                          Test  o    
+  Test 1                           -     o  
+  Test 2                           -     o  
+    Test 21                        Test  o  
+      Todo test                    -     T  
+  Yet another Todo test            -     T  
+    Subtest 1                      Test  o  
+      Subtest 11                   Test  o  
+      Subtest 12                   Tag1  ?  
+    Subtest 2                      Tag2  ?  
+      Subtest 21                   Tag1  o  
+  Test 3                           Test  T  
+
