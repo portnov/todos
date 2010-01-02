@@ -1,9 +1,8 @@
 {-# LANGUAGE UnicodeSyntax #-}
 module TodoTree 
   (addTag, delTag,
-   filterMap, selector, pruneSelector,
+   selector, pruneSelector,
    findTag, filterStatus, grep, prune,
-   flattern,
    showTodos)
   where
 
@@ -22,7 +21,7 @@ import Text.Regex.PCRE
 import TodoParser
 import Unicode
 
-mapTags f = M.map ⋄ everywhere ⋄ mkT changeTags
+mapTags f = map ⋄ everywhere ⋄ mkT changeTags
     where
         changeTags item@(Item {itemTags=ts}) = item {itemTags = f ts}
         
@@ -30,13 +29,14 @@ addTag t = mapTags (t:)
 
 delTag t = mapTags (delete t)
         
-filterMap ∷ (Todo → [Todo]) → TodoMap → TodoMap
-filterMap selector m = consTodoMap ⋄ concatMap selector ⋄ M.elems m
+-- filterMap ∷ (Todo → [Todo]) → TodoMap → TodoMap
+-- filterMap selector m = consTodoMap ⋄ concatMap selector ⋄ M.elems m
 
 selector ∷ (TodoItem → 𝔹) → (Todo → [Todo])
 selector pred (Node item trees) | pred item  = [Node item ⋄ concatMap (selector pred) trees]
                                                | otherwise = concatMap (selector pred) trees
 
+pruneSelector ∷ ℤ → (TodoItem → 𝔹) → (Todo → [Todo])
 pruneSelector n pred = select n False
     where
         select k b (Node item trees) | pred item   = [Node item ⋄ concatMap (select (n-1) True) trees]
@@ -46,30 +46,28 @@ pruneSelector n pred = select n False
 
 addS s item@(Item {itemName=name}) = item {itemName = name ⧺ " — " ⧺ show s}
 
-findTag n tag = filterMap ⋄ tagFinder tag
+findTag ∷ ℤ → String → ([Todo] → [Todo])
+findTag n tag = concatMap ⋄ tagFinder tag
     where
         tagFinder tag = pruneSelector n ⋄ \item → tag ∈ itemTags item
 
-filterStatus n st = filterMap ⋄ statusSelector st
+filterStatus ∷ ℤ → String → ([Todo] → [Todo])
+filterStatus n st = concatMap ⋄ statusSelector st
     where
         statusSelector st = pruneSelector n ⋄ \item → st == itemStatus item
         
-grep n pattern = filterMap grepper 
+grep ∷ ℤ → String → ([Todo] → [Todo])
+grep n pattern = concatMap grepper 
     where
         grepper = pruneSelector n ⋄ \item → itemName item =~ pattern
 
-prune n = filterMap ⋄ prune' n
+prune ∷ ℤ → ([Todo] → [Todo])
+prune n = concatMap ⋄ prune' n
     where
         prune' 0 _ = []
         prune' k (Node item trees) = [Node item ⋄ concatMap (prune' (k-1)) trees]
         
-flattern ∷ TodoMap → TodoMap
-flattern = filterMap flat
-    where
-        flat ∷ Todo → [Todo]
-        flat (Node item trees) = (Node item []):(concatMap flat trees)
-        
-showTodos = concatMap showTodo ∘ M.elems
+showTodos = concatMap showTodo ∘ nub
 
 main = do
   todos ← loadTodo "test.txt"

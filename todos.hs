@@ -18,7 +18,7 @@ import TodoTree
 pruneByDefault = Bound 20
 
 data Bound = NoBound
-           | Bound Integer
+           | Bound ℤ
   deriving (Eq,Show)
 
 instance Ord Bound where

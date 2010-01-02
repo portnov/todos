@@ -1,10 +1,11 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, TypeSynonymInstances, DeriveDataTypeable #-}
 module TodoParser
-    (TodoItem (..),
-     Todo, TodoMap,
-     consTodoMap, pDeps, pItem, parse,
-     loadTodo, showTodo
-    ) where
+--     (TodoItem (..),
+--      Todo, TodoMap, flattern,
+--      consTodoMap,
+--      loadTodo, showTodo
+--     )
+    where
 
 import Prelude hiding (putStrLn,readFile)
 import System.IO.UTF8
@@ -21,7 +22,7 @@ import Data.Generics
 import Unicode
 
 data TodoItem = Item {
-    itemLevel ∷ Int,
+    itemLevel ∷ ℤ,
     itemName ∷ String,
     itemTags ∷ [String],
     depends ∷ [String],
@@ -117,7 +118,7 @@ pItem = do
     many1 pSpace
     stat ← pWord
     sd ← try $ many pSpace
-    let item = Item (length s) (unwords namew) tags [] stat ""
+    let item = Item (fromIntegral $ length s) (unwords namew) tags [] stat ""
     if null sd
       then return item
       else do
@@ -126,7 +127,7 @@ pItem = do
             descr ← many (noneOf "\n")
             many pSpace
             many ⋄ char '\n'
-            return ⋄ Item (length s) (unwords namew) tags deps stat descr
+            return ⋄ Item (fromIntegral $ length s) (unwords namew) tags deps stat descr
 
 pWord ∷ Parser String
 pWord = do
@@ -144,7 +145,7 @@ loadFile path = do
         Right items → return items
         Left e → error ⋄ show e
 
-(~-) ∷  TodoItem → Int → TodoItem
+(~-) ∷  TodoItem → ℤ → TodoItem
 i@(Item {itemLevel=n}) ~- k = i {itemLevel=n-k}
 
 iszero ∷  TodoItem → 𝔹
@@ -163,16 +164,28 @@ mkTodo' (x:xs) = Node x other
     where other = mkTodo ⋄ map (~-lvl) xs
           lvl = itemLevel (head xs)
           
+flattern ∷ [Todo] → [Todo]
+flattern = concatMap flat
+    where
+        flat ∷ Todo → [Todo]
+        flat (Node item trees) = (Node item []):(concatMap flat trees)
+        
 consTodoMap ∷ [Todo] → TodoMap
-consTodoMap todos = M.fromList [(todoName todo, todo) | todo ← todos]
+consTodoMap todos = M.fromList (cons1 100 todos)
+  where
+    cons1 ∷ Int → [Todo] → [(String,Todo)]
+    cons1 0 _ = []
+    cons1 max trees = [(todoName todo, todo) | todo ← trees] ⧺ cons1 (max-1) (children trees)
+    children ∷ [Todo] → [Todo]
+    children trees = concatMap subForest trees
 
 stitchTodos ∷ [TodoItem] → [Todo]
 stitchTodos items = 
-  let m = M.fromList [(todoName todo, todo) | todo ← stitchTodos items]
-  in  normalizeList m (mkTodo items)
+  let m = consTodoMap t
+      t = mkTodo items
+  in  normalizeList m t
 
-loadTodo ∷  FilePath → IO TodoMap 
+loadTodo ∷  FilePath → IO [Todo]
 loadTodo path = do
     ts ← loadFile path
-    let lst = [(todoName todo, todo) | todo ← stitchTodos ts]
-    return ⋄ M.fromList lst
+    return $ stitchTodos ts
