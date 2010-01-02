@@ -7,7 +7,7 @@ module TodoParser
 --     )
     where
 
-import Prelude hiding (putStrLn,readFile)
+import Prelude hiding (putStrLn,readFile,getContents)
 import System.IO.UTF8
 
 import Data.List
@@ -144,9 +144,13 @@ pItems = do
   eof
   return its
 
+readFile' ∷ FilePath → IO String
+readFile' "-" = getContents
+readFile' file = readFile file
+
 loadFile ∷  FilePath → IO [TodoItem]
 loadFile path = do
-    text ← readFile path
+    text ← readFile' path
     case parse pItems path text of
         Right items → return items
         Left e → error ⋄ show e

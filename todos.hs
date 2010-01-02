@@ -51,7 +51,7 @@ parseCmdLine = do
 
 usage = usageInfo header options
 
-header = "Usage: todos [OPTION...]"
+header = "Usage: todos [OPTION...] [INPUTFILE]"
 
 options = [
     Option "p" ["prune"] (ReqArg mkPrune "N") "limit tree height to N",
