@@ -105,29 +105,32 @@ pSpace' = do
 
 pDeps ∷ Parser [String]
 pDeps = do
-    string "depends:"
-    ws ← (many1 ⋄ noneOf ",\n") `sepBy` (char ',')
+    string "("
+    ws ← (many1 ⋄ noneOf ",)\n") `sepBy` (char ',')
+    string ")"
     return $ map strip ws
+
+pTags ∷ Parser [String]
+pTags = do
+    ts ← between (char '[') (char ']') $ word `sepBy1` pSpace
+    many pSpace
+    return ts
+  where
+    word = many1 (noneOf " \t\n]")
 
 pItem ∷ Parser TodoItem
 pItem = do
     s ← many pSpace
-    namew ← many1 pWord
-    many1 pSpace
-    tags ← many1 pWord
-    many1 pSpace
     stat ← pWord
-    sd ← try $ many pSpace
-    let item = Item (fromIntegral $ length s) (unwords namew) tags [] stat ""
-    if null sd
-      then return item
-      else do
-            deps ← option [] (try pDeps)
-            many pSpace
-            descr ← many (noneOf "\n")
-            many pSpace
-            many ⋄ char '\n'
-            return ⋄ Item (fromIntegral $ length s) (unwords namew) tags deps stat descr
+    tags ← (try pTags <|> return [])
+    namew ← many1 pWord
+    many pSpace
+    deps ← (try pDeps <|> return [])
+    many pSpace
+    descr ← many (noneOf "\n")
+    many pSpace
+    many ⋄ char '\n'
+    return ⋄ Item (fromIntegral $ length s) (unwords namew) tags deps stat descr
 
 pWord ∷ Parser String
 pWord = do
@@ -136,7 +139,10 @@ pWord = do
     return w
 
 pItems ∷  GenParser Char () [TodoItem]
-pItems = many (try pItem)
+pItems = do
+  its ← many (try pItem)
+  eof
+  return its
 
 loadFile ∷  FilePath → IO [TodoItem]
 loadFile path = do

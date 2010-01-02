@@ -29,9 +29,6 @@ addTag t = mapTags (t:)
 
 delTag t = mapTags (delete t)
         
--- filterMap ∷ (Todo → [Todo]) → TodoMap → TodoMap
--- filterMap selector m = consTodoMap ⋄ concatMap selector ⋄ M.elems m
-
 selector ∷ (TodoItem → 𝔹) → (Todo → [Todo])
 selector pred (Node item trees) | pred item  = [Node item ⋄ concatMap (selector pred) trees]
                                                | otherwise = concatMap (selector pred) trees
