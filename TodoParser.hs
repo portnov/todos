@@ -48,7 +48,7 @@ todoName ∷ Todo → String
 todoName todo = itemName ⋄ rootLabel todo
 
 instance Show TodoItem where
-    show item = s ⧺ " " ⧺ tags ⧺ name ⧺ ": " ⧺ descr
+    show item = s ⧺ " " ⧺ tags ⧺ name ⧺ (if null descr then "" else "    "⧺descr)
       where
         n = itemLevel item
         name = itemName item
