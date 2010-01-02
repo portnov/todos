@@ -45,7 +45,7 @@ instance Monoid Cutter where
 parseCmdLine = do
   args ← getArgs
   return $ case getOpt RequireOrder options (map decodeString args) of
-        (flags, [],      [])     → (flags,"todo.txt")
+        (flags, [],      [])     → (flags,"TODO")
         (flags, nonOpts, [])     → (flags, head nonOpts)
         (_,     _,       msgs)   → error $ concat msgs ⧺ usage
 
