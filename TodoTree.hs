@@ -2,6 +2,7 @@
 module TodoTree 
   (addTag, delTag,
    selector, pruneSelector,
+   tagPred, statusPred, grepPred,
    findTag, filterStatus, grep, prune,
    showTodos)
   where
@@ -29,6 +30,9 @@ addTag t = mapTags (t:)
 
 delTag t = mapTags (delete t)
         
+-- filterMap ∷ (Todo → [Todo]) → TodoMap → TodoMap
+-- filterMap selector m = consTodoMap ⋄ concatMap selector ⋄ M.elems m
+
 selector ∷ (TodoItem → 𝔹) → (Todo → [Todo])
 selector pred (Node item trees) | pred item  = [Node item ⋄ concatMap (selector pred) trees]
                                                | otherwise = concatMap (selector pred) trees
@@ -46,17 +50,23 @@ addS s item@(Item {itemName=name}) = item {itemName = name ⧺ " — " ⧺ show 
 findTag ∷ ℤ → String → ([Todo] → [Todo])
 findTag n tag = concatMap ⋄ tagFinder tag
     where
-        tagFinder tag = pruneSelector n ⋄ \item → tag ∈ itemTags item
+        tagFinder tag = pruneSelector n ⋄ tagPred tag
+
+tagPred tag = \item → tag ∈ itemTags item
 
 filterStatus ∷ ℤ → String → ([Todo] → [Todo])
 filterStatus n st = concatMap ⋄ statusSelector st
     where
-        statusSelector st = pruneSelector n ⋄ \item → st == itemStatus item
+        statusSelector st = pruneSelector n ⋄ statusPred st 
+
+statusPred st = \item → st == itemStatus item
         
 grep ∷ ℤ → String → ([Todo] → [Todo])
 grep n pattern = concatMap grepper 
     where
-        grepper = pruneSelector n ⋄ \item → itemName item =~ pattern
+        grepper = pruneSelector n ⋄ grepPred pattern
+
+grepPred pattern = \item → itemName item =~ pattern
 
 prune ∷ ℤ → ([Todo] → [Todo])
 prune n = concatMap ⋄ prune' n
