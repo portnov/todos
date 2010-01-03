@@ -49,6 +49,7 @@ data Composed = Pred Flag
     deriving (Eq,Show)
 
 compose ∷  Composed → (TodoItem → Bool)
+compose Empty             = const True
 compose (Pred NoFilter)   = const True
 compose (Pred (Tag s))    = tagPred s
 compose (Pred (Name s))   = grepPred s
