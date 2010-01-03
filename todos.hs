@@ -33,6 +33,7 @@ data Flag = Tag String
           | Prune ℤ
           | AndCons
           | OrCons
+          | NotCons
           | NoFilter
           | HelpF
      deriving (Eq,Ord,Show)         
@@ -44,6 +45,7 @@ data Query = Query Limit Composed
 data Composed = Pred Flag
               | And Composed Composed
               | Or Composed Composed
+              | Not Composed
               | Empty
               | HelpC
     deriving (Eq,Show)
@@ -54,6 +56,7 @@ compose (Pred NoFilter)   = const True
 compose (Pred (Tag s))    = tagPred s
 compose (Pred (Name s))   = grepPred s
 compose (Pred (Status s)) = statusPred s
+compose (Not p)           = not ∘ (compose p)
 compose (And (Pred NoFilter) p) = compose p
 compose (And p (Pred NoFilter)) = compose p
 compose (And p1 p2)      = \item → (compose p1 item) ∧ (compose p2 item)
@@ -73,13 +76,16 @@ emptyC ∷ Composed
 emptyC = Pred NoFilter
 
 appendC ∷ Composed → Flag → Composed
+appendC (Not (Pred NoFilter))   f = Not (Pred f)
 appendC Empty OrCons              = (Pred NoFilter) `Or` (Pred NoFilter)
 appendC Empty AndCons             = (Pred NoFilter) `And` (Pred NoFilter)
+appendC Empty NotCons             = Not (Pred NoFilter)
 appendC Empty f                   = Pred f
 appendC c NoFilter                = c
 appendC _ HelpF                   = HelpC
 appendC c AndCons                 = c `And` (Pred NoFilter)
 appendC c OrCons                  = c `Or`  (Pred NoFilter)
+appendC c NotCons                 = c `And` (Pred NoFilter)
 appendC (And c (Pred NoFilter)) f = c `And` (Pred f) 
 appendC (And (Pred NoFilter) c) f = c `And` (Pred f) 
 appendC c@(And _ _)             f = c `And` (Pred f)
@@ -93,7 +99,7 @@ concatC ∷ [Flag] → Query
 concatC flags | HelpC ← composedFlags = Help
               | otherwise             = Query limit composedFlags
   where
-    composedFlags = foldl appendC Empty (reverse queryFlags)
+    composedFlags = foldl appendC Empty (queryFlags)
     queryFlags    = filter (not ∘ isPrune) flags
     limit1        = foldl min Unlimited $ map unPrune pruneFlags
     limit | Unlimited ← limit1 = pruneByDefault
@@ -118,13 +124,14 @@ usage = usageInfo header options
 
 options ∷  [OptDescr Flag]
 options = [
-    Option "p" ["prune"] (ReqArg mkPrune "N")           "limit tree height to N",
-    Option "t" ["tag"]   (ReqArg Tag "TAG")             "find items marked with TAG",
-    Option "ng" ["name","grep"] (ReqArg Name "PATTERN") "find items with PATTERN in name",
-    Option "s" ["status"] (ReqArg Status "STRING")      "find items with status equal to STRING",
-    Option "a" ["and"]  (NoArg AndCons)                 "logical AND",
-    Option "o" ["or"]   (NoArg OrCons)                  "logical OR",
-    Option "h" ["help"] (NoArg HelpF)                   "display this help"
+    Option "p" ["prune"]  (ReqArg mkPrune "N")     "limit tree height to N",
+    Option "t" ["tag"]    (ReqArg Tag "TAG")       "find items marked with TAG",
+    Option "g" ["grep"]   (ReqArg Name "PATTERN")  "find items with PATTERN in name",
+    Option "s" ["status"] (ReqArg Status "STRING") "find items with status equal to STRING",
+    Option "a" ["and"]    (NoArg AndCons)          "logical AND",
+    Option "o" ["or"]     (NoArg OrCons)           "logical OR",
+    Option "n" ["not"]    (NoArg NotCons)          "logical NOT",
+    Option "h" ["help"]   (NoArg HelpF)            "display this help"
   ]
 
 mkPrune ∷  String → Flag
