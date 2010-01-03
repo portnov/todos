@@ -38,11 +38,13 @@ data Flag = Tag String
      deriving (Eq,Ord,Show)         
 
 data Query = Query Limit Composed
-           | HelpQ
+           | Help
+    deriving (Eq,Show)
 
 data Composed = Pred Flag
-              | AndF Composed Composed
-              | OrF Composed Composed
+              | And Composed Composed
+              | Or Composed Composed
+              | Empty
               | HelpC
     deriving (Eq,Show)
 
@@ -51,12 +53,12 @@ compose (Pred NoFilter)   = const True
 compose (Pred (Tag s))    = tagPred s
 compose (Pred (Name s))   = grepPred s
 compose (Pred (Status s)) = statusPred s
-compose (AndF (Pred NoFilter) p) = compose p
-compose (AndF p (Pred NoFilter)) = compose p
-compose (AndF p1 p2)      = \item → (compose p1 item) ∧ (compose p2 item)
-compose (OrF (Pred NoFilter) p) = compose p
-compose (OrF p (Pred NoFilter)) = compose p
-compose (OrF p1 p2)       = \item → (compose p1 item) ∨ (compose p2 item)
+compose (And (Pred NoFilter) p) = compose p
+compose (And p (Pred NoFilter)) = compose p
+compose (And p1 p2)      = \item → (compose p1 item) ∧ (compose p2 item)
+compose (Or (Pred NoFilter) p) = compose p
+compose (Or p (Pred NoFilter)) = compose p
+compose (Or p1 p2)       = \item → (compose p1 item) ∨ (compose p2 item)
 compose x = error $ show x
 
 composeAll ∷ Query → ([Todo] → [Todo])
@@ -70,22 +72,27 @@ emptyC ∷ Composed
 emptyC = Pred NoFilter
 
 appendC ∷ Composed → Flag → Composed
-appendC c NoFilter                 = c
-appendC _ HelpF                    = HelpC
-appendC (AndF c (Pred NoFilter)) f = c `AndF` (Pred f) 
-appendC c@(AndF _ _)             f = c `AndF` (Pred f)
-appendC (OrF c (Pred NoFilter))  f = c `OrF`  (Pred f)
-appendC c@(OrF _ _)              f = c `OrF`  (Pred f)
-appendC c@(Pred _)               f = c `AndF` (Pred f)
-appendC c AndCons                  = c `AndF` (Pred NoFilter)
-appendC c OrCons                   = c `OrF`  (Pred NoFilter)
-appendC c                        f = c `AndF` (Pred f)
+appendC Empty OrCons              = (Pred NoFilter) `Or` (Pred NoFilter)
+appendC Empty AndCons             = (Pred NoFilter) `And` (Pred NoFilter)
+appendC Empty f                   = Pred f
+appendC c NoFilter                = c
+appendC _ HelpF                   = HelpC
+appendC c AndCons                 = c `And` (Pred NoFilter)
+appendC c OrCons                  = c `Or`  (Pred NoFilter)
+appendC (And c (Pred NoFilter)) f = c `And` (Pred f) 
+appendC (And (Pred NoFilter) c) f = c `And` (Pred f) 
+appendC c@(And _ _)             f = c `And` (Pred f)
+appendC (Or c (Pred NoFilter))  f = c `Or`  (Pred f)
+appendC (Or (Pred NoFilter) c)  f = c `Or`  (Pred f)
+appendC c@(Or _ _)              f = c `Or`  (Pred f)
+appendC c@(Pred _)              f = c `And` (Pred f)
+appendC c                       f = c `And` (Pred f)
 
 concatC ∷ [Flag] → Query
-concatC flags | HelpC ← composedFlags = HelpQ
+concatC flags | HelpC ← composedFlags = Help
               | otherwise             = Query limit composedFlags
   where
-    composedFlags = foldl appendC emptyC (reverse queryFlags)
+    composedFlags = foldl appendC Empty (reverse queryFlags)
     queryFlags    = filter (not ∘ isPrune) flags
     limit1        = foldl min Unlimited $ map unPrune pruneFlags
     limit | Unlimited ← limit1 = pruneByDefault
@@ -110,13 +117,13 @@ usage = usageInfo header options
 
 options ∷  [OptDescr Flag]
 options = [
-    Option "p" ["prune"] (ReqArg mkPrune "N") "limit tree height to N",
-    Option "t" ["tag"]   (ReqArg Tag "TAG") "find items marked with TAG",
+    Option "p" ["prune"] (ReqArg mkPrune "N")           "limit tree height to N",
+    Option "t" ["tag"]   (ReqArg Tag "TAG")             "find items marked with TAG",
     Option "ng" ["name","grep"] (ReqArg Name "PATTERN") "find items with PATTERN in name",
-    Option "s" ["status"] (ReqArg Status "STRING") "find items with status equal to STRING",
-    Option "a" ["and"]  (NoArg AndCons)       "logical AND",
-    Option "o" ["or"]   (NoArg OrCons)        "logical OR",
-    Option "h" ["help"] (NoArg HelpF) "display this help"
+    Option "s" ["status"] (ReqArg Status "STRING")      "find items with status equal to STRING",
+    Option "a" ["and"]  (NoArg AndCons)                 "logical AND",
+    Option "o" ["or"]   (NoArg OrCons)                  "logical OR",
+    Option "h" ["help"] (NoArg HelpF)                   "display this help"
   ]
 
 mkPrune ∷  String → Flag
@@ -126,11 +133,11 @@ main ∷  IO ()
 main = do
   (flags, file) ← parseCmdLine
   let opt = concatC flags
+--   print opt
   case opt of
-    HelpQ → do putStrLn usage
-               exitWith ExitSuccess
+    Help → do putStrLn usage
+              exitWith ExitSuccess
     c → do
---       print $ preds c
       todos ← loadTodo file
       let todos' = delTag "-" todos
       putStrLn $ showTodos $ composeAll c todos'
