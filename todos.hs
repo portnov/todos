@@ -31,6 +31,7 @@ data Flag = Tag String
           | Name String
           | Status String
           | Prune ℤ
+          | Start ℤ
           | AndCons
           | OrCons
           | NotCons
@@ -38,7 +39,7 @@ data Flag = Tag String
           | HelpF
      deriving (Eq,Ord,Show)         
 
-data Query = Query Limit Composed
+data Query = Query { pruneL :: Limit, minL :: Limit, query :: Composed }
            | Help
     deriving (Eq,Show)
 
@@ -66,14 +67,9 @@ compose (Or p1 p2)       = \item → (compose p1 item) ∨ (compose p2 item)
 compose x = error $ show x
 
 composeAll ∷ Query → ([Todo] → [Todo])
-composeAll q = mkSelector (limit q) $ compose $ query q
+composeAll q = mkSelector (pruneL q) (minL q) $ compose $ query q
   where
-    limit (Query (Limit x) _) = x
-    query (Query _ c)         = c
-    mkSelector n p = concatMap $ pruneSelector n p
-
-emptyC ∷ Composed
-emptyC = Pred NoFilter
+    mkSelector (Limit n) (Limit m) p = concatMap $ pruneSelector n m p
 
 appendC ∷ Composed → Flag → Composed
 appendC (Not (Pred NoFilter))   f = Not (Pred f)
@@ -97,16 +93,24 @@ appendC c                       f = c `And` (Pred f)
 
 concatC ∷ [Flag] → Query
 concatC flags | HelpC ← composedFlags = Help
-              | otherwise             = Query limit composedFlags
+              | otherwise             = Query limitP limitM composedFlags
   where
     composedFlags = foldl appendC Empty (queryFlags)
-    queryFlags    = filter (not ∘ isPrune) flags
-    limit1        = foldl min Unlimited $ map unPrune pruneFlags
-    limit | Unlimited ← limit1 = pruneByDefault
-          | otherwise          = limit1
+    queryFlags    = filter isQuery flags
+    limitP'       = foldl min Unlimited $ map unPrune pruneFlags
+    limitP | Unlimited ← limitP' = pruneByDefault
+           | otherwise           = limitP'
+    limitM'       = foldl max (Limit 0) $ map unMin minFlags
+    limitM | Unlimited ← limitM' = pruneByDefault
+           | otherwise           = limitM'
     pruneFlags    = filter isPrune flags
+    minFlags      = filter isMin   flags
+    isQuery x         = (not $ isPrune x) ∧ (not $ isMin x)
     isPrune (Prune _) = True
     isPrune _         = False
+    isMin   (Start x) = True
+    isMin   _         = False
+    unMin   (Start x) = Limit x
     unPrune (Prune x) = Limit x
 
 parseCmdLine ∷  IO ([Flag], FilePath)
@@ -125,6 +129,7 @@ usage = usageInfo header options
 options ∷  [OptDescr Flag]
 options = [
     Option "p" ["prune"]  (ReqArg mkPrune "N")     "limit tree height to N",
+    Option "m" ["min-depth"] (ReqArg mkMin "N")    "show first N levels of tree unconditionally",
     Option "t" ["tag"]    (ReqArg Tag "TAG")       "find items marked with TAG",
     Option "g" ["grep"]   (ReqArg Name "PATTERN")  "find items with PATTERN in name",
     Option "s" ["status"] (ReqArg Status "STRING") "find items with status equal to STRING",
@@ -137,11 +142,13 @@ options = [
 mkPrune ∷  String → Flag
 mkPrune s = Prune (read s)
 
+mkMin s = Start (read s)
+
 main ∷  IO ()
 main = do
   (flags, file) ← parseCmdLine
   let opt = concatC flags
---   print opt
+  print opt
   case opt of
     Help → do putStrLn usage
               exitWith ExitSuccess
