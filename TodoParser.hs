@@ -20,24 +20,7 @@ import Data.Function
 import Data.Generics
 
 import Unicode
-
-data TodoItem = Item {
-    itemLevel ∷ ℤ,
-    itemName ∷ String,
-    itemTags ∷ [String],
-    depends ∷ [String],
-    itemStatus ∷ String,
-    itemDescr ∷ String,
-    fileName ∷ FilePath,
-    lineNr ∷ Line}
-    deriving (Eq,Data,Typeable)
-
-type Todo = Tree TodoItem
-
-type TodoMap = M.Map String Todo
-
-instance (Ord a) => Ord (Tree a) where
-  compare = compare `on` rootLabel
+import Types
 
 showT ::  (Show t, Ord t) => Int -> Tree t -> [String]
 showT n (Node item todos) = ((replicate n ' ') ⧺ (show item)):(concatMap (showT (n+2)) $ sort todos)
@@ -53,29 +36,6 @@ strip = reverse . p . reverse .p
 todoName ∷ Todo → String
 todoName todo = itemName ⋄ rootLabel todo
 
-instance Show TodoItem where
-    show item = s ⧺ " " ⧺ tags ⧺ name ⧺ (if null descr then "" else "    "⧺descr)
-      where
-        n = itemLevel item
-        name = itemName item
-        ts = itemTags item
-        s = itemStatus item
---         deps = unwords ⋄ map show ⋄ depends item
-        descr = itemDescr item
-        tags = if null ts
-                 then ""
-                 else "[" ⧺ (unwords ts) ⧺ "] "
-
-instance Ord TodoItem where
-  compare item1 item2 = 
-      let c1 = (compare `on` itemLevel) item1 item2
-          c2 = (compare `on` itemStatus) item1 item2
-          c3 = (compare `on` itemName) item1 item2
-      in  if c1 == EQ
-            then if c2 == EQ 
-                   then c3
-                   else c2
-            else c1
 
 getDepends ∷ TodoMap → TodoItem → [Todo]
 getDepends m item = catMaybes [M.lookup name m | name ← depends item] 

@@ -20,6 +20,7 @@ import Data.Tree
 import Data.Maybe
 import Text.Regex.PCRE
 
+import Types
 import TodoParser
 import Unicode
 
