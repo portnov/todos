@@ -125,18 +125,18 @@ concatC flags | HelpC ← composedFlags = (Help, undefined)
     unMin   (Start x) = Limit x
     unPrune (Prune x) = Limit x
 
-parseCmdLine ∷  IO ([Flag], FilePath)
+parseCmdLine ∷  IO ([Flag], [FilePath])
 parseCmdLine = do
   args ← getArgs
   return $ case getOpt RequireOrder options (map decodeString args) of
-        (flags, [],      [])     → (flags,"TODO")
-        (flags, nonOpts, [])     → (flags, head nonOpts)
+        (flags, [],      [])     → (flags, ["TODO"])
+        (flags, nonOpts, [])     → (flags, nonOpts)
         (_,     _,       msgs)   → error $ concat msgs ⧺ usage
 
 usage ∷  String
 usage = usageInfo header options
   where 
-    header = "Usage: todos [OPTION...] [INPUTFILE]"
+    header = "Usage: todos [OPTION...] [INPUT FILES]"
 
 options ∷  [OptDescr Flag]
 options = [
@@ -159,14 +159,14 @@ mkMin s = Start (read s)
 
 main ∷  IO ()
 main = do
-  (flags, file) ← parseCmdLine
+  (flags, files) ← parseCmdLine
   let (opt, onlyFirst) = concatC flags
 --   print opt
   case opt of
     Help → do putStrLn usage
               exitWith ExitSuccess
     c → do
-      todos ← loadTodo file
+      todos ← loadTodo files
       let todos' = delTag "-" todos
       putStrLn $ showTodos onlyFirst $ composeAll c todos'
 

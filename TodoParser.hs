@@ -9,7 +9,7 @@ module TodoParser
 
 import Prelude hiding (putStrLn,readFile,getContents)
 import System.IO.UTF8
-
+import Control.Monad
 import Data.List
 import Text.ParserCombinators.Parsec
 import qualified Data.Map as M
@@ -27,7 +27,9 @@ data TodoItem = Item {
     itemTags ∷ [String],
     depends ∷ [String],
     itemStatus ∷ String,
-    itemDescr ∷ String}
+    itemDescr ∷ String,
+    fileName ∷ FilePath,
+    lineNr ∷ Line}
     deriving (Eq,Data,Typeable)
 
 type Todo = Tree TodoItem
@@ -124,6 +126,7 @@ pTags = do
 
 pItem ∷ Parser TodoItem
 pItem = do
+    pos ← getPosition
     s ← many pSpace
     stat ← pWord
     tags ← (try pTags <|> return [])
@@ -134,7 +137,7 @@ pItem = do
     descr ← many (noneOf "\n")
     many pSpace
     many ⋄ char '\n'
-    return ⋄ Item (fromIntegral $ length s) (unwords namew) tags deps stat descr
+    return ⋄ Item (fromIntegral $ length s) (unwords namew) tags deps stat descr (sourceName pos) (sourceLine pos)
 
 pWord ∷ Parser String
 pWord = do
@@ -199,7 +202,7 @@ stitchTodos items =
       t = mkTodo items
   in  normalizeList m t
 
-loadTodo ∷  FilePath → IO [Todo]
-loadTodo path = do
-    ts ← loadFile path
-    return $ stitchTodos ts
+loadTodo ∷  [FilePath] → IO [Todo]
+loadTodo paths = do
+    tss ← forM paths loadFile
+    return $ stitchTodos (concat tss)

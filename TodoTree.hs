@@ -32,8 +32,8 @@ addTag t = mapTags (t:)
 delTag t = mapTags (delete t)
         
 selector ∷ (TodoItem → 𝔹) → (Todo → [Todo])
-selector pred (Node item trees) | pred item  = [Node item ⋄ concatMap (selector pred) trees]
-                                               | otherwise = concatMap (selector pred) trees
+selector pred (Node item trees) | pred item = [Node item ⋄ concatMap (selector pred) trees]
+                                | otherwise = concatMap (selector pred) trees
 
 pruneSelector ∷ ℤ → ℤ → (TodoItem → 𝔹) → (Todo → [Todo])
 pruneSelector n m pred = select n 0 False
