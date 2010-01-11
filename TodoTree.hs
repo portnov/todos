@@ -77,10 +77,10 @@ flattern = concatMap flat
         flat ∷ Todo → [Todo]
         flat (Node item trees) = (Node item []):(concatMap flat trees)
 
-forT ∷ (Monad m) ⇒ [Todo] → (TodoItem → m a) → m ()
-forT todos f = forM todos forT' >> return ()
+forT ∷ (Monad m) ⇒ [Tree t] → (t -> m a) → m [b]
+forT todos f = forM todos forT'
   where
     forT' (Node item trees) =
       do f item
-         forM trees forT'
-         return ()
+         res ← forM trees forT'
+         return $ last res

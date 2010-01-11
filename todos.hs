@@ -148,7 +148,9 @@ main = do
           queried = composeAll q todos'
       case commandToRun q of
         Nothing → putStrLn $ showTodos (showOnlyFirst q) queried 
-        Just cmd → forT selected (\item → system $ (cmd ⧺ " " ⧺ itemDescr item))
-                     where selected | showOnlyFirst q = [Node (head $ map rootLabel queried) []]
-                                    | otherwise       = queried
+        Just cmd → do
+             forT selected (\item → system $ (cmd ⧺ " " ⧺ itemDescr item))
+             return ()
+          where selected | showOnlyFirst q = [Node (head $ map rootLabel queried) []]
+                         | otherwise       = queried
 
