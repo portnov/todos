@@ -5,6 +5,7 @@ module TodoTree
    tagPred, statusPred, grepPred,
 --    findTag, filterStatus, grep,
    prune,
+   forT,
    showTodos)
   where
 
@@ -75,3 +76,11 @@ flattern = concatMap flat
     where
         flat ∷ Todo → [Todo]
         flat (Node item trees) = (Node item []):(concatMap flat trees)
+
+forT ∷ (Monad m) ⇒ [Todo] → (TodoItem → m a) → m ()
+forT todos f = forM todos forT' >> return ()
+  where
+    forT' (Node item trees) =
+      do f item
+         forM trees forT'
+         return ()

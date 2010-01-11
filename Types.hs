@@ -47,10 +47,16 @@ data Flag = Tag String
           | NotCons
           | NoFilter
           | OnlyFirst
+          | Execute String
           | HelpF
      deriving (Eq,Ord,Show)         
 
-data Query = Query { pruneL :: Limit, minL :: Limit, query :: Composed }
+data Query = Query {
+               pruneL ∷ Limit,
+               minL   ∷ Limit,
+               query  ∷ Composed,
+               showOnlyFirst ∷ 𝔹,
+               commandToRun ∷ Maybe String}
            | Help
     deriving (Eq,Show)
 

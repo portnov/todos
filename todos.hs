@@ -6,9 +6,9 @@ import System.IO.UTF8
 import System (getArgs)
 import System.Exit
 import System.Console.GetOpt
+import System.Cmd (system)
 
-import Control.Monad
-import Data.Monoid
+import Data.Tree
 import Data.List
 
 import Unicode
@@ -58,12 +58,20 @@ appendC c@(Or _ _)              f = c `Or`  (Pred f)
 appendC c@(Pred _)              f = c `And` (Pred f)
 appendC c                       f = c `And` (Pred f)
 
-concatC ∷ [Flag] → (Query, 𝔹)
-concatC flags | HelpC ← composedFlags = (Help, undefined)
-              | otherwise             = (Query limitP limitM composedFlags, onlyFirst)
+concatC ∷ [Flag] → Query
+concatC flags | HelpC ← composedFlags = Help
+              | otherwise             = Query limitP limitM composedFlags onlyFirst command
   where
     composedFlags = foldl appendC Empty (queryFlags)
     queryFlags    = filter isQuery flags
+
+    pruneFlags = filter isPrune flags
+    minFlags   = filter isMin   flags
+    onlyFirst  = not $ null $ filter isFirst flags
+    cmdFlags   = filter isCommand flags
+
+    command | null cmdFlags = Nothing
+            | otherwise     = unExecute (last cmdFlags)
 
     limitP'       = foldl min Unlimited $ map unPrune pruneFlags
     limitP | Unlimited ← limitP' = pruneByDefault
@@ -73,11 +81,10 @@ concatC flags | HelpC ← composedFlags = (Help, undefined)
     limitM | Unlimited ← limitM' = pruneByDefault
            | otherwise           = limitM'
 
-    pruneFlags = filter isPrune flags
-    minFlags   = filter isMin   flags
-    onlyFirst  = not $ null $ filter isFirst flags
-
-    isQuery x         = (not $ isPrune x) ∧ (not $ isMin x) ∧ (not $ isFirst x)
+    isQuery x = (not $ isPrune x)
+              ∧ (not $ isMin x)
+              ∧ (not $ isFirst x)
+              ∧ (not $ isCommand x)
 
     isPrune (Prune _) = True
     isPrune _         = False
@@ -88,8 +95,12 @@ concatC flags | HelpC ← composedFlags = (Help, undefined)
     isFirst OnlyFirst = True
     isFirst _         = False
 
+    isCommand (Execute _) = True
+    isCommand _           = False
+
     unMin   (Start x) = Limit x
     unPrune (Prune x) = Limit x
+    unExecute (Execute x) = Just x
 
 parseCmdLine ∷  IO ([Flag], [FilePath])
 parseCmdLine = do
@@ -115,6 +126,7 @@ options = [
     Option "a" ["and"]    (NoArg AndCons)          "logical AND",
     Option "o" ["or"]     (NoArg OrCons)           "logical OR",
     Option "n" ["not"]    (NoArg NotCons)          "logical NOT",
+    Option "e" ["exec"]   (ReqArg Execute "COMMAND") "run COMMAND on each matching entry",
     Option "h" ["help"]   (NoArg HelpF)            "display this help"
   ]
 
@@ -126,13 +138,17 @@ mkMin s = Start (read s)
 main ∷  IO ()
 main = do
   (flags, files) ← parseCmdLine
-  let (opt, onlyFirst) = concatC flags
---   print opt
-  case opt of
+  let qry = concatC flags
+  case qry of
     Help → do putStrLn usage
               exitWith ExitSuccess
-    c → do
+    q → do
       todos ← loadTodo files
       let todos' = delTag "-" todos
-      putStrLn $ showTodos onlyFirst $ composeAll c todos'
+          queried = composeAll q todos'
+      case commandToRun q of
+        Nothing → putStrLn $ showTodos (showOnlyFirst q) queried 
+        Just cmd → forT selected (\item → system $ (cmd ⧺ " " ⧺ itemDescr item))
+                     where selected | showOnlyFirst q = [Node (head $ map rootLabel queried) []]
+                                    | otherwise       = queried
 
