@@ -140,7 +140,7 @@ usage = usageInfo header options
 
 options ∷  [OptDescr Flag]
 options = [
-    Option "1" ["only-first"] (NoArg OnlyFirst)     "limit tree height to N",
+    Option "1" ["only-first"] (NoArg OnlyFirst)    "show only first matching entry",
     Option "p" ["prune"]  (ReqArg mkPrune "N")     "limit tree height to N",
     Option "m" ["min-depth"] (ReqArg mkMin "N")    "show first N levels of tree unconditionally",
     Option "t" ["tag"]    (ReqArg Tag "TAG")       "find items marked with TAG",
