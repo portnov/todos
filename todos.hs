@@ -13,7 +13,7 @@ import Data.List
 
 import Unicode
 import Types
-import TodoParser
+import TodoLoader
 import TodoTree
 
 pruneByDefault = Limit 20

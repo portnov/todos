@@ -21,8 +21,19 @@ import Data.Maybe
 import Text.Regex.PCRE
 
 import Types
-import TodoParser
+import TodoLoader
 import Unicode
+
+showT ∷  (Show t, Ord t) ⇒ Int → Tree t → [String]
+showT n (Node item todos) = ((replicate n ' ') ⧺ (show item)):(concatMap (showT (n+2)) $ sort todos)
+
+showTodo ::  (Show t, Ord t) => Bool -> Tree t -> String
+showTodo False = unlines ∘ showT 0
+showTodo True  = head    ∘ showT 0
+
+showTodos ∷ (Ord t, Show t) ⇒ 𝔹 → [Tree t] → String
+showTodos False = unlines ∘ map (showTodo False) ∘ nub
+showTodos True  = head    ∘ map (showTodo True) ∘ nub
 
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
     where
@@ -59,7 +70,8 @@ prune n = concatMap ⋄ prune' n
         prune' 0 _ = []
         prune' k (Node item trees) = [Node item ⋄ concatMap (prune' (k-1)) trees]
         
-showTodos ∷ (Ord t, Show t) ⇒ 𝔹 → [Tree t] → String
-showTodos False = unlines ∘ map (showTodo False) ∘ nub
-showTodos True  = head    ∘ map (showTodo True) ∘ nub
-
+flattern ∷ [Todo] → [Todo]
+flattern = concatMap flat
+    where
+        flat ∷ Todo → [Todo]
+        flat (Node item trees) = (Node item []):(concatMap flat trees)
