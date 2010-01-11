@@ -58,5 +58,7 @@ prune n = concatMap ⋄ prune' n
         prune' 0 _ = []
         prune' k (Node item trees) = [Node item ⋄ concatMap (prune' (k-1)) trees]
         
-showTodos = concatMap showTodo ∘ nub
+showTodos ∷ (Ord t, Show t) ⇒ 𝔹 → [Tree t] → String
+showTodos False = unlines ∘ map (showTodo False) ∘ nub
+showTodos True  = head    ∘ map (showTodo True) ∘ nub
 

@@ -36,6 +36,7 @@ data Flag = Tag String
           | OrCons
           | NotCons
           | NoFilter
+          | OnlyFirst
           | HelpF
      deriving (Eq,Ord,Show)         
 
@@ -91,25 +92,36 @@ appendC c@(Or _ _)              f = c `Or`  (Pred f)
 appendC c@(Pred _)              f = c `And` (Pred f)
 appendC c                       f = c `And` (Pred f)
 
-concatC ∷ [Flag] → Query
-concatC flags | HelpC ← composedFlags = Help
-              | otherwise             = Query limitP limitM composedFlags
+concatC ∷ [Flag] → (Query, 𝔹)
+concatC flags | HelpC ← composedFlags = (Help, undefined)
+              | otherwise             = (Query limitP limitM composedFlags, onlyFirst)
   where
     composedFlags = foldl appendC Empty (queryFlags)
     queryFlags    = filter isQuery flags
+
     limitP'       = foldl min Unlimited $ map unPrune pruneFlags
     limitP | Unlimited ← limitP' = pruneByDefault
            | otherwise           = limitP'
+
     limitM'       = foldl max (Limit 0) $ map unMin minFlags
     limitM | Unlimited ← limitM' = pruneByDefault
            | otherwise           = limitM'
-    pruneFlags    = filter isPrune flags
-    minFlags      = filter isMin   flags
-    isQuery x         = (not $ isPrune x) ∧ (not $ isMin x)
+
+    pruneFlags = filter isPrune flags
+    minFlags   = filter isMin   flags
+    onlyFirst  = not $ null $ filter isFirst flags
+
+    isQuery x         = (not $ isPrune x) ∧ (not $ isMin x) ∧ (not $ isFirst x)
+
     isPrune (Prune _) = True
     isPrune _         = False
+
     isMin   (Start x) = True
     isMin   _         = False
+
+    isFirst OnlyFirst = True
+    isFirst _         = False
+
     unMin   (Start x) = Limit x
     unPrune (Prune x) = Limit x
 
@@ -128,6 +140,7 @@ usage = usageInfo header options
 
 options ∷  [OptDescr Flag]
 options = [
+    Option "1" ["only-first"] (NoArg OnlyFirst)     "limit tree height to N",
     Option "p" ["prune"]  (ReqArg mkPrune "N")     "limit tree height to N",
     Option "m" ["min-depth"] (ReqArg mkMin "N")    "show first N levels of tree unconditionally",
     Option "t" ["tag"]    (ReqArg Tag "TAG")       "find items marked with TAG",
@@ -147,13 +160,13 @@ mkMin s = Start (read s)
 main ∷  IO ()
 main = do
   (flags, file) ← parseCmdLine
-  let opt = concatC flags
-  print opt
+  let (opt, onlyFirst) = concatC flags
+--   print opt
   case opt of
     Help → do putStrLn usage
               exitWith ExitSuccess
     c → do
       todos ← loadTodo file
       let todos' = delTag "-" todos
-      putStrLn $ showTodos $ composeAll c todos'
+      putStrLn $ showTodos onlyFirst $ composeAll c todos'
 

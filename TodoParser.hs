@@ -37,8 +37,12 @@ type TodoMap = M.Map String Todo
 instance (Ord a) => Ord (Tree a) where
   compare = compare `on` rootLabel
 
-showT n (Node item todos) = (replicate n ' ') ⧺ (show item) ⧺ "\n" ⧺ (concatMap (showT (n+2)) ⋄ sort todos)
-showTodo = showT 0
+showT ::  (Show t, Ord t) => Int -> Tree t -> [String]
+showT n (Node item todos) = ((replicate n ' ') ⧺ (show item)):(concatMap (showT (n+2)) $ sort todos)
+
+showTodo ::  (Show t, Ord t) => Bool -> Tree t -> String
+showTodo False = unlines ∘ showT 0
+showTodo True  = head    ∘ showT 0
 
 strip = reverse . p . reverse .p
   where
