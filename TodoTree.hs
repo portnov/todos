@@ -33,7 +33,7 @@ showTodo False = unlines ∘ showT 0
 showTodo True  = head    ∘ showT 0
 
 showTodos ∷ (Ord t, Show t) ⇒ 𝔹 → [Tree t] → String
-showTodos False = unlines ∘ map (showTodo False) ∘ nub
+showTodos False = concatMap (showTodo False) ∘ nub
 showTodos True  = head    ∘ map (showTodo True) ∘ nub
 
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
@@ -77,8 +77,8 @@ flattern = concatMap flat
         flat ∷ Todo → [Todo]
         flat (Node item trees) = (Node item []):(concatMap flat trees)
 
-forT ∷ (Monad m) ⇒ [Tree t] → (t -> m a) → m [b]
-forT todos f = forM todos forT'
+forT ∷ (Monad m, Eq t) ⇒ [Tree t] → (t -> m a) → m [b]
+forT todos f = forM (nub todos) forT'
   where
     forT' (Node item trees) =
       do f item

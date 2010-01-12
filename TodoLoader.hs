@@ -1,7 +1,7 @@
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 module TodoLoader where
 
-import Prelude hiding (putStrLn,readFile,getContents)
+import Prelude hiding (putStrLn,readFile,getContents,print)
 import System.IO.UTF8
 import Control.Monad (forM)
 import qualified Data.Map as M
@@ -39,16 +39,18 @@ normalize m todo = Node item' ((map (normalize m) subTodos) ⧺ (map (normalize 
 
 normalizeList ∷ TodoMap → [Todo] → [Todo]
 normalizeList m todos = map (normalize m) todos
+
 readFile' ∷ FilePath → IO String
 readFile' "-" = getContents
 readFile' file = readFile file
 
-loadFile ∷  FilePath → IO [TodoItem]
-loadFile path = do
+loadFile ∷ Maybe String → FilePath → IO [TodoItem]
+loadFile Nothing path = do
     text ← readFile' path
-    case parse pItems path text of
-        Right items → return items
-        Left e → error ⋄ show e
+    return $ parsePlain path text
+loadFile (Just p) path = do
+    text ← readFile' path
+    return $ parseAlternate p path text
 
 (~-) ∷  TodoItem → ℤ → TodoItem
 i@(Item {itemLevel=n}) ~- k = i {itemLevel=n-k}
@@ -84,7 +86,7 @@ stitchTodos items =
       t = mkTodo items
   in  normalizeList m t
 
-loadTodo ∷  [FilePath] → IO [Todo]
-loadTodo paths = do
-    tss ← forM paths loadFile
+loadTodo ∷ Maybe String → [FilePath] → IO [Todo]
+loadTodo maybePrefix paths = do
+    tss ← forM paths (loadFile maybePrefix)
     return $ stitchTodos (concat tss)

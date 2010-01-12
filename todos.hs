@@ -8,6 +8,7 @@ import System.Exit
 import System.Console.GetOpt
 import System.Cmd (system)
 
+import Data.Maybe
 import Data.Tree
 import Data.List
 
@@ -58,26 +59,30 @@ appendC c@(Or _ _)              f = c `Or`  (Pred f)
 appendC c@(Pred _)              f = c `And` (Pred f)
 appendC c                       f = c `And` (Pred f)
 
+-- TODO: * refactor
 concatC ∷ [Flag] → Query
 concatC flags | HelpC ← composedFlags = Help
-              | otherwise             = Query limitP limitM composedFlags onlyFirst command
+              | otherwise             = Query limitP limitM composedFlags onlyFirst command aprefix
   where
     composedFlags = foldl appendC Empty (queryFlags)
     queryFlags    = filter isQuery flags
-
     pruneFlags = filter isPrune flags
     minFlags   = filter isMin   flags
     onlyFirst  = not $ null $ filter isFirst flags
     cmdFlags   = filter isCommand flags
+    prefixFlags = filter isPrefix flags
 
     command | null cmdFlags = Nothing
-            | otherwise     = unExecute (last cmdFlags)
+            | otherwise     = Just $ unExecute (last cmdFlags)
 
-    limitP'       = foldl min Unlimited $ map unPrune pruneFlags
+    aprefix | null prefixFlags = Nothing
+            | otherwise        = Just $ unPrefix (last prefixFlags)
+
+    limitP'       = foldl min Unlimited $ map (Limit ∘ unPrune) pruneFlags
     limitP | Unlimited ← limitP' = pruneByDefault
            | otherwise           = limitP'
 
-    limitM'       = foldl max (Limit 0) $ map unMin minFlags
+    limitM'       = foldl max (Limit 0) $ map (Limit ∘ unMin) minFlags
     limitM | Unlimited ← limitM' = pruneByDefault
            | otherwise           = limitM'
 
@@ -85,6 +90,7 @@ concatC flags | HelpC ← composedFlags = Help
               ∧ (not $ isMin x)
               ∧ (not $ isFirst x)
               ∧ (not $ isCommand x)
+              ∧ (not $ isPrefix x)
 
     isPrune (Prune _) = True
     isPrune _         = False
@@ -98,9 +104,8 @@ concatC flags | HelpC ← composedFlags = Help
     isCommand (Execute _) = True
     isCommand _           = False
 
-    unMin   (Start x) = Limit x
-    unPrune (Prune x) = Limit x
-    unExecute (Execute x) = Just x
+    isPrefix (Prefix _) = True
+    isPrefix _          = False
 
 parseCmdLine ∷  IO ([Flag], [FilePath])
 parseCmdLine = do
@@ -118,6 +123,7 @@ usage = usageInfo header options
 options ∷  [OptDescr Flag]
 options = [
     Option "1" ["only-first"] (NoArg OnlyFirst)    "show only first matching entry",
+    Option "A" ["prefix"] (OptArg mkPrefix "PREFIX") "use alternate parser: read only lines starting with PREFIX",
     Option "p" ["prune"]  (ReqArg mkPrune "N")     "limit tree height to N",
     Option "m" ["min-depth"] (ReqArg mkMin "N")    "show first N levels of tree unconditionally",
     Option "t" ["tag"]    (ReqArg Tag "TAG")       "find items marked with TAG",
@@ -135,6 +141,8 @@ mkPrune s = Prune (read s)
 
 mkMin s = Start (read s)
 
+mkPrefix = Prefix ∘ fromMaybe "TODO:"
+
 main ∷  IO ()
 main = do
   (flags, files) ← parseCmdLine
@@ -143,7 +151,7 @@ main = do
     Help → do putStrLn usage
               exitWith ExitSuccess
     q → do
-      todos ← loadTodo files
+      todos ← loadTodo (prefix q) files
       let todos' = delTag "-" todos
           queried = composeAll q todos'
       case commandToRun q of
@@ -151,6 +159,6 @@ main = do
         Just cmd → do
              forT selected (\item → system $ (cmd ⧺ " " ⧺ itemDescr item))
              return ()
-          where selected | showOnlyFirst q = [Node (head $ map rootLabel queried) []]
+          where selected | showOnlyFirst q = [Node (rootLabel $ head queried) []]
                          | otherwise       = queried
 

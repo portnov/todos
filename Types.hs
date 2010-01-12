@@ -38,16 +38,17 @@ instance Ord Limit where
     compare (Limit x) (Limit y) = compare x y
 
 data Flag = Tag String
-          | Name String
+          | Name {unName ∷ String}
           | Status String
-          | Prune ℤ
-          | Start ℤ
+          | Prune {unPrune ∷ ℤ}
+          | Start {unMin ∷ ℤ}
           | AndCons
           | OrCons
           | NotCons
           | NoFilter
           | OnlyFirst
-          | Execute String
+          | Execute {unExecute ∷ String}
+          | Prefix {unPrefix ∷ String}
           | HelpF
      deriving (Eq,Ord,Show)         
 
@@ -56,7 +57,8 @@ data Query = Query {
                minL   ∷ Limit,
                query  ∷ Composed,
                showOnlyFirst ∷ 𝔹,
-               commandToRun ∷ Maybe String}
+               commandToRun ∷ Maybe String,
+               prefix ∷ Maybe String}
            | Help
     deriving (Eq,Show)
 
