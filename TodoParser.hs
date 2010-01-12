@@ -100,7 +100,7 @@ parsePlain path text =
 parseAlternate ∷ String → SourceName → String → [TodoItem]
 parseAlternate prefix path text = 
   let (ns, filtered) = filterJoin prefix text
-      renumber lst = zipWith ($) (map renumber1 ns) lst
+      renumber lst = zipWith renumber1 ns lst
       renumber1 n item = item {lineNr=n}
   in case parse pItems path filtered of
        Right items → renumber items
