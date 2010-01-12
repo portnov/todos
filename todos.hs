@@ -16,6 +16,7 @@ import Unicode
 import Types
 import TodoLoader
 import TodoTree
+import CommandParser
 
 pruneByDefault = Limit 20
 
@@ -157,7 +158,7 @@ main = do
       case commandToRun q of
         Nothing → putStrLn $ showTodos (showOnlyFirst q) queried 
         Just cmd → do
-             forT selected (\item → system $ (cmd ⧺ " " ⧺ itemDescr item))
+             forT selected (\item → system $ printfItem cmd item)
              return ()
           where selected | showOnlyFirst q = [Node (rootLabel $ head queried) []]
                          | otherwise       = queried
