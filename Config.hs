@@ -11,6 +11,7 @@ import Data.ConfigFile
 
 import Unicode
 import Types
+import ConstrSet (fromList)
 
 getVal conf name = either (const Nothing) Just $ get conf "DEFAULT" name
 
@@ -39,5 +40,5 @@ readConfig = do
       mflags = catMaybes [Execute `fmap` exec, Prefix `fmap` prefix]
   return (fromMaybe "" defPrefix,
           fromMaybe "" defExec,
-          O [] mflags lflags)
+          O [] (fromList mflags) (fromList lflags))
 
