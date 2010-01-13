@@ -1,4 +1,4 @@
-X [TODO] Написать TodoManager
+X [TODO] Написать TodoManager      todos.hs
   ? [TODO] Даты                    Поддержка дат
     - в т.ч. разные форматы дат
   + [queries] Запросы              TodoTree.hs

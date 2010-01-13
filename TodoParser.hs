@@ -68,7 +68,7 @@ pItem = do
 
 pWord ∷ Parser String
 pWord = do
-    w ← many1 (noneOf " \t\n")
+    w ← many1 (noneOf " \t\n\r")
     (try pSpace') <|> (return w)
     return w
 

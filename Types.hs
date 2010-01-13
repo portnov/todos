@@ -37,20 +37,33 @@ instance Ord Limit where
     compare _ Unlimited = LT
     compare (Limit x) (Limit y) = compare x y
 
-data Flag = Tag String
-          | Name {unName ∷ String}
-          | Status String
-          | Prune {unPrune ∷ ℤ}
-          | Start {unMin ∷ ℤ}
-          | AndCons
-          | OrCons
-          | NotCons
-          | NoFilter
-          | OnlyFirst
-          | Execute {unExecute ∷ String}
-          | Prefix {unPrefix ∷ String}
-          | HelpF
-     deriving (Eq,Ord,Show)         
+data CmdLineFlag = QF {queryFlag :: QueryFlag}
+                 | MF {modeFlag :: ModeFlag}
+                 | LF {limFlag :: LimitFlag}
+                 | HelpF
+    deriving (Eq,Show)
+
+data QueryFlag = Tag String
+               | Name {unName ∷ String}
+               | Status String
+               | AndCons
+               | OrCons
+               | NotCons
+               | NoFilter
+     deriving (Eq,Ord,Show)        
+
+data LimitFlag = Prune {unPrune ∷ ℤ}
+               | Start {unMin ∷ ℤ}
+    deriving (Eq,Show)
+
+data ModeFlag = OnlyFirst
+              | Execute {unExecute ∷ String}
+              | Prefix {unPrefix ∷ String}
+              | Describe {unDescribe :: String}
+    deriving (Eq,Ord,Show)
+
+data Options = O [QueryFlag] [ModeFlag] [LimitFlag]
+             | Help
 
 data Query = Query {
                pruneL ∷ Limit,
@@ -58,11 +71,11 @@ data Query = Query {
                query  ∷ Composed,
                showOnlyFirst ∷ 𝔹,
                commandToRun ∷ Maybe String,
-               prefix ∷ Maybe String}
-           | Help
+               prefix ∷ Maybe String,
+               descrFormat :: String}
     deriving (Eq,Show)
 
-data Composed = Pred Flag
+data Composed = Pred QueryFlag
               | And Composed Composed
               | Or Composed Composed
               | Not Composed

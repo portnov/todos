@@ -5,7 +5,7 @@ module TodoTree
    tagPred, statusPred, grepPred,
 --    findTag, filterStatus, grep,
    prune,
-   forT,
+   forT, mapT,
    showTodos)
   where
 
@@ -84,3 +84,8 @@ forT todos f = forM (nub todos) forT'
       do f item
          res ← forM trees forT'
          return $ last res
+
+mapT :: (t -> t) -> [Tree t] -> [Tree t]
+mapT f todos = map mapT' todos
+  where
+    mapT' (Node item trees) = Node (f item) (mapT f trees)
