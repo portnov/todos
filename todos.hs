@@ -18,7 +18,6 @@ import TodoTree
 import CommandParser
 import Config
 import CmdLine
-import ConstrSet (append)
 
 main ∷  IO ()
 main = do
@@ -27,7 +26,7 @@ main = do
   case loptions of
     O lqflags lmflags llflags -> 
       do
-        let options = O (gqflags ++ lqflags) (gmflags `append` lmflags) (glflags `append` llflags)
+        let options = O (gqflags++lqflags) (gmflags++lmflags) (glflags++llflags)
             q = buildQuery options
         todos ← loadTodo (prefix q) files
         let todos'  = delTag "-" todos

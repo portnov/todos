@@ -50,7 +50,7 @@ loadFile Nothing path = do
     return $ parsePlain path text
 loadFile (Just p) path = do
     text ← readFile' path
-    return $ parseAlternate p path text
+    return $ parseAlternate 2 p path text
 
 (~-) ∷  TodoItem → ℤ → TodoItem
 i@(Item {itemLevel=n}) ~- k = i {itemLevel=n-k}

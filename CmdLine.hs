@@ -12,7 +12,6 @@ import Data.Maybe
 import Unicode
 import Types
 import TodoTree
-import ConstrSet 
 
 pruneByDefault = Limit 20
 
@@ -56,27 +55,40 @@ appendC c@(Pred _)              f = c `And` (Pred f)
 appendC c                       f = c `And` (Pred f)
 
 appendF (O q m l) (QF f) = O (f:q) m l
-appendF (O q m l) (MF f) = O q (f `insert` m) l
-appendF (O q m l) (LF f) = O q m (f `insert` l)
+appendF (O q m l) (MF f) = O q (f:m) l
+appendF (O q m l) (LF f) = O q m (f:l)
 appendF _ HelpF = Help
 
 parseFlags :: [CmdLineFlag] -> Options
 parseFlags lst | HelpF `elem` lst = Help
-parseFlags [] = O [] empty empty
+parseFlags [] = O [] [] []
 parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
 buildQuery :: Options -> Query
 buildQuery (O qflags mflags lflags) = Query limitP limitM composedFlags onlyFirst command aprefix dformat
   where
     composedFlags = parseQuery qflags
-    (limitP,limitM) = parseLimits (toList lflags)
+    (limitP,limitM) = parseLimits lflags
 
-    onlyFirst = OnlyFirst `elemC` mflags
-    command = unExecute `fmap` (mflags `selectByConstrOf` (Execute undefined))
+    onlyFirst = OnlyFirst `elem` mflags
+    cmdFlags  = filter isCommand mflags
+    command | null cmdFlags = Nothing
+            | otherwise     = Just $ unExecute (last cmdFlags)
 
-    aprefix = unPrefix `fmap` (mflags `selectByConstrOf` (Prefix undefined))
+    prefixFlags = filter isPrefix mflags
+    aprefix | null prefixFlags = Nothing
+            | otherwise        = Just $ unPrefix (last prefixFlags)
 
-    dformat = unDescribe $ selectByConstrOf' (Describe "%d") mflags (Describe undefined)
+    dflags = filter isDescribe mflags
+    dformat | null dflags = "%d"
+            | otherwise   = unDescribe $ last dflags
+
+    isDescribe (Describe _) = True
+    isDescribe _            = False
+    isCommand (Execute _) = True
+    isCommand _           = False
+    isPrefix (Prefix _) = True
+    isPrefix _          = False
 
 parseLimits :: [LimitFlag] -> (Limit,Limit)
 parseLimits flags = (limitP,limitM)

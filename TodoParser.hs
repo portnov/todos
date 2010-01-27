@@ -78,17 +78,25 @@ pItems = do
   eof
   return its
 
-filterN ∷ String → [String] → ([Int], [String])
-filterN prefix lst = unzip $ filterN' 1 lst
-  where
-    filterN' k [] = []
-    filterN' k (x:xs) | prefix `isPrefixOf` x = (k, cut x):filterN' (k+1) xs
-                      | otherwise             = filterN' (k+1) xs
-    cut = drop (1+length prefix)
+unwords' lst =
+  let (hd:tl) = map (filter (/='\r')) lst
+  in  case tl of
+        [] -> hd
+        _  -> hd ++ "    {" ++ (unwords tl) ++ "}"
 
-filterJoin ∷ String → String → ([Int], String)
-filterJoin prefix str = 
-  let (ns, lns) = filterN prefix (lines str)
+filterN n prefix lst = 
+  let zipped = zip [0..] lst
+      good   = filter (isGood . snd) zipped
+      lns    = map fst good
+      sub k l = (take l) . (drop k)
+      ans = map unwords' [sub j n lst | j <- lns]
+      isGood x = prefix `isPrefixOf` x
+      cut = drop (1+length prefix) 
+  in (map (+1) lns, map cut ans)
+
+filterJoin ∷ Int -> String → String → ([Int], String)
+filterJoin n prefix str = 
+  let (ns, lns) = filterN n prefix (lines str)
   in  (ns, unlines lns)
 
 parsePlain ∷ SourceName → String → [TodoItem]
@@ -97,9 +105,9 @@ parsePlain path text =
       Right items → items
       Left e → error ⋄ show e
 
-parseAlternate ∷ String → SourceName → String → [TodoItem]
-parseAlternate prefix path text = 
-  let (ns, filtered) = filterJoin prefix text
+parseAlternate ∷ Int -> String → SourceName → String → [TodoItem]
+parseAlternate next prefix path text = 
+  let (ns, filtered) = filterJoin next prefix text
       renumber lst = zipWith renumber1 ns lst
       renumber1 n item = item {lineNr=n}
   in case parse pItems path filtered of

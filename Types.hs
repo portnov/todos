@@ -9,7 +9,6 @@ import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
 
 import Unicode
-import ConstrSet
 
 data TodoItem = Item {
     itemLevel ∷ ℤ,
@@ -51,22 +50,19 @@ data QueryFlag = Tag String
                | OrCons
                | NotCons
                | NoFilter
-     deriving (Eq,Ord,Show,Typeable,Data)
+     deriving (Eq,Ord,Show)        
 
 data LimitFlag = Prune {unPrune ∷ ℤ}
                | Start {unMin ∷ ℤ}
-    deriving (Eq,Show,Typeable,Data)
+    deriving (Eq,Show)
 
 data ModeFlag = OnlyFirst
               | Execute {unExecute ∷ String}
               | Prefix {unPrefix ∷ String}
               | Describe {unDescribe :: String}
-    deriving (Eq,Ord,Show,Typeable,Data)
+    deriving (Eq,Ord,Show)
 
-type ModeFlags = CSet ModeFlag
-type LimitFlags = CSet LimitFlag
-
-data Options = O [QueryFlag] ModeFlags LimitFlags
+data Options = O [QueryFlag] [ModeFlag] [LimitFlag]
              | Help
 
 data Query = Query {
