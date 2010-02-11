@@ -144,8 +144,26 @@ bold s = do
   putStr s
   setSGR []
 
+lookupC k [] = Nothing
+lookupC k ((lst,c):other) | k `elem` lst = Just c
+                          | otherwise    = lookupC k other
+
+statusColors = 
+  [(["FIXED", "DONE"], Green),
+   (["INVALID"],       Magenta),
+   (["*"],             Red),
+   (["?"],             Blue)]
+
+colorStatus st =
+  case lookupC st statusColors of
+    Nothing -> putStr st
+    Just clr -> do
+      setSGR [SetColor Foreground Dull clr]
+      putStr st
+      setSGR []
+
 instance ShowIO TodoItem where
-    showIOL item = noIO <++> s <++> " " <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
+    showIOL item = noIO <++> (colorStatus s) <++> " " <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
       where
         n = itemLevel item
         name = itemName item
