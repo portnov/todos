@@ -1,15 +1,14 @@
-{-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction #-}
+{-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
 module TodoTree 
   (addTag, delTag,
    selector, pruneSelector,
    tagPred, statusPred, grepPred,
---    findTag, filterStatus, grep,
    prune,
    forT, mapT,
    showTodos)
   where
 
-import Prelude hiding (putStrLn)
+import Prelude hiding (putStrLn,putStr)
 import System.IO.UTF8
 import System (getArgs)
 import System.Console.GetOpt
@@ -25,16 +24,18 @@ import Types
 import TodoLoader
 import Unicode
 
-showT ∷  (Show t, Ord t) ⇒ Int → Tree t → [String]
-showT n (Node item todos) = ((replicate n ' ') ⧺ (show item)):(concatMap (showT (n+2)) $ sort todos)
+showT ::  (ShowIO t, Ord t) => Int -> Tree t -> [IOList]
+showT n (Node item todos) = (noIO <++> (replicate n ' ') <++> (showIO item)):(concatMap (showT (n+2)) $ sort todos)
 
-showTodo ::  (Show t, Ord t) => Bool -> Tree t -> String
-showTodo False = unlines ∘ showT 0
-showTodo True  = head    ∘ showT 0
+unlinesIOL = intercalateIOL (putStrLn "")
 
-showTodos ∷ (Ord t, Show t) ⇒ 𝔹 → [Tree t] → String
-showTodos False = concatMap (showTodo False) ∘ nub
-showTodos True  = head    ∘ map (showTodo True) ∘ nub
+showTodo ::  (ShowIO t, Ord t) => Bool -> Tree t -> IOList
+showTodo False = unlinesIOL ∘ showT 0
+showTodo True  = head       ∘ showT 0
+
+showTodos ::  (ShowIO t, Ord t) => Bool -> [Tree t] -> IO ()
+showTodos False = runIOL ∘ unlinesIOL ∘ map (showTodo False) ∘ nub
+showTodos True  = runIOL ∘ head       ∘ map (showTodo True)  ∘ nub
 
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
     where
