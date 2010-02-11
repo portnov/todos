@@ -33,7 +33,9 @@ main = do
             queried = composeAll q todos'
             format item = item {itemDescr = printfItem (descrFormat q) item}
         case commandToRun q of
-          Nothing → putStrLn $ showTodos (showOnlyFirst q) (mapT format queried)
+          Nothing  → do
+               showTodos (showOnlyFirst q) (mapT format queried)
+               putStrLn ""
           Just cmd → do
                forT selected (\item → system $ printfItem cmd (format item))
                return ()

@@ -1,10 +1,16 @@
-{-# LANGUAGE UnicodeSyntax, DeriveDataTypeable #-}
+{-# LANGUAGE UnicodeSyntax, DeriveDataTypeable, TypeSynonymInstances, FlexibleInstances, NoMonomorphismRestriction #-}
 
 module Types where
+
+import Prelude hiding (putStr)
+import System.IO.UTF8
+
+import System.Console.ANSI
 
 import Data.Function 
 import Data.Generics hiding (GT)
 import Data.Tree
+import Data.List
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
 
@@ -25,8 +31,46 @@ type Todo = Tree TodoItem
 
 type TodoMap = M.Map String Todo
 
+newtype IOList = IOL [IO ()]
+
+noIO = IOL []
+
+class IOAdd a where
+  (<++>) :: IOList -> a -> IOList
+
+instance IOAdd (IO ()) where
+  (IOL lst) <++> io = IOL (lst ++ [io])
+
+instance IOAdd String where
+  iol <++> s = iol <++> (putStr s)
+
+runIOL ::  IOList -> IO ()
+runIOL (IOL lst) = sequence_ lst
+
+concatIOL ::  [IOList] -> IOList
+concatIOL iols = IOL $ concat [lst | IOL lst <- iols]
+
+intercalateIOL :: IO () -> [IOList] -> IOList
+intercalateIOL s = concatIOL . intersperse (IOL [s])
+
+intersperseIOL ::  IO () -> IOList -> IOList
+intersperseIOL a (IOL lst) = IOL $ intersperse a lst
+
+class ShowIO s where
+  showIOL :: s -> IOList
+
+instance ShowIO String where
+  showIOL s = IOL [putStr s]
+
+instance ShowIO (IO ()) where
+  showIOL i = IOL [i]
+  
+showIO ::  (ShowIO a) => a -> IO ()
+showIO = runIOL . showIOL
+
 instance (Ord a) => Ord (Tree a) where
   compare = compare `on` rootLabel
+
 data Limit = Unlimited
            | Limit ℤ
   deriving (Eq,Show)
@@ -95,6 +139,41 @@ instance Show TodoItem where
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "
 
+bold s = do
+  setSGR [SetConsoleIntensity BoldIntensity]
+  putStr s
+  setSGR []
+
+lookupC k [] = Nothing
+lookupC k ((lst,c):other) | k `elem` lst = Just c
+                          | otherwise    = lookupC k other
+
+statusColors = 
+  [(["FIXED", "DONE"], Green),
+   (["INVALID"],       Magenta),
+   (["*"],             Red),
+   (["?"],             Blue)]
+
+colorStatus st =
+  case lookupC st statusColors of
+    Nothing -> putStr st
+    Just clr -> do
+      setSGR [SetColor Foreground Dull clr]
+      putStr st
+      setSGR []
+
+instance ShowIO TodoItem where
+    showIOL item = noIO <++> (colorStatus s) <++> " " <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
+      where
+        n = itemLevel item
+        name = itemName item
+        ts = itemTags item
+        s = itemStatus item
+        descr = itemDescr item
+        tags = if null ts
+                 then ""
+                 else "[" ⧺ (unwords ts) ⧺ "] "
+
 instance Ord TodoItem where
   compare item1 item2 = 
       let c1 = (compare `on` itemLevel) item1 item2
@@ -105,3 +184,4 @@ instance Ord TodoItem where
                    then c3
                    else c2
             else c1
+
