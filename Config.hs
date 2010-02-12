@@ -39,5 +39,5 @@ readConfig = do
       mflags = catMaybes [Execute `fmap` exec, Prefix `fmap` prefix]
   return (fromMaybe "" defPrefix,
           fromMaybe "" defExec,
-          O [] mflags lflags)
+          O [] mflags [] lflags)
 

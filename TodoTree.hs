@@ -1,18 +1,16 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
 module TodoTree 
-  (addTag, delTag,
-   selector, pruneSelector,
+  (delTag,
+   pruneSelector,
    tagPred, statusPred, grepPred,
-   prune,
    forT, mapT,
    showTodos)
   where
 
 import Prelude hiding (putStrLn,putStr)
 import System.IO.UTF8
-import System (getArgs)
-import System.Console.GetOpt
 import Control.Monad
+import Control.Monad.Reader
 import qualified Data.Map as M
 import Data.Generics
 import Data.List
@@ -24,31 +22,32 @@ import Types
 import TodoLoader
 import Unicode
 
-showT ::  (ShowIO t, Ord t) => Int -> Tree t -> [IOList]
-showT n (Node item todos) = (noIO <++> (replicate n ' ') <++> (showIO item)):(concatMap (showT (n+2)) $ sort todos)
+showT ∷ (ShowIO t, Ord t) ⇒ OutConfig → Int → Tree t → [IOList]
+showT conf n (Node item todos) = (noIO <++> (replicate n ' ') <++> (showIO conf item)):(concatMap (showT conf (n+2)) $ sort todos)
 
 unlinesIOL = intercalateIOL (putStrLn "")
 
-showTodo ::  (ShowIO t, Ord t) => Bool -> Tree t -> IOList
-showTodo False = unlinesIOL ∘ showT 0
-showTodo True  = head       ∘ showT 0
+showTodo ∷ (ShowIO t, Ord t) ⇒ OutConfig → Tree t → IOList
+showTodo conf = 
+  case outOnlyFirst conf of
+    False → unlinesIOL ∘ showT conf 0
+    True  → head       ∘ showT conf 0
 
-showTodos ::  (ShowIO t, Ord t) => Bool -> [Tree t] -> IO ()
-showTodos False = runIOL ∘ unlinesIOL ∘ map (showTodo False) ∘ nub
-showTodos True  = runIOL ∘ head       ∘ map (showTodo True)  ∘ nub
+showTodos ∷  (ShowIO t, Ord t) ⇒ OutConfig → [Tree t] → IO ()
+showTodos conf =
+  let f = case outOnlyFirst conf of
+            False → unlinesIOL
+            True  → head
+  in runIOL conf ∘ f ∘ map (showTodo conf) ∘ nub
 
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
-    where
-        changeTags item@(Item {itemTags=ts}) = item {itemTags = f ts}
+  where
+    changeTags item@(Item {itemTags=ts}) = item {itemTags = f ts}
         
 addTag t = mapTags (t:)
 
 delTag t = mapTags (delete t)
         
-selector ∷ (TodoItem → 𝔹) → (Todo → [Todo])
-selector pred (Node item trees) | pred item = [Node item ⋄ concatMap (selector pred) trees]
-                                | otherwise = concatMap (selector pred) trees
-
 pruneSelector ∷ ℤ → ℤ → (TodoItem → 𝔹) → (Todo → [Todo])
 pruneSelector n m pred = select n 0 False
     where
@@ -66,19 +65,13 @@ statusPred st = \item → st == itemStatus item
         
 grepPred pattern = \item → itemName item =~ pattern
 
-prune ∷ ℤ → ([Todo] → [Todo])
-prune n = concatMap ⋄ prune' n
-    where
-        prune' 0 _ = []
-        prune' k (Node item trees) = [Node item ⋄ concatMap (prune' (k-1)) trees]
-        
 flattern ∷ [Todo] → [Todo]
 flattern = concatMap flat
     where
         flat ∷ Todo → [Todo]
         flat (Node item trees) = (Node item []):(concatMap flat trees)
 
-forT ∷ (Monad m, Eq t) ⇒ [Tree t] → (t -> m a) → m [b]
+forT ∷ (Monad m, Eq t) ⇒ [Tree t] → (t → m a) → m [b]
 forT todos f = forM (nub todos) forT'
   where
     forT' (Node item trees) =
@@ -86,7 +79,7 @@ forT todos f = forM (nub todos) forT'
          res ← forM trees forT'
          return $ last res
 
-mapT :: (t -> t) -> [Tree t] -> [Tree t]
+mapT ∷ (t → t) → [Tree t] → [Tree t]
 mapT f todos = map mapT' todos
   where
     mapT' (Node item trees) = Node (f item) (mapT f trees)

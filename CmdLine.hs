@@ -54,23 +54,24 @@ appendC c@(Or _ _)              f = c `Or`  (Pred f)
 appendC c@(Pred _)              f = c `And` (Pred f)
 appendC c                       f = c `And` (Pred f)
 
-appendF (O q m l) (QF f) = O (f:q) m l
-appendF (O q m l) (MF f) = O q (f:m) l
-appendF (O q m l) (LF f) = O q m (f:l)
+appendF (O q m o l) (QF f) = O (f:q) m o l
+appendF (O q m o l) (MF f) = O q (f:m) o l
+appendF (O q m o l) (OF f) = O q m (f:o) l
+appendF (O q m o l) (LF f) = O q m o (f:l)
 appendF _ HelpF = Help
 
 parseFlags :: [CmdLineFlag] -> Options
 parseFlags lst | HelpF `elem` lst = Help
-parseFlags [] = O [] [] []
+parseFlags [] = O [] [] [] []
 parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
 buildQuery :: Options -> Query
-buildQuery (O qflags mflags lflags) = Query limitP limitM composedFlags onlyFirst command aprefix dformat
+buildQuery (O qflags mflags oflags lflags) = Query limitP limitM composedFlags onlyFirst command aprefix dformat
   where
     composedFlags = parseQuery qflags
     (limitP,limitM) = parseLimits lflags
 
-    onlyFirst = OnlyFirst `elem` mflags
+    onlyFirst = OnlyFirst `elem` oflags
     cmdFlags  = filter isCommand mflags
     command | null cmdFlags = Nothing
             | otherwise     = Just $ unExecute (last cmdFlags)
@@ -129,7 +130,8 @@ usage = usageInfo header (options "" "")
 
 options ∷  String -> String -> [OptDescr CmdLineFlag]
 options defPrefix defExec = [
-    Option "1" ["only-first"] (NoArg (MF OnlyFirst))    "show only first matching entry",
+    Option "1" ["only-first"] (NoArg (OF OnlyFirst))    "show only first matching entry",
+    Option "c" ["color"]  (NoArg (OF Colors))    "show colored output",
     Option "A" ["prefix"] (OptArg (mkPrefix defPrefix) "PREFIX") "use alternate parser: read only lines starting with PREFIX",
     Option "D" ["describe"] (OptArg mkDescribe "FORMAT") "use FORMAT for descriptions",
     Option "p" ["prune"]  (ReqArg mkPrune "N")     "limit tree height to N",

@@ -7,6 +7,7 @@ import System.IO.UTF8
 
 import System.Console.ANSI
 
+import Control.Monad.Reader
 import Data.Function 
 import Data.Generics hiding (GT)
 import Data.Tree
@@ -31,46 +32,6 @@ type Todo = Tree TodoItem
 
 type TodoMap = M.Map String Todo
 
-newtype IOList = IOL [IO ()]
-
-noIO = IOL []
-
-class IOAdd a where
-  (<++>) :: IOList -> a -> IOList
-
-instance IOAdd (IO ()) where
-  (IOL lst) <++> io = IOL (lst ++ [io])
-
-instance IOAdd String where
-  iol <++> s = iol <++> (putStr s)
-
-runIOL ::  IOList -> IO ()
-runIOL (IOL lst) = sequence_ lst
-
-concatIOL ::  [IOList] -> IOList
-concatIOL iols = IOL $ concat [lst | IOL lst <- iols]
-
-intercalateIOL :: IO () -> [IOList] -> IOList
-intercalateIOL s = concatIOL . intersperse (IOL [s])
-
-intersperseIOL ::  IO () -> IOList -> IOList
-intersperseIOL a (IOL lst) = IOL $ intersperse a lst
-
-class ShowIO s where
-  showIOL :: s -> IOList
-
-instance ShowIO String where
-  showIOL s = IOL [putStr s]
-
-instance ShowIO (IO ()) where
-  showIOL i = IOL [i]
-  
-showIO ::  (ShowIO a) => a -> IO ()
-showIO = runIOL . showIOL
-
-instance (Ord a) => Ord (Tree a) where
-  compare = compare `on` rootLabel
-
 data Limit = Unlimited
            | Limit ℤ
   deriving (Eq,Show)
@@ -81,9 +42,10 @@ instance Ord Limit where
     compare _ Unlimited = LT
     compare (Limit x) (Limit y) = compare x y
 
-data CmdLineFlag = QF {queryFlag :: QueryFlag}
-                 | MF {modeFlag :: ModeFlag}
-                 | LF {limFlag :: LimitFlag}
+data CmdLineFlag = QF {queryFlag ∷ QueryFlag}
+                 | MF {modeFlag ∷ ModeFlag}
+                 | OF {outFlag ∷ OutFlag}
+                 | LF {limFlag ∷ LimitFlag}
                  | HelpF
     deriving (Eq,Show)
 
@@ -100,13 +62,69 @@ data LimitFlag = Prune {unPrune ∷ ℤ}
                | Start {unMin ∷ ℤ}
     deriving (Eq,Show)
 
-data ModeFlag = OnlyFirst
-              | Execute {unExecute ∷ String}
+data ModeFlag = Execute {unExecute ∷ String}
               | Prefix {unPrefix ∷ String}
-              | Describe {unDescribe :: String}
+              | Describe {unDescribe ∷ String}
     deriving (Eq,Ord,Show)
 
-data Options = O [QueryFlag] [ModeFlag] [LimitFlag]
+data OutFlag = OnlyFirst 
+             | Colors
+    deriving (Eq,Ord,Show)
+
+data OutConfig = OutConfig {
+  outOnlyFirst ∷ Bool,
+  outColors ∷ Bool }
+
+type ConfigIO = ReaderT OutConfig IO ()
+
+newtype IOList = IOL [ConfigIO]
+
+noIO = IOL []
+
+class IOAdd a where
+  (<++>) ∷ IOList → a → IOList
+
+instance IOAdd (IO ()) where
+  (IOL lst) <++> io = IOL (lst ++ [lift io])
+
+instance IOAdd ConfigIO where
+  (IOL lst) <++> cio = IOL (lst ++ [cio])
+
+instance IOAdd String where
+  iol <++> s = iol <++> (putStr s)
+
+runIOL ∷ OutConfig → IOList → IO ()
+runIOL conf (IOL lst) = runReaderT (sequence_ lst) conf
+
+concatIOL ∷  [IOList] → IOList
+concatIOL iols = IOL $ concat [lst | IOL lst ← iols]
+
+intercalateIOL ∷ IO () → [IOList] → IOList
+intercalateIOL s = concatIOL ∘ intersperse (IOL [lift s])
+
+intersperseIOL ∷  IO () → IOList → IOList
+intersperseIOL a (IOL lst) = IOL $ intersperse (lift a) lst
+
+class ShowIO s where
+  showIOL ∷ s → IOList
+
+instance ShowIO String where
+  showIOL s = IOL [lift $ putStr s]
+
+instance ShowIO (IO ()) where
+  showIOL i = IOL [lift i]
+
+instance ShowIO ConfigIO where
+  showIOL i = IOL [i]
+  
+showIO ∷ (ShowIO a) ⇒ OutConfig → a → IO ()
+showIO conf = (runIOL conf) ∘ showIOL
+
+instance (Ord a) ⇒ Ord (Tree a) where
+  compare = compare `on` rootLabel
+
+-- TODO: - rename Options → QueryOptions or similar
+data Options = O [QueryFlag] [ModeFlag] [OutFlag] [LimitFlag]
              | Help
 
 data Query = Query {
@@ -116,7 +134,7 @@ data Query = Query {
                showOnlyFirst ∷ 𝔹,
                commandToRun ∷ Maybe String,
                prefix ∷ Maybe String,
-               descrFormat :: String}
+               descrFormat ∷ String}
     deriving (Eq,Show)
 
 data Composed = Pred QueryFlag
@@ -139,10 +157,16 @@ instance Show TodoItem where
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "
 
+setBold = lift $ setSGR [SetConsoleIntensity BoldIntensity]
+setColor clr = lift $ setSGR [SetColor Foreground Dull clr]
+reset = lift $ setSGR []
+
+bold ∷ String → ConfigIO
 bold s = do
-  setSGR [SetConsoleIntensity BoldIntensity]
-  putStr s
-  setSGR []
+  col ← asks outColors 
+  when col setBold
+  lift $ putStr s
+  when col reset
 
 lookupC k [] = Nothing
 lookupC k ((lst,c):other) | k `elem` lst = Just c
@@ -154,13 +178,15 @@ statusColors =
    (["*"],             Red),
    (["?"],             Blue)]
 
+colorStatus ∷ String → ConfigIO
 colorStatus st =
   case lookupC st statusColors of
-    Nothing -> putStr st
-    Just clr -> do
-      setSGR [SetColor Foreground Dull clr]
-      putStr st
-      setSGR []
+    Nothing → lift $ putStr st
+    Just clr → do
+      col ← asks outColors 
+      when col $ setColor clr
+      lift $ putStr st
+      when col reset
 
 instance ShowIO TodoItem where
     showIOL item = noIO <++> (colorStatus s) <++> " " <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)

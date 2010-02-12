@@ -21,20 +21,21 @@ import CmdLine
 
 main ∷  IO ()
 main = do
-  (defPrefix, defExec, O gqflags gmflags glflags) <- readConfig
+  (defPrefix, defExec, O gqflags gmflags goflags glflags) <- readConfig
   (loptions, files) <- parseCmdLine defPrefix defExec
   case loptions of
-    O lqflags lmflags llflags -> 
+    O lqflags lmflags loflags llflags -> 
       do
-        let options = O (gqflags++lqflags) (gmflags++lmflags) (glflags++llflags)
+        let options = O (gqflags++lqflags) (gmflags++lmflags) (goflags++loflags) (glflags++llflags)
             q = buildQuery options
         todos ← loadTodo (prefix q) files
         let todos'  = delTag "-" todos
             queried = composeAll q todos'
             format item = item {itemDescr = printfItem (descrFormat q) item}
+            outConf = OutConfig (showOnlyFirst q) (Colors ∈ (goflags++loflags))
         case commandToRun q of
           Nothing  → do
-               showTodos (showOnlyFirst q) (mapT format queried)
+               showTodos outConf (mapT format queried)
                putStrLn ""
           Just cmd → do
                forT selected (\item → system $ printfItem cmd (format item))
