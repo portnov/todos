@@ -1,10 +1,10 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
 module TodoTree 
---   (delTag,
---    pruneSelector,
---    tagPred, statusPred, grepPred,
---    forT, mapT,
---    printTodos)
+  (delTag,
+   pruneSelector,
+   tagPred, statusPred, grepPred,
+   forT, mapT,
+   printTodos)
   where
 
 -- import Prelude hiding (putStrLn,putStr)
@@ -38,7 +38,7 @@ showTodo t = do
             True  → head
   f $ showT 0 t
 
-showTodos ∷ (ConfigShow t, Ord t) ⇒ [Tree t] → Reader Config [OutItem]
+showTodos ∷ (ConfigShow t, Ord t) ⇒ [Tree t] → ConfigM
 showTodos lst = do
   conf ← ask
   let f = case outOnlyFirst conf of

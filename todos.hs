@@ -7,6 +7,8 @@ import System (getArgs)
 import System.Exit
 import System.Cmd (system)
 
+import System.Time
+
 import Control.Monad.Reader
 import Data.Maybe
 import Data.Tree
@@ -22,14 +24,15 @@ import CmdLine
 
 main ∷  IO ()
 main = do
-  (defPrefix, defExec, O gqflags gmflags goflags glflags) <- readConfig
-  (loptions, files) <- parseCmdLine defPrefix defExec
+  (defPrefix, defExec, O gqflags gmflags goflags glflags) ← readConfig
+  (loptions, files) ← parseCmdLine defPrefix defExec
   case loptions of
-    O lqflags lmflags loflags llflags -> 
+    O lqflags lmflags loflags llflags → 
       do
-        let options = O (gqflags++lqflags) (gmflags++lmflags) (goflags++loflags) (glflags++llflags)
+        currTime ← toCalendarTime =<< getClockTime
+        let options = O (gqflags⧺lqflags) (gmflags⧺lmflags) (goflags⧺loflags) (glflags⧺llflags)
             q = buildQuery options
-        todos ← loadTodo (prefix q) files
+        todos ← loadTodo (prefix q) (ctYear currTime) files
         let todos'  = delTag "-" todos
             queried = transformList q composeAll todos'
             format item = item {itemDescr = printfItem (descrFormat q) item}
@@ -43,6 +46,6 @@ main = do
             where selected | outOnlyFirst q = [Node (rootLabel $ head queried) []]
                            | otherwise       = queried
 
-    Help -> do putStrLn usage
-               exitWith ExitSuccess
+    Help → do putStrLn usage
+              exitWith ExitSuccess
 

@@ -44,13 +44,13 @@ readFile' ∷ FilePath → IO String
 readFile' "-" = getContents
 readFile' file = readFile file
 
-loadFile ∷ Maybe String → FilePath → IO [TodoItem]
-loadFile Nothing path = do
+loadFile ∷ Maybe String → Int → FilePath → IO [TodoItem]
+loadFile Nothing year path = do
     text ← readFile' path
-    return $ parsePlain path text
-loadFile (Just p) path = do
+    return $ parsePlain year path text
+loadFile (Just p) year path = do
     text ← readFile' path
-    return $ parseAlternate 2 p path text
+    return $ parseAlternate 2 p year path text
 
 (~-) ∷  TodoItem → ℤ → TodoItem
 i@(Item {itemLevel=n}) ~- k = i {itemLevel=n-k}
@@ -86,7 +86,7 @@ stitchTodos items =
       t = mkTodo items
   in  normalizeList m t
 
-loadTodo ∷ Maybe String → [FilePath] → IO [Todo]
-loadTodo maybePrefix paths = do
-    tss ← forM paths (loadFile maybePrefix)
+loadTodo ∷ Maybe String → Int → [FilePath] → IO [Todo]
+loadTodo maybePrefix year paths = do
+    tss ← forM paths (loadFile maybePrefix year)
     return $ stitchTodos (concat tss)

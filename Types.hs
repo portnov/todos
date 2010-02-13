@@ -1,4 +1,4 @@
-{-# LANGUAGE UnicodeSyntax, DeriveDataTypeable, TypeSynonymInstances, FlexibleInstances, NoMonomorphismRestriction #-}
+{-# LANGUAGE UnicodeSyntax, DeriveDataTypeable, TypeSynonymInstances, FlexibleInstances, NoMonomorphismRestriction, TupleSections #-}
 
 module Types where
 
@@ -10,12 +10,65 @@ import System.Console.ANSI
 import Control.Monad.Reader
 import Data.Function 
 import Data.Generics hiding (GT)
+import Data.Char (toUpper)
+import Data.Maybe
 import Data.Tree
 import Data.List
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
 
 import Unicode
+
+data DateType = StartDate
+              | EndDate
+              | Deadline
+  deriving (Eq)
+
+instance Show DateType where
+  show StartDate = "start"
+  show EndDate = "end"
+  show Deadline = "deadline"
+
+data DateTime =
+  DateTime {
+    year ∷ Int,
+    month ∷ Int,
+    day ∷ Int,
+    hour ∷ Int,
+    minute ∷ Int,
+    second ∷ Int }
+  deriving (Eq,Ord,Data,Typeable)
+
+months ∷ [String]
+months = ["january",
+          "february",
+          "march",
+          "april",
+          "may",
+          "june",
+          "july",
+          "august",
+          "september",
+          "october",
+          "november",
+          "december"]
+
+upFirst [] = []
+upFirst (x:xs) = (toUpper x):xs
+
+showMonth i = upFirst $ months !! (i-1)
+
+instance Show DateTime where
+  show (DateTime y m d h min s) = 
+    show d ⧺ " " ⧺ showMonth m ⧺ " " ⧺ show y ⧺ ", " ⧺
+      show h ⧺ ":" ⧺ show min ⧺ ":" ⧺ show s
+
+data Time = 
+  Time {
+    tHour ∷ Int,
+    tMinute ∷ Int,
+    tSecond ∷ Int }
+  deriving (Eq,Ord,Show,Data,Typeable)
 
 data TodoItem = Item {
     itemLevel ∷ ℤ,
@@ -24,9 +77,12 @@ data TodoItem = Item {
     depends ∷ [String],
     itemStatus ∷ String,
     itemDescr ∷ String,
+    startDate ∷ Maybe DateTime,
+    endDate ∷ Maybe DateTime,
+    deadline ∷ Maybe DateTime,
     fileName ∷ FilePath,
     lineNr ∷ Line}
-    deriving (Eq,Data,Typeable)
+  deriving (Eq,Data,Typeable)
 
 type Todo = Tree TodoItem
 
@@ -159,14 +215,23 @@ data Composed = Pred QueryFlag
               | HelpC
     deriving (Eq,Show)
 
+t `is`  x = (t,) `fmap` x
+
+showDate (t,d) = show t ⧺ ": " ⧺ show d
+
+showDates = intercalate "; " ∘ map showDate ∘ catMaybes
+
 instance Show TodoItem where
-    show item = s ⧺ " " ⧺ tags ⧺ name ⧺ (if null descr then "" else "    "⧺descr)
+    show item = s ⧺ " " ⧺ dates ⧺ tags ⧺ name ⧺ (if null descr then "" else "    "⧺descr)
       where
         n = itemLevel item
         name = itemName item
         ts = itemTags item
         s = itemStatus item
         descr = itemDescr item
+        dates | null dates' = ""
+              | otherwise = "(" ⧺ dates' ⧺ ") "
+        dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]
         tags = if null ts
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "
@@ -199,13 +264,16 @@ colorStatus st =
         else return [OutString st]
 
 instance ConfigShow TodoItem where
-    configShow item = configM <++> colorStatus s <++> " " <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
+    configShow item = configM <++> colorStatus s <++> " " <++> dates <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
       where
         n = itemLevel item
         name = itemName item
         ts = itemTags item
         s = itemStatus item
         descr = itemDescr item
+        dates | null dates' = ""
+              | otherwise = "(" ⧺ dates' ⧺ ") "
+        dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]
         tags = if null ts
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "

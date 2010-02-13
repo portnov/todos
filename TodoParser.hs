@@ -3,7 +3,7 @@ module TodoParser
 --     (TodoItem (..),
 --      Todo, TodoMap, flattern,
 --      consTodoMap,
---      loadTodo, showTodo
+--      loadTodo,
 --     )
     where
 
@@ -20,6 +20,7 @@ import Data.Function
 
 import Unicode
 import Types
+import Dates
 
 strip = reverse ∘ p ∘ reverse ∘ p
   where
@@ -51,11 +52,12 @@ pTags = do
   where
     word = many1 (noneOf " \t\n\r]")
 
-pItem ∷ Parser TodoItem
-pItem = do
+pItem ∷ Int → Parser TodoItem
+pItem year = do
     pos ← getPosition
     s ← pSpaces
     stat ← pWord
+    dates ← (try (pSpecDates year) <|> return [])
     tags ← (try pTags <|> return [])
     namew ← many1 pWord
     pSpaces
@@ -64,7 +66,18 @@ pItem = do
     descr ← many (noneOf "\n\r")
     pSpaces
     many ⋄ oneOf "\n\r"
-    return ⋄ Item (fromIntegral $ length s) (unwords namew) tags deps stat descr (sourceName pos) (sourceLine pos)
+    return ⋄ Item {
+        itemLevel = fromIntegral $ length s,
+        itemName = unwords namew,
+        itemTags = tags,
+        depends = deps,
+        itemStatus = stat,
+        itemDescr = descr,
+        startDate = lookup StartDate dates,
+        endDate = lookup EndDate dates,
+        deadline = lookup Deadline dates,
+        fileName = sourceName pos,
+        lineNr = sourceLine pos }
 
 pWord ∷ Parser String
 pWord = do
@@ -72,9 +85,9 @@ pWord = do
     (try pSpace') <|> (return w)
     return w
 
-pItems ∷  Parser [TodoItem]
-pItems = do
-  its ← many pItem
+pItems ∷ Int → Parser [TodoItem]
+pItems year = do
+  its ← many (pItem year)
   eof
   return its
 
@@ -99,17 +112,17 @@ filterJoin n prefix str =
   let (ns, lns) = filterN n prefix (lines str)
   in  (ns, unlines lns)
 
-parsePlain ∷ SourceName → String → [TodoItem]
-parsePlain path text = 
-  case parse pItems path text of
+parsePlain ∷ Int → SourceName → String → [TodoItem]
+parsePlain year path text = 
+  case parse (pItems year) path text of
       Right items → items
       Left e → error ⋄ show e
 
-parseAlternate ∷ Int -> String → SourceName → String → [TodoItem]
-parseAlternate next prefix path text = 
+parseAlternate ∷ Int -> String → Int → SourceName → String → [TodoItem]
+parseAlternate next prefix year path text = 
   let (ns, filtered) = filterJoin next prefix text
       renumber lst = zipWith renumber1 ns lst
       renumber1 n item = item {lineNr=n}
-  in case parse pItems path filtered of
+  in case parse (pItems year) path filtered of
        Right items → renumber items
        Left e      → error $ show e
