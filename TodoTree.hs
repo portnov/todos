@@ -7,8 +7,8 @@ module TodoTree
    showTodos)
   where
 
-import Prelude hiding (putStrLn,putStr)
-import System.IO.UTF8
+-- import Prelude hiding (putStrLn,putStr)
+-- import System.IO.UTF8
 import Control.Monad
 import Control.Monad.Reader
 import qualified Data.Map as M
@@ -22,18 +22,18 @@ import Types
 import TodoLoader
 import Unicode
 
-showT ∷ (ShowIO t, Ord t) ⇒ OutConfig → Int → Tree t → [IOList]
+showT ∷ (ShowIO t, Ord t) ⇒ Config → Int → Tree t → [IOList]
 showT conf n (Node item todos) = (noIO <++> (replicate n ' ') <++> (showIO conf item)):(concatMap (showT conf (n+2)) $ sort todos)
 
 unlinesIOL = intercalateIOL (putStrLn "")
 
-showTodo ∷ (ShowIO t, Ord t) ⇒ OutConfig → Tree t → IOList
+showTodo ∷ (ShowIO t, Ord t) ⇒ Config → Tree t → IOList
 showTodo conf = 
   case outOnlyFirst conf of
     False → unlinesIOL ∘ showT conf 0
     True  → head       ∘ showT conf 0
 
-showTodos ∷  (ShowIO t, Ord t) ⇒ OutConfig → [Tree t] → IO ()
+showTodos ∷  (ShowIO t, Ord t) ⇒ Config → [Tree t] → IO ()
 showTodos conf =
   let f = case outOnlyFirst conf of
             False → unlinesIOL
@@ -47,9 +47,15 @@ mapTags f = map ⋄ everywhere ⋄ mkT changeTags
 addTag t = mapTags (t:)
 
 delTag t = mapTags (delete t)
+
+pruneSelector ∷ (TodoItem → 𝔹) → Transformer
+pruneSelector pred = do
+  (Limit n) ← asks pruneL
+  (Limit m) ← asks minL
+  return $ pruneSelector' n m pred
         
-pruneSelector ∷ ℤ → ℤ → (TodoItem → 𝔹) → (Todo → [Todo])
-pruneSelector n m pred = select n 0 False
+pruneSelector' ∷ ℤ → ℤ → (TodoItem → 𝔹) → (Todo → [Todo])
+pruneSelector' n m pred = select n 0 False
     where
         select k t b (Node item trees) | t < m       = [Node item ⋄ concatMap (select (n-1) (t+1) True) trees]
                                        | pred item   = [Node item ⋄ concatMap (select (n-1) (t+1) True) trees]

@@ -7,8 +7,8 @@ module TodoParser
 --     )
     where
 
-import Prelude hiding (putStrLn,readFile,getContents)
-import System.IO.UTF8
+-- import Prelude hiding (putStrLn,readFile,getContents)
+-- import System.IO.UTF8
 import Control.Monad
 import Data.List
 import Text.ParserCombinators.Parsec

@@ -2,12 +2,13 @@
 
 module CmdLine where
 
-import Prelude hiding (putStrLn,print)
+-- import Prelude hiding (putStrLn,print)
 import Codec.Binary.UTF8.String
-import System.IO.UTF8
+-- import System.IO.UTF8
 import System (getArgs)
 import System.Console.GetOpt
 import Data.Maybe
+import Control.Monad.Reader
 
 import Unicode
 import Types
@@ -30,10 +31,15 @@ compose (Or p (Pred NoFilter)) = compose p
 compose (Or p1 p2)       = \item → (compose p1 item) ∨ (compose p2 item)
 compose x = error $ show x
 
-composeAll ∷ Query → ([Todo] → [Todo])
-composeAll q = mkSelector (pruneL q) (minL q) $ compose $ query q
-  where
-    mkSelector (Limit n) (Limit m) p = concatMap $ pruneSelector n m p
+concatMapM ∷ (Monad m) ⇒ m (t → [t]) → m ([t] → [t])
+concatMapM m = do
+  f ← m
+  return $ concatMap f 
+
+composeAll ∷ ListTransformer
+composeAll = do
+  pred ← asks (compose ∘ query)
+  concatMapM (pruneSelector pred)
 
 appendC ∷ Composed → QueryFlag → Composed
 appendC (Not (Pred NoFilter))   f = Not (Pred f)
@@ -61,17 +67,18 @@ appendF (O q m o l) (LF f) = O q m o (f:l)
 appendF _ HelpF = Help
 
 parseFlags :: [CmdLineFlag] -> Options
-parseFlags lst | HelpF `elem` lst = Help
+parseFlags lst | HelpF ∈ lst = Help
 parseFlags [] = O [] [] [] []
 parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
-buildQuery :: Options -> Query
-buildQuery (O qflags mflags oflags lflags) = Query limitP limitM composedFlags onlyFirst command aprefix dformat
+buildQuery :: Options -> Config
+buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors limitP limitM command aprefix dformat composedFlags 
   where
     composedFlags = parseQuery qflags
     (limitP,limitM) = parseLimits lflags
 
-    onlyFirst = OnlyFirst `elem` oflags
+    onlyFirst = OnlyFirst ∈ oflags
+    colors = Colors ∈ oflags
     cmdFlags  = filter isCommand mflags
     command | null cmdFlags = Nothing
             | otherwise     = Just $ unExecute (last cmdFlags)

@@ -2,8 +2,8 @@
 
 module Types where
 
-import Prelude hiding (putStr)
-import System.IO.UTF8
+-- import Prelude hiding (putStr)
+-- import System.IO.UTF8
 
 import System.Console.ANSI
 
@@ -71,11 +71,15 @@ data OutFlag = OnlyFirst
              | Colors
     deriving (Eq,Ord,Show)
 
-data OutConfig = OutConfig {
-  outOnlyFirst ∷ Bool,
-  outColors ∷ Bool }
+type Transformer = Reader Config (Todo -> [Todo])
+type ListTransformer = Reader Config ([Todo] -> [Todo])
 
-type ConfigIO = ReaderT OutConfig IO ()
+transformList conf tr list = do
+    f ← tr
+    return (f list)
+  `runReader` conf
+
+type ConfigIO = ReaderT Config IO ()
 
 newtype IOList = IOL [ConfigIO]
 
@@ -93,7 +97,7 @@ instance IOAdd ConfigIO where
 instance IOAdd String where
   iol <++> s = iol <++> (putStr s)
 
-runIOL ∷ OutConfig → IOList → IO ()
+runIOL ∷ Config → IOList → IO ()
 runIOL conf (IOL lst) = runReaderT (sequence_ lst) conf
 
 concatIOL ∷  [IOList] → IOList
@@ -117,7 +121,7 @@ instance ShowIO (IO ()) where
 instance ShowIO ConfigIO where
   showIOL i = IOL [i]
   
-showIO ∷ (ShowIO a) ⇒ OutConfig → a → IO ()
+showIO ∷ (ShowIO a) ⇒ Config → a → IO ()
 showIO conf = (runIOL conf) ∘ showIOL
 
 instance (Ord a) ⇒ Ord (Tree a) where
@@ -127,14 +131,15 @@ instance (Ord a) ⇒ Ord (Tree a) where
 data Options = O [QueryFlag] [ModeFlag] [OutFlag] [LimitFlag]
              | Help
 
-data Query = Query {
-               pruneL ∷ Limit,
-               minL   ∷ Limit,
-               query  ∷ Composed,
-               showOnlyFirst ∷ 𝔹,
-               commandToRun ∷ Maybe String,
-               prefix ∷ Maybe String,
-               descrFormat ∷ String}
+data Config = Config {
+      outOnlyFirst ∷ 𝔹,
+      outColors ∷ 𝔹,
+      pruneL ∷ Limit,
+      minL   ∷ Limit,
+      commandToRun ∷ Maybe String,
+      prefix ∷ Maybe String,
+      descrFormat ∷ String,
+      query ∷ Composed}
     deriving (Eq,Show)
 
 data Composed = Pred QueryFlag
