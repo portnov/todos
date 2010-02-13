@@ -1,10 +1,10 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
 module TodoTree 
-  (delTag,
-   pruneSelector,
-   tagPred, statusPred, grepPred,
-   forT, mapT,
-   showTodos)
+--   (delTag,
+--    pruneSelector,
+--    tagPred, statusPred, grepPred,
+--    forT, mapT,
+--    printTodos)
   where
 
 -- import Prelude hiding (putStrLn,putStr)
@@ -22,23 +22,34 @@ import Types
 import TodoLoader
 import Unicode
 
-showT ∷ (ShowIO t, Ord t) ⇒ Config → Int → Tree t → [IOList]
-showT conf n (Node item todos) = (noIO <++> (replicate n ' ') <++> (showIO conf item)):(concatMap (showT conf (n+2)) $ sort todos)
+showT ∷ (ConfigShow t, Ord t) ⇒ Int → Tree t → [ConfigM]
+showT n (Node item todos) = 
+  (configM <++> (replicate n ' ') <++> (configShow item)) :
+    (concatMap (showT (n+2)) $ sort todos)
 
-unlinesIOL = intercalateIOL (putStrLn "")
+unlines'' ∷ [ConfigM] → ConfigM
+unlines'' lst = concat `fmap` (sequence $ intersperse newLine lst)
 
-showTodo ∷ (ShowIO t, Ord t) ⇒ Config → Tree t → IOList
-showTodo conf = 
-  case outOnlyFirst conf of
-    False → unlinesIOL ∘ showT conf 0
-    True  → head       ∘ showT conf 0
-
-showTodos ∷  (ShowIO t, Ord t) ⇒ Config → [Tree t] → IO ()
-showTodos conf =
+showTodo ∷ (ConfigShow t, Ord t) ⇒ Tree t → ConfigM
+showTodo t = do
+  conf ← ask
   let f = case outOnlyFirst conf of
-            False → unlinesIOL
+            False → unlines''
             True  → head
-  in runIOL conf ∘ f ∘ map (showTodo conf) ∘ nub
+  f $ showT 0 t
+
+showTodos ∷ (ConfigShow t, Ord t) ⇒ [Tree t] → Reader Config [OutItem]
+showTodos lst = do
+  conf ← ask
+  let f = case outOnlyFirst conf of
+            False → unlines''
+            True  → head
+  f (map showTodo $ nub lst)
+
+printTodos ∷ (ConfigShow t, Ord t) ⇒ Config → [Tree t] → IO ()
+printTodos conf lst = 
+  let lst' = runReader (showTodos lst) conf
+  in  mapM_ outItem lst'
 
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
   where

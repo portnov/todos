@@ -35,7 +35,7 @@ main = do
             format item = item {itemDescr = printfItem (descrFormat q) item}
         case commandToRun q of
           Nothing  → do
-               showTodos q (mapT format queried)
+               printTodos q (mapT format queried)
                putStrLn ""
           Just cmd → do
                forT selected (\item → system $ printfItem cmd (format item))

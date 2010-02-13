@@ -16,7 +16,7 @@ import TodoTree
 
 pruneByDefault = Limit 20
 
-compose ∷  Composed → (TodoItem → Bool)
+compose ∷  Composed → (TodoItem → 𝔹)
 compose Empty             = const True
 compose (Pred NoFilter)   = const True
 compose (Pred (Tag s))    = tagPred s

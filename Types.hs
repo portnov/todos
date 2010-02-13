@@ -79,50 +79,59 @@ transformList conf tr list = do
     return (f list)
   `runReader` conf
 
-type ConfigIO = ReaderT Config IO ()
+data OutItem = OutString String
+             | OutSetColor Color
+             | SetBold
+             | ResetAll
+    deriving (Show)
 
-newtype IOList = IOL [ConfigIO]
+type ConfigM = Reader Config [OutItem]
 
-noIO = IOL []
+newtype IOList = IOL [ConfigM]
 
-class IOAdd a where
-  (<++>) ∷ IOList → a → IOList
+configM ∷ ConfigM
+configM = return []
 
-instance IOAdd (IO ()) where
-  (IOL lst) <++> io = IOL (lst ++ [lift io])
+outString ∷ String → ConfigM
+outString s = return [OutString s]
 
-instance IOAdd ConfigIO where
-  (IOL lst) <++> cio = IOL (lst ++ [cio])
+newLine ∷ ConfigM
+newLine = outString "\n"
 
-instance IOAdd String where
-  iol <++> s = iol <++> (putStr s)
+class ConfigAdd a where
+  (<++>) ∷ ConfigM → a → ConfigM
 
-runIOL ∷ Config → IOList → IO ()
-runIOL conf (IOL lst) = runReaderT (sequence_ lst) conf
+instance ConfigAdd ConfigM where
+  (<++>) = liftM2 (⧺)
 
-concatIOL ∷  [IOList] → IOList
-concatIOL iols = IOL $ concat [lst | IOL lst ← iols]
+instance ConfigAdd String where
+  cm <++> s = cm <++> ((return [OutString s]) ∷ ConfigM)
 
-intercalateIOL ∷ IO () → [IOList] → IOList
-intercalateIOL s = concatIOL ∘ intersperse (IOL [lift s])
+setBold = setSGR [SetConsoleIntensity BoldIntensity]
+setColor clr = setSGR [SetColor Foreground Dull clr]
+reset = setSGR []
 
-intersperseIOL ∷  IO () → IOList → IOList
-intersperseIOL a (IOL lst) = IOL $ intersperse (lift a) lst
+outItem (OutString s)   = putStr s
+outItem (OutSetColor c) = setColor c
+outItem SetBold         = setBold
+outItem ResetAll        = reset
 
-class ShowIO s where
-  showIOL ∷ s → IOList
+runConfigM ∷ Config → ConfigM → IO ()
+runConfigM conf cm = 
+  let lst = runReader cm conf
+  in  mapM_ outItem lst
 
-instance ShowIO String where
-  showIOL s = IOL [lift $ putStr s]
+class ConfigShow s where
+  configShow ∷ s → ConfigM
 
-instance ShowIO (IO ()) where
-  showIOL i = IOL [lift i]
+instance ConfigShow String where
+  configShow s = return [OutString s]
 
-instance ShowIO ConfigIO where
-  showIOL i = IOL [i]
+instance ConfigShow ConfigM where
+  configShow = id
   
-showIO ∷ (ShowIO a) ⇒ Config → a → IO ()
-showIO conf = (runIOL conf) ∘ showIOL
+showIO ∷ (ConfigShow a) ⇒ Config → a → IO ()
+showIO conf = (runConfigM conf) ∘ configShow
 
 instance (Ord a) ⇒ Ord (Tree a) where
   compare = compare `on` rootLabel
@@ -162,16 +171,12 @@ instance Show TodoItem where
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "
 
-setBold = lift $ setSGR [SetConsoleIntensity BoldIntensity]
-setColor clr = lift $ setSGR [SetColor Foreground Dull clr]
-reset = lift $ setSGR []
-
-bold ∷ String → ConfigIO
+bold ∷ String → ConfigM
 bold s = do
   col ← asks outColors 
-  when col setBold
-  lift $ putStr s
-  when col reset
+  if col
+    then return [SetBold, OutString s, ResetAll]
+    else return [OutString s]
 
 lookupC k [] = Nothing
 lookupC k ((lst,c):other) | k `elem` lst = Just c
@@ -183,18 +188,18 @@ statusColors =
    (["*"],             Red),
    (["?"],             Blue)]
 
-colorStatus ∷ String → ConfigIO
+colorStatus ∷ String → ConfigM
 colorStatus st =
   case lookupC st statusColors of
-    Nothing → lift $ putStr st
+    Nothing → return [OutString st]
     Just clr → do
       col ← asks outColors 
-      when col $ setColor clr
-      lift $ putStr st
-      when col reset
+      if col
+        then return [OutSetColor clr, OutString st, ResetAll]
+        else return [OutString st]
 
-instance ShowIO TodoItem where
-    showIOL item = noIO <++> (colorStatus s) <++> " " <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
+instance ConfigShow TodoItem where
+    configShow item = configM <++> colorStatus s <++> " " <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
       where
         n = itemLevel item
         name = itemName item
