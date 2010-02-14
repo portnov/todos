@@ -44,7 +44,7 @@ readFile' ∷ FilePath → IO String
 readFile' "-" = getContents
 readFile' file = readFile file
 
-loadFile ∷ Maybe String → Int → FilePath → IO [TodoItem]
+loadFile ∷ Maybe String → DateTime → FilePath → IO [TodoItem]
 loadFile Nothing year path = do
     text ← readFile' path
     return $ parsePlain year path text
@@ -86,7 +86,7 @@ stitchTodos items =
       t = mkTodo items
   in  normalizeList m t
 
-loadTodo ∷ Maybe String → Int → [FilePath] → IO [Todo]
-loadTodo maybePrefix year paths = do
-    tss ← forM paths (loadFile maybePrefix year)
+loadTodo ∷ Maybe String → DateTime → [FilePath] → IO [Todo]
+loadTodo maybePrefix date paths = do
+    tss ← forM paths (loadFile maybePrefix date)
     return $ stitchTodos (concat tss)

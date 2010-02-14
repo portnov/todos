@@ -7,8 +7,6 @@ import System (getArgs)
 import System.Exit
 import System.Cmd (system)
 
-import System.Time
-
 import Control.Monad.Reader
 import Data.Maybe
 import Data.Tree
@@ -21,6 +19,7 @@ import TodoTree
 import CommandParser
 import Config
 import CmdLine
+import Dates (getCurrentDateTime)
 
 main ∷  IO ()
 main = do
@@ -29,10 +28,10 @@ main = do
   case loptions of
     O lqflags lmflags loflags llflags → 
       do
-        currTime ← toCalendarTime =<< getClockTime
+        currDate ← getCurrentDateTime 
         let options = O (gqflags⧺lqflags) (gmflags⧺lmflags) (goflags⧺loflags) (glflags⧺llflags)
             q = buildQuery options
-        todos ← loadTodo (prefix q) (ctYear currTime) files
+        todos ← loadTodo (prefix q) currDate files
         let todos'  = delTag "-" todos
             queried = transformList q composeAll todos'
             format item = item {itemDescr = printfItem (descrFormat q) item}

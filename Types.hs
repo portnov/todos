@@ -53,10 +53,10 @@ months = ["january",
           "november",
           "december"]
 
-upFirst [] = []
-upFirst (x:xs) = (toUpper x):xs
+capitalize [] = []
+capitalize (x:xs) = (toUpper x):xs
 
-showMonth i = upFirst $ months !! (i-1)
+showMonth i = capitalize $ months !! (i-1)
 
 instance Show DateTime where
   show (DateTime y m d h min s) = 

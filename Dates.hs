@@ -1,26 +1,39 @@
 {-# LANGUAGE UnicodeSyntax #-}
 module Dates
-  (pDate, parseDate, pSpecDates)
+--   (pDate, parseDate, pSpecDates, getCurrentDateTime)
   where
 
 import Data.Char (toUpper)
 import Data.Function (on)
+import Data.List
+import Data.Time.Calendar
+import Data.Time.Clock
+import Data.Time.LocalTime
 import Text.ParserCombinators.Parsec
 
 import Types
+import Unicode
 
-eqI ∷  Char → Char → Bool
-eqI = (==) `on` toUpper
+getCurrentDateTime = do
+  zt ← getZonedTime
+  let lt = zonedTimeToLocalTime zt
+      ld = localDay lt
+      ltod = localTimeOfDay lt
+      (y,m,d) = toGregorian ld
+      h = todHour ltod
+      min = todMin ltod
+      s = round $ todSec ltod
+  return $ DateTime (fromIntegral y) m d h min s
 
-startsWith ∷  String → String → Bool
-startsWith [] _ = False
-startsWith _ [] = True
-startsWith (x:xs) (y:ys) = (x `eqI` y) && (xs `startsWith` ys)
+uppercase ∷ String → String
+uppercase = map toUpper
+
+p `isPrefixOfI` s = (uppercase p) `isPrefixOf` (uppercase s)
 
 lookupS ∷ String → [(String,a)] → Maybe a
 lookupS _ [] = Nothing
-lookupS k ((k',v):other) | k' `startsWith` k = Just v
-                         | otherwise         = lookupS k other
+lookupS k ((k',v):other) | k `isPrefixOfI` k' = Just v
+                         | otherwise          = lookupS k other
 
 monthsN ∷ [(String,Int)]
 monthsN = zip months [1..]
@@ -152,8 +165,8 @@ time12 = do
   hd ← ampm
   return $ Time (h+hd) m s
 
-pDate ∷ Int → Parser DateTime
-pDate year = do
+pAbsDate ∷ Int → Parser DateTime
+pAbsDate year = do
   date ← choice $ map try $ map ($ year) $ [
                               const euroNumDate,
                               const americanDate,
@@ -169,25 +182,104 @@ pDate year = do
       t ← choice $ map try [time12,time24]
       return $ date `addTime` t
 
+data DateIntervalType = Day | Week | Month | Year
+  deriving (Eq,Show,Read)
+
+data DateInterval = Days ℤ
+                  | Weeks ℤ
+                  | Months ℤ
+                  | Years ℤ
+  deriving (Eq,Show)
+
+convertTo dt = fromGregorian (fromIntegral $ year dt) (month dt) (day dt)
+convertFrom dt = 
+  let (y,m,d) = toGregorian dt
+  in  date (fromIntegral y) m d
+
+modifyDate fn x dt = convertFrom $ fn x $ convertTo dt
+
+addInterval dt (Days ds) = modifyDate addDays ds dt
+addInterval dt (Weeks ws) = modifyDate addDays (ws*7) dt
+addInterval dt (Months ms) = modifyDate addGregorianMonthsClip ms dt
+addInterval dt (Years ys) = modifyDate addGregorianYearsClip ys dt
+
+maybePlural ∷ String → Parser String
+maybePlural str = do
+  r ← string str
+  optional $ char 's'
+  return (capitalize r)
+
+pDateInterval ∷ Parser DateIntervalType
+pDateInterval = do
+  s ← choice $ map maybePlural ["day", "week", "month", "year"]
+  return $ read s
+
+pRelDate ∷ DateTime → Parser DateTime
+pRelDate date = do
+  offs ← (try futureDate) <|> (try passDate) <|> (try today) <|> (try tomorrow) <|> yesterday
+  return $ date `addInterval` offs
+
+futureDate ∷ Parser DateInterval
+futureDate = do
+  string "in "
+  n ← many1 digit
+  char ' '
+  tp ← pDateInterval
+  case tp of
+    Day →   return $ Days (read n)
+    Week →  return $ Weeks (read n)
+    Month → return $ Months (read n)
+    Year →  return $ Years (read n)
+
+passDate ∷ Parser DateInterval
+passDate = do
+  n ← many1 digit
+  char ' '
+  tp ← pDateInterval
+  string " ago"
+  case tp of
+    Day →   return $ Days $ - (read n)
+    Week →  return $ Weeks $ - (read n)
+    Month → return $ Months $ - (read n)
+    Year →  return $ Years $ - (read n)
+
+today ∷ Parser DateInterval
+today = do
+  string "today"
+  return $ Days 0
+
+tomorrow ∷ Parser DateInterval
+tomorrow = do
+  string "tomorrow"
+  return $ Days 1
+
+yesterday ∷ Parser DateInterval
+yesterday = do
+  string "yesterday"
+  return $ Days (-1)
+
+pDate ∷ DateTime → Parser DateTime
+pDate date =  (try $ pRelDate date) <|> (try $ pAbsDate $ year date)
+
 dateType ∷ String → DateType
 dateType "start" = StartDate
 dateType "end"   = EndDate
 dateType "deadline" = Deadline
 dateType _ = error "unknown date type"
 
-pSpecDate ∷ Int → Parser (DateType, DateTime)
-pSpecDate year = do
+pSpecDate ∷ DateTime → Parser (DateType, DateTime)
+pSpecDate date = do
   tp ← choice $ map string ["start","end","deadline"]
   string ": "
-  dt ← pDate year
+  dt ← pDate date
   return (dateType tp, dt)
 
-pSpecDates ∷ Int → Parser [(DateType, DateTime)]
-pSpecDates year = do
+pSpecDates ∷ DateTime → Parser [(DateType, DateTime)]
+pSpecDates date = do
   char '('
-  pairs ← (pSpecDate year) `sepBy1` (string "; ")
+  pairs ← (pSpecDate date) `sepBy1` (string "; ")
   string ") "
   return pairs
 
-parseDate ∷ Int → String → Either ParseError DateTime
-parseDate year s = parse (pDate year) "" s
+parseDate ∷ DateTime → String → Either ParseError DateTime
+parseDate date s = parse (pDate date) "" s

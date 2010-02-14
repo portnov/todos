@@ -52,12 +52,12 @@ pTags = do
   where
     word = many1 (noneOf " \t\n\r]")
 
-pItem ∷ Int → Parser TodoItem
-pItem year = do
+pItem ∷ DateTime → Parser TodoItem
+pItem date = do
     pos ← getPosition
     s ← pSpaces
     stat ← pWord
-    dates ← (try (pSpecDates year) <|> return [])
+    dates ← (try (pSpecDates date) <|> return [])
     tags ← (try pTags <|> return [])
     namew ← many1 pWord
     pSpaces
@@ -85,9 +85,9 @@ pWord = do
     (try pSpace') <|> (return w)
     return w
 
-pItems ∷ Int → Parser [TodoItem]
-pItems year = do
-  its ← many (pItem year)
+pItems ∷ DateTime → Parser [TodoItem]
+pItems date = do
+  its ← many (pItem date)
   eof
   return its
 
@@ -112,17 +112,17 @@ filterJoin n prefix str =
   let (ns, lns) = filterN n prefix (lines str)
   in  (ns, unlines lns)
 
-parsePlain ∷ Int → SourceName → String → [TodoItem]
-parsePlain year path text = 
-  case parse (pItems year) path text of
+parsePlain ∷ DateTime → SourceName → String → [TodoItem]
+parsePlain date path text = 
+  case parse (pItems date) path text of
       Right items → items
       Left e → error ⋄ show e
 
-parseAlternate ∷ Int -> String → Int → SourceName → String → [TodoItem]
-parseAlternate next prefix year path text = 
+parseAlternate ∷ Int -> String → DateTime → SourceName → String → [TodoItem]
+parseAlternate next prefix date path text = 
   let (ns, filtered) = filterJoin next prefix text
       renumber lst = zipWith renumber1 ns lst
       renumber1 n item = item {lineNr=n}
-  in case parse (pItems year) path filtered of
+  in case parse (pItems date) path filtered of
        Right items → renumber items
        Left e      → error $ show e
