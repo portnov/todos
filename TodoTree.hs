@@ -2,7 +2,7 @@
 module TodoTree 
   (delTag,
    pruneSelector,
-   tagPred, statusPred, grepPred,
+   tagPred, statusPred, grepPred, datePred,
    forT, mapT,
    printTodos)
   where
@@ -81,6 +81,15 @@ tagPred tag = \item → tag ∈ itemTags item
 statusPred st = \item → st == itemStatus item
         
 grepPred pattern = \item → itemName item =~ pattern
+
+isLT Nothing _ = False
+isLT (Just x) y = x <= y
+
+isGT Nothing _ = False
+isGT (Just x) y = x >= y
+
+datePred selector curr dt | dt >= curr = \item → selector item `isLT` dt
+                          | otherwise  = \item → selector item `isGT` dt
 
 flattern ∷ [Todo] → [Todo]
 flattern = concatMap flat

@@ -13,32 +13,36 @@ import Control.Monad.Reader
 import Unicode
 import Types
 import TodoTree
+import Dates (parseDate)
 
 pruneByDefault = Limit 20
 
-compose ∷  Composed → (TodoItem → 𝔹)
-compose Empty             = const True
-compose (Pred NoFilter)   = const True
-compose (Pred (Tag s))    = tagPred s
-compose (Pred (Name s))   = grepPred s
-compose (Pred (Status s)) = statusPred s
-compose (Not p)           = not ∘ (compose p)
-compose (And (Pred NoFilter) p) = compose p
-compose (And p (Pred NoFilter)) = compose p
-compose (And p1 p2)      = \item → (compose p1 item) ∧ (compose p2 item)
-compose (Or (Pred NoFilter) p) = compose p
-compose (Or p (Pred NoFilter)) = compose p
-compose (Or p1 p2)       = \item → (compose p1 item) ∨ (compose p2 item)
-compose x = error $ show x
+compose ∷ DateTime → Composed → (TodoItem → 𝔹)
+compose _ Empty             = const True
+compose _ (Pred NoFilter)   = const True
+compose _ (Pred (Tag s))    = tagPred s
+compose _ (Pred (Name s))   = grepPred s
+compose _ (Pred (Status s)) = statusPred s
+compose dt (Pred (StartDateIs d)) = datePred startDate dt d
+compose dt (Pred (EndDateIs d)) = datePred endDate dt d
+compose dt (Pred (DeadlineIs d)) = datePred deadline dt d
+compose dt (Not p)           = not ∘ (compose dt p)
+compose dt (And (Pred NoFilter) p) = compose dt p
+compose dt (And p (Pred NoFilter)) = compose dt p
+compose dt (And p1 p2)      = \item → (compose dt p1 item) ∧ (compose dt p2 item)
+compose dt (Or (Pred NoFilter) p) = compose dt p
+compose dt (Or p (Pred NoFilter)) = compose dt p
+compose dt (Or p1 p2)       = \item → (compose dt p1 item) ∨ (compose dt p2 item)
+compose _ x = error $ show x
 
 concatMapM ∷ (Monad m) ⇒ m (t → [t]) → m ([t] → [t])
 concatMapM m = do
   f ← m
   return $ concatMap f 
 
-composeAll ∷ ListTransformer
-composeAll = do
-  pred ← asks (compose ∘ query)
+composeAll ∷ DateTime → ListTransformer
+composeAll date = do
+  pred ← asks ((compose date) ∘ query)
   concatMapM (pruneSelector pred)
 
 appendC ∷ Composed → QueryFlag → Composed
@@ -118,25 +122,24 @@ parseLimits flags = (limitP,limitM)
     isMin   (Start x) = True
     isMin   _         = False
 
--- TODO: * refactor
 parseQuery ∷ [QueryFlag] → Composed
 parseQuery flags = foldl appendC Empty flags
 
-parseCmdLine ∷  String -> String -> IO (Options, [FilePath])
-parseCmdLine defPrefix defExec = do
+parseCmdLine ∷ DateTime → String → String → IO (Options, [FilePath])
+parseCmdLine currDate defPrefix defExec = do
   args ← getArgs
-  return $ case getOpt RequireOrder (options defPrefix defExec) (map decodeString args) of
+  return $ case getOpt RequireOrder (options currDate defPrefix defExec) (map decodeString args) of
         (flags, [],      [])     → (parseFlags flags, ["TODO"])
         (flags, nonOpts, [])     → (parseFlags flags, nonOpts)
         (_,     _,       msgs)   → error $ concat msgs ⧺ usage
 
 usage ∷  String
-usage = usageInfo header (options "" "")
+usage = usageInfo header (options (DateTime {}) "" "")
   where 
     header = "Usage: todos [OPTION...] [INPUT FILES]"
 
-options ∷  String -> String -> [OptDescr CmdLineFlag]
-options defPrefix defExec = [
+options ∷ DateTime → String → String → [OptDescr CmdLineFlag]
+options currDate defPrefix defExec = [
     Option "1" ["only-first"] (NoArg (OF OnlyFirst))    "show only first matching entry",
     Option "c" ["color"]  (NoArg (OF Colors))    "show colored output",
     Option "A" ["prefix"] (OptArg (mkPrefix defPrefix) "PREFIX") "use alternate parser: read only lines starting with PREFIX",
@@ -150,6 +153,9 @@ options defPrefix defExec = [
     Option "o" ["or"]     (NoArg (QF OrCons))           "logical OR",
     Option "n" ["not"]    (NoArg (QF NotCons))          "logical NOT",
     Option "e" ["exec"]   (OptArg (mkExecute defExec) "COMMAND") "run COMMAND on each matching entry",
+    Option "S" ["start-date"] (ReqArg (mkStartDate currDate) "DATE") "find items with start date bounded with DATE",
+    Option "E" ["end-date"] (ReqArg (mkEndDate currDate) "DATE") "find items with end date bounded with DATE",
+    Option "d" ["deadline"] (ReqArg (mkDeadline currDate) "DATE") "find items with deadline bounded with DATE",
     Option "h" ["help"]   (NoArg HelpF)            "display this help"
   ]
 
@@ -158,6 +164,13 @@ mkTag t = QF $ Tag t
 mkName n = QF $ Name n
 
 mkStatus s = QF $ Status s
+
+forceEither (Right x) = x
+forceEither (Left x) = error $ show x
+
+mkStartDate dt s = QF $ StartDateIs $ forceEither $ parseDate dt s
+mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate dt s
+mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate dt s
 
 mkDescribe Nothing = MF $ Describe "%d"
 mkDescribe (Just f) = MF $ Describe f
