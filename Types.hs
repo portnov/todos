@@ -1,9 +1,9 @@
-{-# LANGUAGE UnicodeSyntax, DeriveDataTypeable, TypeSynonymInstances, FlexibleInstances, NoMonomorphismRestriction, TupleSections #-}
+{-# LANGUAGE UnicodeSyntax, DeriveDataTypeable, TypeSynonymInstances, FlexibleInstances, NoMonomorphismRestriction #-}
 
 module Types where
 
--- import Prelude hiding (putStr)
--- import System.IO.UTF8
+import Prelude hiding (putStr)
+import System.IO.UTF8
 
 import System.Console.ANSI
 
@@ -218,7 +218,7 @@ data Composed = Pred QueryFlag
               | HelpC
     deriving (Eq,Show)
 
-t `is`  x = (t,) `fmap` x
+t `is`  x = (\a -> (t,a)) `fmap` x
 
 showDate (t,d) = show t ⧺ ": " ⧺ show d
 

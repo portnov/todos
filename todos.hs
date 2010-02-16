@@ -1,8 +1,8 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 
--- import Prelude hiding (putStrLn,print)
+import Prelude hiding (putStrLn,print)
 import Codec.Binary.UTF8.String
--- import System.IO.UTF8
+import System.IO.UTF8
 import System (getArgs)
 import System.Exit
 import System.Cmd (system)
