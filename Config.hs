@@ -1,28 +1,86 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Config (readConfig) where
+module Config
+  (readConfig)
+  where
 
+import Prelude hiding (readFile)
+import System.IO.UTF8
 import System.Environment
 import System.FilePath 
 import System.Directory (doesFileExist)
 import Data.Maybe
 import Data.Either
+import Text.ParserCombinators.Parsec
 
 import Unicode
 import Types
 
-readFile' ∷ FilePath → IO String
+word ∷ Parser String
+word = choice $ map try [quotedOption, simpleOption, quoted, simpleWord]
+
+simpleWord = many1 $ noneOf " \t\r\n=\"'"
+
+quotedOption = (try quotedLongOption) <|> quotedShortOption
+
+quotedLongOption ∷ Parser String
+quotedLongOption = do
+  string "--"
+  o ← simpleWord
+  char '='
+  v ← quoted
+  return ("--" ⧺ o ⧺ "=" ⧺ v)
+
+quotedShortOption ∷ Parser String
+quotedShortOption = do
+  string "-"
+  o ← simpleWord
+  v ← quoted
+  return ("-" ⧺ o ⧺ v)
+
+simpleOption = do
+  o ← simpleWord
+  optional $ char '='
+  v ← simpleWord
+  return (o ⧺ "=" ⧺ v)
+
+quoted = quoted1 <|> quoted2
+
+quoted1 = do
+  char '\''
+  s ← many1 $ noneOf "'"
+  char '\''
+  return s
+
+quoted2 = do
+  char '"'
+  s ← many1 $ noneOf "\""
+  char '"'
+  return s
+
+pConfig ∷ Parser [String]
+pConfig = word `sepBy` space
+
+parseConfig ∷ String → [String]
+parseConfig str = 
+  case parse pConfig "config file" str of
+    Right lst → lst
+    Left err → error $ show err
+
+readFile' ∷ FilePath → IO [String]
 readFile' path = 
   do b <- doesFileExist path
      if not b
-       then return ""
-       else readFile path
+       then return []
+       else do
+              str ← readFile path
+              return $ parseConfig (unwords $ lines str)
 
 readConfig :: IO [String]
 readConfig = do
   home <- getEnv "HOME"
   let homepath = home </> ".config" </> "todos"
-  homecfg ← return ∘ words =<< readFile' homepath
-  localcfg ← return ∘ words =<< readFile' ".todos.conf"
+  homecfg ← readFile' homepath
+  localcfg ← readFile' ".todos.conf"
   return $ homecfg ⧺ localcfg
   
