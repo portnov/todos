@@ -125,24 +125,23 @@ parseLimits flags = (limitP,limitM)
 parseQuery ∷ [QueryFlag] → Composed
 parseQuery flags = foldl appendC Empty flags
 
-parseCmdLine ∷ DateTime → String → String → IO (Options, [FilePath])
-parseCmdLine currDate defPrefix defExec = do
-  args ← getArgs
-  return $ case getOpt RequireOrder (options currDate defPrefix defExec) (map decodeString args) of
+parseCmdLine ∷ DateTime → [String] → (Options, [FilePath])
+parseCmdLine currDate args = 
+  case getOpt RequireOrder (options currDate) (map decodeString args) of
         (flags, [],      [])     → (parseFlags flags, ["TODO"])
         (flags, nonOpts, [])     → (parseFlags flags, nonOpts)
         (_,     _,       msgs)   → error $ concat msgs ⧺ usage
 
 usage ∷  String
-usage = usageInfo header (options (DateTime {}) "" "")
+usage = usageInfo header (options undefined)
   where 
     header = "Usage: todos [OPTION...] [INPUT FILES]"
 
-options ∷ DateTime → String → String → [OptDescr CmdLineFlag]
-options currDate defPrefix defExec = [
+options ∷ DateTime → [OptDescr CmdLineFlag]
+options currDate = [
     Option "1" ["only-first"] (NoArg (OF OnlyFirst))    "show only first matching entry",
     Option "c" ["color"]  (NoArg (OF Colors))    "show colored output",
-    Option "A" ["prefix"] (OptArg (mkPrefix defPrefix) "PREFIX") "use alternate parser: read only lines starting with PREFIX",
+    Option "A" ["prefix"] (OptArg mkPrefix "PREFIX") "use alternate parser: read only lines starting with PREFIX",
     Option "D" ["describe"] (OptArg mkDescribe "FORMAT") "use FORMAT for descriptions",
     Option "p" ["prune"]  (ReqArg mkPrune "N")     "limit tree height to N",
     Option "m" ["min-depth"] (ReqArg mkMin "N")    "show first N levels of tree unconditionally",
@@ -152,7 +151,7 @@ options currDate defPrefix defExec = [
     Option "a" ["and"]    (NoArg (QF AndCons))          "logical AND",
     Option "o" ["or"]     (NoArg (QF OrCons))           "logical OR",
     Option "n" ["not"]    (NoArg (QF NotCons))          "logical NOT",
-    Option "e" ["exec"]   (OptArg (mkExecute defExec) "COMMAND") "run COMMAND on each matching entry",
+    Option "e" ["exec"]   (OptArg mkExecute "COMMAND") "run COMMAND on each matching entry",
     Option "S" ["start-date"] (ReqArg (mkStartDate currDate) "DATE") "find items with start date bounded with DATE",
     Option "E" ["end-date"] (ReqArg (mkEndDate currDate) "DATE") "find items with end date bounded with DATE",
     Option "d" ["deadline"] (ReqArg (mkDeadline currDate) "DATE") "find items with deadline bounded with DATE",
@@ -180,7 +179,6 @@ mkPrune s = LF $ Prune (read s)
 
 mkMin s = LF $ Start (read s)
 
-mkPrefix "" = MF . Prefix . fromMaybe "TODO:"
-mkPrefix def = MF . Prefix . fromMaybe def
+mkPrefix = MF . Prefix . fromMaybe "TODO:"
 
-mkExecute def = MF . Execute . fromMaybe def
+mkExecute = MF . Execute . fromMaybe "echo %n %d"

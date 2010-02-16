@@ -24,12 +24,13 @@ import Dates (getCurrentDateTime)
 main ∷  IO ()
 main = do
   currDate ← getCurrentDateTime 
-  (defPrefix, defExec, O gqflags gmflags goflags glflags) ← readConfig
-  (loptions, files) ← parseCmdLine currDate defPrefix defExec
+  config ← readConfig
+  args ← getArgs
+  let (loptions, files) = parseCmdLine currDate (config ⧺ args)
   case loptions of
-    O lqflags lmflags loflags llflags → 
+    O qflags mflags oflags lflags → 
       do
-        let options = O (gqflags⧺lqflags) (gmflags⧺lmflags) (goflags⧺loflags) (glflags⧺llflags)
+        let options = O qflags mflags oflags lflags
             q = buildQuery options
         todos ← loadTodo (prefix q) currDate files
         let todos'  = delTag "-" todos
