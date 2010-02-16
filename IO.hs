@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+-- | Wrapper to support unicode IO with GHC 6.10 and 6.12
 module IO 
   (putStrLn,readFile,getContents,print)
   where

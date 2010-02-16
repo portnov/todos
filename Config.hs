@@ -1,5 +1,6 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
+-- | Module for parsing config files
 module Config
   (readConfig)
   where
@@ -69,16 +70,17 @@ parseConfig str =
 
 readFile' ∷ FilePath → IO [String]
 readFile' path = 
-  do b <- doesFileExist path
+  do b ← doesFileExist path
      if not b
        then return []
        else do
               str ← readFile path
               return $ parseConfig (unwords $ lines str)
 
-readConfig :: IO [String]
+-- | Read list of options from config files
+readConfig ∷ IO [String]
 readConfig = do
-  home <- getEnv "HOME"
+  home ← getEnv "HOME"
   let homepath = home </> ".config" </> "todos"
   homecfg ← readFile' homepath
   localcfg ← readFile' ".todos.conf"

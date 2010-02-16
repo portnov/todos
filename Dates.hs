@@ -1,6 +1,8 @@
 {-# LANGUAGE UnicodeSyntax #-}
+-- | Operations with dates
 module Dates
---   (pDate, parseDate, pSpecDates, getCurrentDateTime)
+  (parseDate, getCurrentDateTime,
+   pSpecDates)
   where
 
 import Data.Char (toUpper)
@@ -14,6 +16,7 @@ import Text.ParserCombinators.Parsec
 import Types
 import Unicode
 
+getCurrentDateTime ∷  IO DateTime
 getCurrentDateTime = do
   zt ← getZonedTime
   let lt = zonedTimeToLocalTime zt
@@ -28,6 +31,7 @@ getCurrentDateTime = do
 uppercase ∷ String → String
 uppercase = map toUpper
 
+isPrefixOfI ∷  String → String → Bool
 p `isPrefixOfI` s = (uppercase p) `isPrefixOf` (uppercase s)
 
 lookupS ∷ String → [(String,a)] → Maybe a
@@ -41,8 +45,10 @@ monthsN = zip months [1..]
 lookupMonth ∷ String → Maybe Int
 lookupMonth n = lookupS n monthsN
 
+date ∷  Int → Int → Int → DateTime
 date y m d = DateTime y m d 0 0 0
 
+addTime ∷  DateTime → Time → DateTime
 addTime dt t = dt {
                  hour = tHour t + hour dt,
                  minute = tMinute t + minute dt,
@@ -191,13 +197,18 @@ data DateInterval = Days ℤ
                   | Years ℤ
   deriving (Eq,Show)
 
+convertTo ∷  DateTime → Day
 convertTo dt = fromGregorian (fromIntegral $ year dt) (month dt) (day dt)
+
+convertFrom ∷  Day → DateTime
 convertFrom dt = 
   let (y,m,d) = toGregorian dt
   in  date (fromIntegral y) m d
 
+modifyDate ∷  (t → Day → Day) → t → DateTime → DateTime
 modifyDate fn x dt = convertFrom $ fn x $ convertTo dt
 
+addInterval ∷  DateTime → DateInterval → DateTime
 addInterval dt (Days ds) = modifyDate addDays ds dt
 addInterval dt (Weeks ws) = modifyDate addDays (ws*7) dt
 addInterval dt (Months ms) = modifyDate addGregorianMonthsClip ms dt
@@ -281,5 +292,9 @@ pSpecDates date = do
   string ") "
   return pairs
 
-parseDate ∷ DateTime → String → Either ParseError DateTime
+-- | Parse date/time
+parseDate ∷ DateTime  -- ^ Current date/time
+          → String    -- ^ String to parse
+          → Either ParseError DateTime
 parseDate date s = parse (pDate date) "" s
+

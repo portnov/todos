@@ -1,5 +1,6 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 
+-- | Module for parsing command line options and build queries
 module CmdLine
   (parseCmdLine,
    glob,
@@ -23,9 +24,14 @@ import Types
 import TodoTree
 import Dates (parseDate)
 
+-- | Default limit for tree height
+pruneByDefault ∷  Limit
 pruneByDefault = Limit 20
 
-compose ∷ DateTime → Composed → (TodoItem → 𝔹)
+-- | Compose predicate from Composed
+compose ∷ DateTime       -- ^ Current date/time
+        → Composed       -- ^ Composed query
+        → (TodoItem → 𝔹)
 compose _ Empty             = const True
 compose _ (Pred NoFilter)   = const True
 compose _ (Pred (Tag s))    = tagPred s
@@ -44,10 +50,9 @@ compose dt (Or p1 p2)       = \item → (compose dt p1 item) ∨ (compose dt p2 
 compose _ x = error $ show x
 
 concatMapM ∷ (Monad m) ⇒ m (t → [t]) → m ([t] → [t])
-concatMapM m = do
-  f ← m
-  return $ concatMap f 
+concatMapM = liftM concatMap
 
+-- | Make a list transformer
 composeAll ∷ DateTime → ListTransformer
 composeAll date = do
   pred ← asks ((compose date) ∘ query)
@@ -78,12 +83,13 @@ appendF (O q m o l) (OF f) = O q m (f:o) l
 appendF (O q m o l) (LF f) = O q m o (f:l)
 appendF _ HelpF = Help
 
-parseFlags :: [CmdLineFlag] -> Options
+parseFlags ∷ [CmdLineFlag] → Options
 parseFlags lst | HelpF ∈ lst = Help
 parseFlags [] = O [] [] [] []
 parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
-buildQuery :: Options -> Config
+-- | Build Config (with query etc) from Options
+buildQuery ∷ Options → Config
 buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors limitP limitM command aprefix dformat composedFlags 
   where
     composedFlags = parseQuery qflags
@@ -110,7 +116,7 @@ buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors limitP limi
     isPrefix (Prefix _) = True
     isPrefix _          = False
 
-parseLimits :: [LimitFlag] -> (Limit,Limit)
+parseLimits ∷ [LimitFlag] → (Limit,Limit)
 parseLimits flags = (limitP,limitM)
   where
     pruneFlags = filter isPrune flags
@@ -133,14 +139,17 @@ parseLimits flags = (limitP,limitM)
 parseQuery ∷ [QueryFlag] → Composed
 parseQuery flags = foldl appendC Empty flags
 
-parseCmdLine ∷ DateTime → [String] → (Options, [FilePath])
+-- | Parse command line
+parseCmdLine ∷ DateTime              -- ^ Current date/time
+             → [String]              -- ^ Command line args
+             → (Options, [FilePath]) -- ^ (Options, list of files)
 parseCmdLine currDate args = 
   case getOpt RequireOrder (options currDate) (map decodeString args) of
         (flags, [],      [])     → (parseFlags flags, ["TODO"])
         (flags, nonOpts, [])     → (parseFlags flags, nonOpts)
         (_,     _,       msgs)   → error $ concat msgs ⧺ usage
 
-isPattern s = ('*' `elem` s) || ('?' `elem` s)
+isPattern s = ('*' ∈ s) || ('?' ∈ s)
 
 glob ∷ [FilePath] → IO [FilePath]
 glob list = do
@@ -156,46 +165,59 @@ usage = usageInfo header (options undefined)
 
 options ∷ DateTime → [OptDescr CmdLineFlag]
 options currDate = [
-    Option "1" ["only-first"] (NoArg (OF OnlyFirst))    "show only first matching entry",
-    Option "c" ["color"]  (NoArg (OF Colors))    "show colored output",
-    Option "A" ["prefix"] (OptArg mkPrefix "PREFIX") "use alternate parser: read only lines starting with PREFIX",
-    Option "D" ["describe"] (OptArg mkDescribe "FORMAT") "use FORMAT for descriptions",
-    Option "p" ["prune"]  (ReqArg mkPrune "N")     "limit tree height to N",
-    Option "m" ["min-depth"] (ReqArg mkMin "N")    "show first N levels of tree unconditionally",
-    Option "t" ["tag"]    (ReqArg mkTag "TAG")       "find items marked with TAG",
-    Option "g" ["grep"]   (ReqArg mkName "PATTERN")  "find items with PATTERN in name",
-    Option "s" ["status"] (ReqArg mkStatus "STRING") "find items with status equal to STRING",
-    Option "a" ["and"]    (NoArg (QF AndCons))          "logical AND",
-    Option "o" ["or"]     (NoArg (QF OrCons))           "logical OR",
-    Option "n" ["not"]    (NoArg (QF NotCons))          "logical NOT",
-    Option "e" ["exec"]   (OptArg mkExecute "COMMAND") "run COMMAND on each matching entry",
+    Option "1" ["only-first"] (NoArg (OF OnlyFirst))                 "show only first matching entry",
+    Option "c" ["color"]      (NoArg (OF Colors))                    "show colored output",
+    Option "A" ["prefix"]     (OptArg mkPrefix "PREFIX")             "use alternate parser: read only lines starting with PREFIX",
+    Option "D" ["describe"]   (OptArg mkDescribe "FORMAT")           "use FORMAT for descriptions",
+    Option "p" ["prune"]      (ReqArg mkPrune "N")                   "limit tree height to N",
+    Option "m" ["min-depth"]  (ReqArg mkMin "N")                     "show first N levels of tree unconditionally",
+    Option "t" ["tag"]        (ReqArg mkTag "TAG")                   "find items marked with TAG",
+    Option "g" ["grep"]       (ReqArg mkName "PATTERN")              "find items with PATTERN in name",
+    Option "s" ["status"]     (ReqArg mkStatus "STRING")             "find items with status equal to STRING",
+    Option "a" ["and"]        (NoArg (QF AndCons))                   "logical AND",
+    Option "o" ["or"]         (NoArg (QF OrCons))                    "logical OR",
+    Option "n" ["not"]        (NoArg (QF NotCons))                   "logical NOT",
+    Option "e" ["exec"]       (OptArg mkExecute "COMMAND")           "run COMMAND on each matching entry",
     Option "S" ["start-date"] (ReqArg (mkStartDate currDate) "DATE") "find items with start date bounded with DATE",
-    Option "E" ["end-date"] (ReqArg (mkEndDate currDate) "DATE") "find items with end date bounded with DATE",
-    Option "d" ["deadline"] (ReqArg (mkDeadline currDate) "DATE") "find items with deadline bounded with DATE",
-    Option "h" ["help"]   (NoArg HelpF)            "display this help"
+    Option "E" ["end-date"]   (ReqArg (mkEndDate currDate) "DATE")   "find items with end date bounded with DATE",
+    Option "d" ["deadline"]   (ReqArg (mkDeadline currDate) "DATE")  "find items with deadline bounded with DATE",
+    Option "h" ["help"]       (NoArg HelpF)                          "display this help"
   ]
 
+mkTag ∷  String → CmdLineFlag
 mkTag t = QF $ Tag t
 
+mkName ∷  String → CmdLineFlag
 mkName n = QF $ Name n
 
+mkStatus ∷  String → CmdLineFlag
 mkStatus s = QF $ Status s
 
+forceEither ∷  (Show t) ⇒ Either t b → b
 forceEither (Right x) = x
 forceEither (Left x) = error $ show x
 
+mkStartDate ∷  DateTime → String → CmdLineFlag
 mkStartDate dt s = QF $ StartDateIs $ forceEither $ parseDate dt s
+
+mkEndDate ∷  DateTime → String → CmdLineFlag
 mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate dt s
+
+mkDeadline ∷  DateTime → String → CmdLineFlag
 mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate dt s
 
+mkDescribe ∷  Maybe String → CmdLineFlag
 mkDescribe Nothing = MF $ Describe "%d"
 mkDescribe (Just f) = MF $ Describe f
 
 mkPrune ∷  String → CmdLineFlag
 mkPrune s = LF $ Prune (read s)
 
+mkMin ∷  String → CmdLineFlag
 mkMin s = LF $ Start (read s)
 
-mkPrefix = MF . Prefix . fromMaybe "TODO:"
+mkPrefix ∷  Maybe [Char] → CmdLineFlag
+mkPrefix = MF ∘ Prefix ∘ fromMaybe "TODO:"
 
-mkExecute = MF . Execute . fromMaybe "echo %n %d"
+mkExecute ∷  Maybe [Char] → CmdLineFlag
+mkExecute = MF ∘ Execute ∘ fromMaybe "echo %n %d"

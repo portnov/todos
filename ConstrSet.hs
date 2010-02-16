@@ -17,7 +17,7 @@ import Data.Maybe (fromMaybe)
 
 teq = (==) `on` toConstr
 
-data (Data a) => CSet a = CSet [a]
+data (Data a) ⇒ CSet a = CSet [a]
 
 empty = CSet []
 

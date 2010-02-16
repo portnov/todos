@@ -5,7 +5,10 @@ module CommandParser where
 import Unicode
 import Types
 
-printfItem ∷ String → TodoItem → String
+-- | Format item info
+printfItem ∷ String      -- ^ Format string
+           → TodoItem 
+           → String
 printfItem pattern item = printf pattern
   where
     printf "" = ""
