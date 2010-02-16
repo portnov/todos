@@ -1,13 +1,21 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 
-module CmdLine where
+module CmdLine
+  (parseCmdLine,
+   glob,
+   buildQuery,
+   composeAll,
+   usage)
+  where
 
 import Prelude hiding (putStrLn,print)
 import Codec.Binary.UTF8.String
 import System.IO.UTF8
 import System (getArgs)
 import System.Console.GetOpt
+import System.FilePath.Glob
 import Data.Maybe
+import Data.List (sort)
 import Control.Monad.Reader
 
 import Unicode
@@ -131,6 +139,15 @@ parseCmdLine currDate args =
         (flags, [],      [])     → (parseFlags flags, ["TODO"])
         (flags, nonOpts, [])     → (parseFlags flags, nonOpts)
         (_,     _,       msgs)   → error $ concat msgs ⧺ usage
+
+isPattern s = ('*' `elem` s) || ('?' `elem` s)
+
+glob ∷ [FilePath] → IO [FilePath]
+glob list = do
+  let patterns = filter isPattern list
+      files = filter (not ∘ isPattern) list
+  (matches, _) ← globDir (map compile patterns) "." 
+  return $ sort $ files ⧺ concat matches
 
 usage ∷  String
 usage = usageInfo header (options undefined)

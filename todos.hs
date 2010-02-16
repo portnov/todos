@@ -26,7 +26,8 @@ main = do
   currDate ← getCurrentDateTime 
   config ← readConfig
   args ← getArgs
-  let (loptions, files) = parseCmdLine currDate (config ⧺ args)
+  let (loptions, files') = parseCmdLine currDate (config ⧺ args)
+  files ← glob files'
   case loptions of
     O qflags mflags oflags lflags → 
       do
