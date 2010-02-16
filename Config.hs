@@ -4,8 +4,8 @@ module Config
   (readConfig)
   where
 
-import Prelude hiding (readFile)
-import System.IO.UTF8
+import Prelude hiding (putStrLn,readFile,getContents,print)
+import IO
 import System.Environment
 import System.FilePath 
 import System.Directory (doesFileExist)

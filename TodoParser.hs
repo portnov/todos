@@ -1,14 +1,13 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, TypeSynonymInstances, DeriveDataTypeable #-}
 module TodoParser
---     (TodoItem (..),
---      Todo, TodoMap, flattern,
---      consTodoMap,
---      loadTodo,
---     )
+    (TodoItem (..),
+     Todo, TodoMap,
+     parsePlain, parseAlternate 
+    )
     where
 
--- import Prelude hiding (putStrLn,readFile,getContents)
--- import System.IO.UTF8
+import Prelude hiding (putStrLn,readFile,getContents,print)
+import IO
 import Control.Monad
 import Data.List
 import Text.ParserCombinators.Parsec

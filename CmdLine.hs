@@ -8,9 +8,9 @@ module CmdLine
    usage)
   where
 
--- import Prelude hiding (putStrLn,print)
+import Prelude hiding (putStrLn,readFile,getContents,print)
+import IO
 import Codec.Binary.UTF8.String
--- import System.IO.UTF8
 import System (getArgs)
 import System.Console.GetOpt
 import System.FilePath.Glob

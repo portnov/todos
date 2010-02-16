@@ -1,8 +1,8 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 module TodoLoader where
 
--- import Prelude hiding (putStrLn,readFile,getContents,print)
--- import System.IO.UTF8
+import Prelude hiding (putStrLn,readFile,getContents,print)
+import IO
 import Control.Monad (forM)
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec

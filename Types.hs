@@ -2,9 +2,8 @@
 
 module Types where
 
--- import Prelude hiding (putStr)
--- import System.IO.UTF8
-
+import Prelude hiding (putStrLn,readFile,getContents,print)
+import IO
 import System.Console.ANSI
 
 import Control.Monad.Reader
