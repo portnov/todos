@@ -1,0 +1,15 @@
+Name:           todos
+Version:        0.1
+Cabal-Version:  >= 1.2
+License:        BSD3
+Author:         Ilya V. Portnov
+Synopsis:       Easy-to-use TODOs manager.
+Build-Type:     Simple
+
+Executable todos
+  Build-Depends:  base >= 3 && <= 5, haskell98, utf8-string, containers, parsec >= 2 && < 3,
+                  syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
+                  process
+  GHC-options:    -O2
+  Main-Is:        todos.hs
+
