@@ -7,8 +7,8 @@ module TodoTree
    printTodos)
   where
 
-import Prelude hiding (putStrLn,putStr)
-import System.IO.UTF8
+import Prelude hiding (putStrLn,readFile,getContents,print)
+import IO
 import Control.Monad
 import Control.Monad.Reader
 import qualified Data.Map as M
@@ -51,12 +51,15 @@ printTodos conf lst =
   let lst' = runReader (showTodos lst) conf
   in  mapM_ outItem lst'
 
+mapTags ∷  (Data a) ⇒ ([String] → [String]) → [a] → [a]
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
   where
     changeTags item@(Item {itemTags=ts}) = item {itemTags = f ts}
         
+addTag ∷  (Data a) ⇒ String → [a] → [a]
 addTag t = mapTags (t:)
 
+delTag ∷  (Data a) ⇒ String → [a] → [a]
 delTag t = mapTags (delete t)
 
 pruneSelector ∷ (TodoItem → 𝔹) → Transformer
@@ -74,20 +77,27 @@ pruneSelector' n m pred = select n 0 False
                                        | k > 0       = concatMap (select (k-1) (t+1) False) trees
                                        | otherwise   = []                                               
 
+addS ∷  (Show a) ⇒ a → TodoItem → TodoItem
 addS s item@(Item {itemName=name}) = item {itemName = name ⧺ " — " ⧺ show s}
 
+tagPred ∷  String → TodoItem → 𝔹
 tagPred tag = \item → tag ∈ itemTags item
 
+statusPred ∷  String → TodoItem → 𝔹
 statusPred st = \item → st == itemStatus item
         
+grepPred ∷ String → TodoItem → 𝔹
 grepPred pattern = \item → itemName item =~ pattern
 
+isLT ∷  (Ord t) ⇒ Maybe t → t → 𝔹
 isLT Nothing _ = False
 isLT (Just x) y = x <= y
 
+isGT ∷  (Ord t) ⇒ Maybe t → t → 𝔹
 isGT Nothing _ = False
 isGT (Just x) y = x >= y
 
+datePred ∷  (Ord a) ⇒ (t → Maybe a) → a → a → t → 𝔹
 datePred selector curr dt | dt >= curr = \item → selector item `isLT` dt
                           | otherwise  = \item → selector item `isGT` dt
 

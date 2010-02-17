@@ -1,14 +1,10 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, TypeSynonymInstances, DeriveDataTypeable #-}
 module TodoParser
---     (TodoItem (..),
---      Todo, TodoMap, flattern,
---      consTodoMap,
---      loadTodo,
---     )
+    (parsePlain, parseAlternate)
     where
 
-import Prelude hiding (putStrLn,readFile,getContents)
-import System.IO.UTF8
+import Prelude hiding (putStrLn,readFile,getContents,print)
+import IO
 import Control.Monad
 import Data.List
 import Text.ParserCombinators.Parsec
@@ -22,6 +18,7 @@ import Unicode
 import Types
 import Dates
 
+strip ∷  String → String
 strip = reverse ∘ p ∘ reverse ∘ p
   where
     p = dropWhile isSpace
@@ -91,34 +88,46 @@ pItems date = do
   eof
   return its
 
+unwords' ∷  [String] → String
 unwords' lst =
   let (hd:tl) = map (filter (/='\r')) lst
   in  case tl of
-        [] -> hd
-        _  -> hd ++ "    {" ++ (unwords tl) ++ "}"
+        [] → hd
+        _  → hd ⧺ "    {" ++ (unwords tl) ++ "}"
 
+filterN ∷ (Num a, Enum a) ⇒ Int → String → [String] → ([a], [String])
 filterN n prefix lst = 
   let zipped = zip [0..] lst
       good   = filter (isGood . snd) zipped
       lns    = map fst good
       sub k l = (take l) . (drop k)
-      ans = map unwords' [sub j n lst | j <- lns]
+      ans = map unwords' [sub j n lst | j ← lns]
       isGood x = prefix `isPrefixOf` x
       cut = drop (1+length prefix) 
   in (map (+1) lns, map cut ans)
 
-filterJoin ∷ Int -> String → String → ([Int], String)
+filterJoin ∷ Int → String → String → ([Int], String)
 filterJoin n prefix str = 
   let (ns, lns) = filterN n prefix (lines str)
   in  (ns, unlines lns)
 
-parsePlain ∷ DateTime → SourceName → String → [TodoItem]
+-- | Read list of TODO items from plain format 
+parsePlain ∷ DateTime   -- ^ Current date/time
+           → SourceName -- ^ Source file name
+           → String     -- ^ String to parse
+           → [TodoItem]
 parsePlain date path text = 
   case parse (pItems date) path text of
       Right items → items
       Left e → error ⋄ show e
 
-parseAlternate ∷ Int -> String → DateTime → SourceName → String → [TodoItem]
+-- | Read list of TODO items from alternate format
+parseAlternate ∷ Int        -- ^ Number of lones after matching to include to item's description
+               → String     -- ^ Prefix to match
+               → DateTime   -- ^ Current date/time
+               → SourceName -- ^ Source file name
+               → String     -- ^ String to parse
+               → [TodoItem]
 parseAlternate next prefix date path text = 
   let (ns, filtered) = filterJoin next prefix text
       renumber lst = zipWith renumber1 ns lst
@@ -126,3 +135,4 @@ parseAlternate next prefix date path text =
   in case parse (pItems date) path filtered of
        Right items → renumber items
        Left e      → error $ show e
+

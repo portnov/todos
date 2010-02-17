@@ -1,8 +1,11 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
-module TodoLoader where
+-- | Read TODOs from files and construct corresponding ADTs.
+module TodoLoader
+  (loadTodo)
+  where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import System.IO.UTF8
+import IO
 import Control.Monad (forM)
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
@@ -86,7 +89,11 @@ stitchTodos items =
       t = mkTodo items
   in  normalizeList m t
 
-loadTodo ∷ Maybe String → DateTime → [FilePath] → IO [Todo]
+-- | Load list of TODO trees from files
+loadTodo ∷ Maybe String  -- ^ Nothing for plain format, Just prefix for alternate format
+         → DateTime      -- ^ Current date/time
+         → [FilePath]    -- ^ List of files
+         → IO [Todo]
 loadTodo maybePrefix date paths = do
     tss ← forM paths (loadFile maybePrefix date)
     return $ stitchTodos (concat tss)

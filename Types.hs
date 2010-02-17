@@ -2,9 +2,8 @@
 
 module Types where
 
-import Prelude hiding (putStr)
-import System.IO.UTF8
-
+import Prelude hiding (putStrLn,readFile,getContents,print)
+import IO
 import System.Console.ANSI
 
 import Control.Monad.Reader
@@ -53,9 +52,11 @@ months = ["january",
           "november",
           "december"]
 
+capitalize ∷ String → String
 capitalize [] = []
 capitalize (x:xs) = (toUpper x):xs
 
+showMonth ∷  Int → String
 showMonth i = capitalize $ months !! (i-1)
 
 instance Show DateTime where
@@ -130,9 +131,10 @@ data OutFlag = OnlyFirst
              | Colors
     deriving (Eq,Ord,Show)
 
-type Transformer = Reader Config (Todo -> [Todo])
-type ListTransformer = Reader Config ([Todo] -> [Todo])
+type Transformer = Reader Config (Todo → [Todo])
+type ListTransformer = Reader Config ([Todo] → [Todo])
 
+transformList ∷  r → Reader r (t → a) → t → a
 transformList conf tr list = do
     f ← tr
     return (f list)
@@ -166,10 +168,16 @@ instance ConfigAdd ConfigM where
 instance ConfigAdd String where
   cm <++> s = cm <++> ((return [OutString s]) ∷ ConfigM)
 
+setBold ∷  IO ()
 setBold = setSGR [SetConsoleIntensity BoldIntensity]
+
+setColor ∷  Color → IO ()
 setColor clr = setSGR [SetColor Foreground Dull clr]
+
+reset ∷  IO ()
 reset = setSGR []
 
+outItem ∷  OutItem → IO ()
 outItem (OutString s)   = putStr s
 outItem (OutSetColor c) = setColor c
 outItem SetBold         = setBold
@@ -218,10 +226,13 @@ data Composed = Pred QueryFlag
               | HelpC
     deriving (Eq,Show)
 
-t `is`  x = (\a -> (t,a)) `fmap` x
+is ∷  (Functor f) ⇒ t → f a → f (t, a)
+t `is`  x = (\a → (t,a)) `fmap` x
 
+showDate ∷  (Show t, Show t1) ⇒ (t, t1) → [Char]
 showDate (t,d) = show t ⧺ ": " ⧺ show d
 
+showDates ∷  (Show t, Show t1) ⇒ [Maybe (t, t1)] → [Char]
 showDates = intercalate "; " ∘ map showDate ∘ catMaybes
 
 instance Show TodoItem where
@@ -246,10 +257,12 @@ bold s = do
     then return [SetBold, OutString s, ResetAll]
     else return [OutString s]
 
+lookupC ∷  (Eq a1) ⇒ a1 → [([a1], a)] → Maybe a
 lookupC k [] = Nothing
-lookupC k ((lst,c):other) | k `elem` lst = Just c
-                          | otherwise    = lookupC k other
+lookupC k ((lst,c):other) | k ∈ lst   = Just c
+                          | otherwise = lookupC k other
 
+statusColors ∷  [([String], Color)]
 statusColors = 
   [(["FIXED", "DONE"], Green),
    (["INVALID"],       Magenta),
