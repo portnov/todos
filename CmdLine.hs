@@ -90,13 +90,17 @@ parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
 -- | Build Config (with query etc) from Options
 buildQuery ∷ Options → Config
-buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors limitP limitM command aprefix dformat composedFlags 
+buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors srt limitP limitM command aprefix dformat composedFlags 
   where
     composedFlags = parseQuery qflags
     (limitP,limitM) = parseLimits lflags
 
     onlyFirst = OnlyFirst ∈ oflags
     colors = Colors ∈ oflags
+    srtFlags = filter isSort oflags
+    srt | null srtFlags = DoNotSort 
+        | otherwise = getSorting (last srtFlags)
+
     cmdFlags  = filter isCommand mflags
     command | null cmdFlags = Nothing
             | otherwise     = Just $ unExecute (last cmdFlags)
@@ -109,6 +113,8 @@ buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors limitP limi
     dformat | null dflags = "%d"
             | otherwise   = unDescribe $ last dflags
 
+    isSort (Sort _) = True
+    isSort _        = False
     isDescribe (Describe _) = True
     isDescribe _            = False
     isCommand (Execute _) = True
@@ -177,12 +183,15 @@ options currDate = [
     Option "a" ["and"]        (NoArg (QF AndCons))                   "logical AND",
     Option "o" ["or"]         (NoArg (QF OrCons))                    "logical OR",
     Option "n" ["not"]        (NoArg (QF NotCons))                   "logical NOT",
+    Option ""  ["sort"]       (ReqArg mkSort "FIELD")                "specify sorting",
     Option "e" ["exec"]       (OptArg mkExecute "COMMAND")           "run COMMAND on each matching entry",
     Option "S" ["start-date"] (ReqArg (mkStartDate currDate) "DATE") "find items with start date bounded with DATE",
     Option "E" ["end-date"]   (ReqArg (mkEndDate currDate) "DATE")   "find items with end date bounded with DATE",
     Option "d" ["deadline"]   (ReqArg (mkDeadline currDate) "DATE")  "find items with deadline bounded with DATE",
     Option "h" ["help"]       (NoArg HelpF)                          "display this help"
   ]
+
+mkSort s = OF $ Sort $ readSort s
 
 mkTag ∷  String → CmdLineFlag
 mkTag t = QF $ Tag t

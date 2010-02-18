@@ -14,6 +14,7 @@ import Control.Monad.Reader
 import qualified Data.Map as M
 import Data.Generics
 import Data.List
+import Data.Function (on)
 import Data.Tree
 import Data.Maybe
 import Text.Regex.PCRE
@@ -22,31 +23,43 @@ import Types
 import TodoLoader
 import Unicode
 
-showT ∷ (ConfigShow t, Ord t) ⇒ Int → Tree t → [ConfigM]
-showT n (Node item todos) = 
+sortBy' s | s == DoNotSort = id
+          | otherwise = sortBy sorter
+  where
+    sorter = compare `on` (f ∘ rootLabel)
+    f = case s of
+          ByTitle → itemName
+          ByStatus → itemStatus
+          ByTags → unwords ∘ itemTags
+          ByStartDate → show ∘ startDate
+          ByEndDate → show ∘ endDate
+          ByDeadline → show ∘ deadline 
+
+showT ∷ SortingType → Int → Todo → [ConfigM]
+showT s n (Node item todos) = 
   (configM <++> (replicate n ' ') <++> (configShow item)) :
-    (concatMap (showT (n+2)) $ sort todos)
+    (concatMap (showT s (n+2)) $ sortBy' s todos)
 
 unlines'' ∷ [ConfigM] → ConfigM
 unlines'' lst = concat `fmap` (sequence $ intersperse newLine lst)
 
-showTodo ∷ (ConfigShow t, Ord t) ⇒ Tree t → ConfigM
+showTodo ∷ Todo → ConfigM
 showTodo t = do
   conf ← ask
   let f = case outOnlyFirst conf of
             False → unlines''
             True  → head
-  f $ showT 0 t
+  f $ showT (sorting conf) 0 t
 
-showTodos ∷ (ConfigShow t, Ord t) ⇒ [Tree t] → ConfigM
+showTodos ∷ [Todo] → ConfigM
 showTodos lst = do
   conf ← ask
   let f = case outOnlyFirst conf of
             False → unlines''
             True  → head
-  f (map showTodo $ nub lst)
+  f $ map showTodo $ sortBy' (sorting conf) $ nub lst
 
-printTodos ∷ (ConfigShow t, Ord t) ⇒ Config → [Tree t] → IO ()
+printTodos ∷ Config → [Todo] → IO ()
 printTodos conf lst = 
   let lst' = runReader (showTodos lst) conf
   in  mapM_ outItem lst'

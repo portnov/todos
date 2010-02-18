@@ -129,7 +129,27 @@ data ModeFlag = Execute {unExecute ∷ String}
 
 data OutFlag = OnlyFirst 
              | Colors
+             | Sort {getSorting ∷ SortingType}
     deriving (Eq,Ord,Show)
+
+data SortingType = DoNotSort
+                 | ByTitle
+                 | ByStatus
+                 | ByTags 
+                 | ByStartDate
+                 | ByEndDate
+                 | ByDeadline
+    deriving (Eq,Ord,Show)
+
+readSort ∷ String → SortingType
+readSort "no" = DoNotSort
+readSort "title" = ByTitle
+readSort "status" = ByStatus
+readSort "tags" = ByTags
+readSort "start-date" = ByStartDate
+readSort "end-date" = ByEndDate
+readSort "deadline" = ByDeadline
+readSort s = error $ "Unknown sorting type: "++s
 
 type Transformer = Reader Config (Todo → [Todo])
 type ListTransformer = Reader Config ([Todo] → [Todo])
@@ -210,6 +230,7 @@ data Options = O [QueryFlag] [ModeFlag] [OutFlag] [LimitFlag]
 data Config = Config {
       outOnlyFirst ∷ 𝔹,
       outColors ∷ 𝔹,
+      sorting ∷ SortingType,
       pruneL ∷ Limit,
       minL   ∷ Limit,
       commandToRun ∷ Maybe String,
