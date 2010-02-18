@@ -144,7 +144,7 @@ parseCmdLine ∷ DateTime              -- ^ Current date/time
              → [String]              -- ^ Command line args
              → (Options, [FilePath]) -- ^ (Options, list of files)
 parseCmdLine currDate args = 
-  case getOpt RequireOrder (options currDate) (map decodeString args) of
+  case getOpt Permute (options currDate) (map decodeString args) of
         (flags, [],      [])     → (parseFlags flags, ["TODO"])
         (flags, nonOpts, [])     → (parseFlags flags, nonOpts)
         (_,     _,       msgs)   → error $ concat msgs ⧺ usage

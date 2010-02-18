@@ -2,7 +2,7 @@
 
 module Types where
 
-import Prelude hiding (putStrLn,readFile,getContents,print)
+import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
 import IO
 import System.Console.ANSI
 

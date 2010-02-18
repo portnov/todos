@@ -88,20 +88,21 @@ pItems date = do
   eof
   return its
 
-unwords' ∷  [String] → String
-unwords' lst =
+unwords' ∷  String → [String] → String
+unwords' prefix lst =
   let (hd:tl) = map (filter (/='\r')) lst
-  in  case tl of
+      addLines = filter (not ∘ (prefix `isPrefixOf`)) tl
+  in  case addLines of
         [] → hd
-        _  → hd ⧺ "    {" ++ (unwords tl) ++ "}"
+        _  → hd ⧺ "    {" ++ (unwords addLines) ++ "}"
 
 filterN ∷ (Num a, Enum a) ⇒ Int → String → [String] → ([a], [String])
 filterN n prefix lst = 
   let zipped = zip [0..] lst
-      good   = filter (isGood . snd) zipped
+      good   = filter (isGood ∘ snd) zipped
       lns    = map fst good
-      sub k l = (take l) . (drop k)
-      ans = map unwords' [sub j n lst | j ← lns]
+      sub k l = (take l) ∘ (drop k)
+      ans = map (unwords' prefix) [sub j n lst | j ← lns]
       isGood x = prefix `isPrefixOf` x
       cut = drop (1+length prefix) 
   in (map (+1) lns, map cut ans)
@@ -119,7 +120,7 @@ parsePlain ∷ DateTime   -- ^ Current date/time
 parsePlain date path text = 
   case parse (pItems date) path text of
       Right items → items
-      Left e → error ⋄ show e
+      Left e → error $ show e
 
 -- | Read list of TODO items from alternate format
 parseAlternate ∷ Int        -- ^ Number of lones after matching to include to item's description
