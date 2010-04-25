@@ -1,0 +1,91 @@
+todos README
+============
+Ilya V. Portnov <portnov84@rambler.ru>
+
+todos is a simple TODO manager. TODO records theirself are described in
+plain-text file, and todos allows you to show only needed of them. So, todos
+works as specialized `grep' utility.
+
+By default, output format is the same as input; so, you can combine several
+`todos' instances into unix pipes. 
+
+If source files are not given in the commandline, file with name "TODO" in
+current directory is used. If "-" is given as file name, todos will read
+standart input.
+
+todos supports two formats of input files. In first case, file contains TODOS
+records and only them. In «alternative» format, source files can contain any
+text, but it's ignored; only lines starting with given prefix ("TODO: " by
+default) are parsed. So, alternative format enable you to grep TODO records
+from any files, for example, program source files.
+
+Following is format of TODO record:
+
+    [spaces]status (dates) [TAGS] title (depends) description
+
+Here [spaces] is optional indent with spaces, «status» — is status of record
+(for example, URGENT or DONE; can be any word), «dates» give info about dates
+(see below), «TAGS» is a comma-separated list of tags in brackets, «title» is
+title of record, «depends» — comma-separated list of depends (titles of other
+records) in parenthesis, «description» is description of the record. All fields
+except status and title are optional. Description is separated from title with
+not less than 2 spaces.
+
+Using different indents one can create sub-records (and, so, trees of records).
+Moreover, depends are interpreted in same way as sub-records. So, one can
+create not only trees of records, but arbitrary graphs of records (even
+cycled). When cycled graphs are used, user should control for rational level of
+hierarchy (for example, one can bound height of output tree using -p option).
+
+Dates information is described in parenthesis, as not more than 3 records,
+separated with semicolon. Each records has format «date type: date». Date type
+can be one of: start, end, deadline. For dates, many formats are supported; for
+example, «18 Feb», или «02/18/2010», «2010/02/18» are all valid dates. One can
+even use relative dates specification here, such as «in 2 weeks» or «2 days
+ago», but there is no point to this: all dates are counted from program start
+date.
+
+Next commandline options are supported:
+
+  -1           --only-first         show only first matching entry
+  -c           --color              show colored output
+  -A[PREFIX]   --prefix[=PREFIX]    use alternate parser: read only lines starting with PREFIX
+  -D[FORMAT]   --describe[=FORMAT]  use FORMAT for descriptions
+  -p N         --prune=N            limit tree height to N
+  -m N         --min-depth=N        show first N levels of tree unconditionally
+  -t TAG       --tag=TAG            find items marked with TAG
+  -g PATTERN   --grep=PATTERN       find items with PATTERN in name
+  -s STRING    --status=STRING      find items with status equal to STRING
+  -a           --and                logical AND
+  -o           --or                 logical OR
+  -n           --not                logical NOT
+               --sort=FIELD         specify sorting
+  -e[COMMAND]  --exec[=COMMAND]     run COMMAND on each matching entry
+  -S DATE      --start-date=DATE    find items with start date bounded with DATE
+  -E DATE      --end-date=DATE      find items with end date bounded with DATE
+  -d DATE      --deadline=DATE      find items with deadline bounded with DATE
+  -h           --help               display this help
+
+Dates in the commandline are specified in any of supported formats. There
+relative dates specifications are useful: how about something like «todos
+--deadline=yesterday»? ;)
+
+For --describe and --exec options, printf-style format strings should be
+specified. Following substitution sequences are supported:
+
+%n :: title of the record
+%t :: list of record's tags
+%s :: status of the record
+%d :: description of the record
+%f :: name of file, in which record was found
+%l :: number of line in source file
+
+For example, «todos -tBUG -e"vi %f +%l"» command for each record with «BUG» tag
+will open vi with corresponding file on corresponding line.
+
+todos can read configuration files: ~/.config/todos («global») and
+./.todos.conf («local»). Config files contain command line options, in the same
+format as in the commandline. Resulting commandline is composed as: (options in
+global config) + (options in local config) + (options in the actual command
+line). If there is no one of configs, todos will ignore it.
+
