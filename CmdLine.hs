@@ -92,7 +92,7 @@ parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
 -- | Build Config (with query etc) from Options
 buildQuery ∷ Options → Config
-buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors showIds srt limitP limitM command aprefix dformat composedFlags 
+buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors showIds srt limitP limitM command aprefix dformat noStatus setStatus composedFlags 
   where
     composedFlags = parseQuery qflags
     (limitP,limitM) = parseLimits lflags
@@ -116,6 +116,11 @@ buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors showIds srt
     dformat | null dflags = "%d"
             | otherwise   = unDescribe $ last dflags
 
+    noStatus = not $ null $ filter isNoStatus mflags
+    newStatusFlags = filter isSetStatus mflags
+    setStatus | null newStatusFlags = Nothing
+              | otherwise           = Just $ newStatus $ last newStatusFlags
+
     isSort (Sort _) = True
     isSort _        = False
     isDescribe (Describe _) = True
@@ -124,6 +129,10 @@ buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors showIds srt
     isCommand _           = False
     isPrefix (Prefix _) = True
     isPrefix _          = False
+    isNoStatus DoNotReadStatus = True
+    isNoStatus _               = False
+    isSetStatus (SetStatus _)  = True
+    isSetStatus _              = False
 
 parseLimits ∷ [LimitFlag] → (Limit,Limit)
 parseLimits flags = (limitP,limitM)
@@ -179,6 +188,8 @@ options currDate = [
     Option "I" ["show-ids"]   (NoArg (OF Ids))                       "show IDs of todos",
     Option "A" ["prefix"]     (OptArg mkPrefix "PREFIX")             "use alternate parser: read only lines starting with PREFIX",
     Option "D" ["describe"]   (OptArg mkDescribe "FORMAT")           "use FORMAT for descriptions",
+    Option "w" ["no-status"]  (NoArg (MF DoNotReadStatus))           "do not read status field from TODOs",
+    Option ""  ["set-status"] (ReqArg mkSetStatus "STRING")          "force all TODOs status to be equal to STRING",
     Option "p" ["prune"]      (ReqArg mkPrune "N")                   "limit tree height to N",
     Option "m" ["min-depth"]  (ReqArg mkMin "N")                     "show first N levels of tree unconditionally",
     Option "t" ["tag"]        (ReqArg mkTag "TAG")                   "find items marked with TAG",
@@ -219,17 +230,20 @@ forceEither (Right x) = x
 forceEither (Left x) = error $ show x
 
 mkStartDate ∷  DateTime → String → CmdLineFlag
-mkStartDate dt s = QF $ StartDateIs $ forceEither $ parseDate dt s
+mkStartDate dt s = QF $ StartDateIs $ forceEither $ parseDate emptyConfig dt s
 
 mkEndDate ∷  DateTime → String → CmdLineFlag
-mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate dt s
+mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate emptyConfig dt s
 
 mkDeadline ∷  DateTime → String → CmdLineFlag
-mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate dt s
+mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate emptyConfig dt s
 
 mkDescribe ∷  Maybe String → CmdLineFlag
 mkDescribe Nothing = MF $ Describe "%d"
 mkDescribe (Just f) = MF $ Describe f
+
+mkSetStatus ∷ String → CmdLineFlag
+mkSetStatus st = MF $ SetStatus st
 
 mkPrune ∷  String → CmdLineFlag
 mkPrune s = LF $ Prune (read s)

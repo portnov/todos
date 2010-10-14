@@ -23,25 +23,25 @@ strip = reverse ∘ p ∘ reverse ∘ p
   where
     p = dropWhile isSpace
 
-pSpace ∷ Parser Char
+pSpace ∷ TParser Char
 pSpace = oneOf " \t"
 
-pSpace' ∷ Parser String
+pSpace' ∷ TParser String
 pSpace' = do
     pSpace
     return " "
 
-pSpaces ∷ Parser String
+pSpaces ∷ TParser String
 pSpaces = many pSpace
 
-pDeps ∷ Parser [String]
+pDeps ∷ TParser [String]
 pDeps = do
     string "("
     ws ← (many1 ⋄ noneOf ",)\n\r") `sepBy` (char ',')
     string ")"
     return $ map strip ws
 
-pTags ∷ Parser [String]
+pTags ∷ TParser [String]
 pTags = do
     ts ← between (char '[') (char ']') $ word `sepBy1` pSpace
     pSpaces
@@ -49,11 +49,20 @@ pTags = do
   where
     word = many1 (noneOf " \t\n\r]")
 
-pItem ∷ DateTime → Parser TodoItem
+pItem ∷ DateTime → TParser TodoItem
 pItem date = do
     pos ← getPosition
     s ← pSpaces
-    stat ← pWord
+    conf ← getState
+    stat ← if skipStatus conf
+             then case forcedStatus conf of
+                    Just fs → return fs
+                    Nothing → return "*"
+            else do 
+                rs ← pWord
+                case forcedStatus conf of
+                  Just fs → return fs
+                  Nothing → return rs
     dates ← (try (pSpecDates date) <|> return [])
     tags ← (try pTags <|> return [])
     namew ← many1 pWord
@@ -76,13 +85,13 @@ pItem date = do
         fileName = sourceName pos,
         lineNr = sourceLine pos }
 
-pWord ∷ Parser String
+pWord ∷ TParser String
 pWord = do
     w ← many1 (noneOf " \t\n\r")
     (try pSpace') <|> (return w)
     return w
 
-pItems ∷ DateTime → Parser [TodoItem]
+pItems ∷ DateTime → TParser [TodoItem]
 pItems date = do
   its ← many (pItem date)
   eof
@@ -113,27 +122,29 @@ filterJoin n prefix str =
   in  (ns, unlines lns)
 
 -- | Read list of TODO items from plain format 
-parsePlain ∷ DateTime   -- ^ Current date/time
+parsePlain ∷ Config
+           → DateTime   -- ^ Current date/time
            → SourceName -- ^ Source file name
            → String     -- ^ String to parse
            → [TodoItem]
-parsePlain date path text = 
-  case parse (pItems date) path text of
+parsePlain conf date path text = 
+  case runParser (pItems date) conf path text of
       Right items → items
       Left e → error $ show e
 
 -- | Read list of TODO items from alternate format
-parseAlternate ∷ Int        -- ^ Number of lones after matching to include to item's description
+parseAlternate ∷ Config 
+               → Int        -- ^ Number of lones after matching to include to item's description
                → String     -- ^ Prefix to match
                → DateTime   -- ^ Current date/time
                → SourceName -- ^ Source file name
                → String     -- ^ String to parse
                → [TodoItem]
-parseAlternate next prefix date path text = 
+parseAlternate conf next prefix date path text = 
   let (ns, filtered) = filterJoin next prefix text
       renumber lst = zipWith renumber1 ns lst
       renumber1 n item = item {lineNr=n}
-  in case parse (pItems date) path filtered of
+  in case runParser (pItems date) conf path filtered of
        Right items → renumber items
        Left e      → error $ show e
 

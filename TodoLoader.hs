@@ -44,16 +44,21 @@ normalizeList ∷ TodoMap → [Todo] → [Todo]
 normalizeList m todos = map (normalize m) todos
 
 readFile' ∷ FilePath → IO String
-readFile' "-" = getContents
+readFile' "-"  = getContents
 readFile' file = readFile file
 
-loadFile ∷ Maybe String → DateTime → FilePath → IO [TodoItem]
-loadFile Nothing year path = do
-    text ← readFile' path
-    return $ parsePlain year path text
-loadFile (Just p) year path = do
-    text ← readFile' path
-    return $ parseAlternate 2 p year path text
+loadFile ∷ Config
+         → DateTime
+         → FilePath
+         → IO [TodoItem]
+loadFile conf year path =
+  case prefix conf of
+    Nothing → do
+        text ← readFile' path
+        return $ parsePlain conf year path text
+    Just p  → do
+        text ← readFile' path
+        return $ parseAlternate conf 2 p year path text
 
 (~-) ∷  TodoItem → ℤ → TodoItem
 i@(Item {itemLevel=n}) ~- k = i {itemLevel=n-k}
@@ -90,10 +95,10 @@ stitchTodos items =
   in  normalizeList m t
 
 -- | Load list of TODO trees from files
-loadTodo ∷ Maybe String  -- ^ Nothing for plain format, Just prefix for alternate format
+loadTodo ∷ Config
          → DateTime      -- ^ Current date/time
          → [FilePath]    -- ^ List of files
          → IO [Todo]
-loadTodo maybePrefix date paths = do
-    tss ← forM paths (loadFile maybePrefix date)
+loadTodo conf date paths = do
+    tss ← forM paths (loadFile conf date)
     return $ stitchTodos (concat tss)

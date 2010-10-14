@@ -141,6 +141,8 @@ data LimitFlag = Prune {unPrune ∷ ℤ}
 data ModeFlag = Execute {unExecute ∷ String}
               | Prefix {unPrefix ∷ String}
               | Describe {unDescribe ∷ String}
+              | DoNotReadStatus
+              | SetStatus {newStatus ∷ String}
     deriving (Eq,Ord,Show)
 
 data OutFlag = OnlyFirst 
@@ -254,8 +256,24 @@ data Config = Config {
       commandToRun ∷ Maybe String,
       prefix ∷ Maybe String,
       descrFormat ∷ String,
-      query ∷ Composed}
+      skipStatus ∷ 𝔹,
+      forcedStatus ∷ Maybe String,
+      query ∷ Composed }
     deriving (Eq,Show)
+
+emptyConfig = Config {
+  outOnlyFirst = False,
+  outColors = False,
+  outIds = False,
+  sorting = DoNotSort,
+  pruneL = Unlimited,
+  minL = Unlimited,
+  commandToRun = Nothing,
+  prefix = Nothing,
+  descrFormat = "%d",
+  skipStatus = False,
+  forcedStatus = Nothing,
+  query = Empty }
 
 data Composed = Pred QueryFlag
               | And Composed Composed
@@ -343,4 +361,6 @@ instance Ord TodoItem where
                    then c3
                    else c2
             else c1
+
+type TParser a = GenParser Char Config a
 

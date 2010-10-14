@@ -33,7 +33,7 @@ main = do
       do
         let options = O qflags mflags oflags lflags
             q = buildQuery options
-        todos ← loadTodo (prefix q) currDate files
+        todos ← loadTodo q currDate files
         let todos'  = delTag "-" todos
             queried = transformList q (composeAll currDate) todos'
             format item = item {itemDescr = printfItem (descrFormat q) item}
