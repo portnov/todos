@@ -2,7 +2,7 @@
 module TodoTree 
   (delTag,
    pruneSelector,
-   tagPred, statusPred, grepPred, datePred,
+   tagPred, statusPred, grepPred, descPred, datePred,
    forT, mapT,
    printTodos)
   where
@@ -101,6 +101,9 @@ statusPred st = \item → st == itemStatus item
         
 grepPred ∷ String → TodoItem → 𝔹
 grepPred pattern = \item → itemName item =~ pattern
+
+descPred ∷ String → TodoItem → 𝔹
+descPred pattern = \item → itemDescr item =~ pattern
 
 isLT ∷  (Ord t) ⇒ Maybe t → t → 𝔹
 isLT Nothing _ = False

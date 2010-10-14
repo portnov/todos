@@ -109,6 +109,7 @@ data CmdLineFlag = QF {queryFlag ∷ QueryFlag}
 data QueryFlag = Tag String
                | Name {unName ∷ String}
                | Status String
+               | Description String
                | StartDateIs DateTime
                | EndDateIs DateTime
                | DeadlineIs DateTime

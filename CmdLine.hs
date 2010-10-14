@@ -36,6 +36,7 @@ compose _ Empty             = const True
 compose _ (Pred NoFilter)   = const True
 compose _ (Pred (Tag s))    = tagPred s
 compose _ (Pred (Name s))   = grepPred s
+compose _ (Pred (Description s))   = descPred s
 compose _ (Pred (Status s)) = statusPred s
 compose dt (Pred (StartDateIs d)) = datePred startDate dt d
 compose dt (Pred (EndDateIs d)) = datePred endDate dt d
@@ -179,6 +180,7 @@ options currDate = [
     Option "m" ["min-depth"]  (ReqArg mkMin "N")                     "show first N levels of tree unconditionally",
     Option "t" ["tag"]        (ReqArg mkTag "TAG")                   "find items marked with TAG",
     Option "g" ["grep"]       (ReqArg mkName "PATTERN")              "find items with PATTERN in name",
+    Option "G" ["description"] (ReqArg mkDescr "PATTERN")            "find items with PATTERN in description",
     Option "s" ["status"]     (ReqArg mkStatus "STRING")             "find items with status equal to STRING",
     Option "a" ["and"]        (NoArg (QF AndCons))                   "logical AND",
     Option "o" ["or"]         (NoArg (QF OrCons))                    "logical OR",
@@ -201,6 +203,9 @@ mkName n = QF $ Name n
 
 mkStatus ∷  String → CmdLineFlag
 mkStatus s = QF $ Status s
+
+mkDescr ∷  String → CmdLineFlag
+mkDescr s = QF $ Description s
 
 forceEither ∷  (Show t) ⇒ Either t b → b
 forceEither (Right x) = x
