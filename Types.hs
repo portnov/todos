@@ -148,6 +148,7 @@ data ModeFlag = Execute {unExecute ∷ String}
 data OutFlag = OnlyFirst 
              | Colors
              | Ids
+             | DotExport
              | Sort {getSorting ∷ SortingType}
     deriving (Eq,Ord,Show)
 
@@ -246,6 +247,12 @@ instance (Ord a) ⇒ Ord (Tree a) where
 data Options = O [QueryFlag] [ModeFlag] [OutFlag] [LimitFlag]
              | Help
 
+data TodoCommand =
+    JustShow
+  | ShowAsDot
+  | SystemCommand String
+  deriving (Eq, Show)
+
 data Config = Config {
       outOnlyFirst ∷ 𝔹,
       outColors ∷ 𝔹,
@@ -253,7 +260,7 @@ data Config = Config {
       sorting ∷ SortingType,
       pruneL ∷ Limit,
       minL   ∷ Limit,
-      commandToRun ∷ Maybe String,
+      commandToRun ∷ TodoCommand,
       prefix ∷ Maybe String,
       descrFormat ∷ String,
       skipStatus ∷ 𝔹,
@@ -268,7 +275,7 @@ emptyConfig = Config {
   sorting = DoNotSort,
   pruneL = Unlimited,
   minL = Unlimited,
-  commandToRun = Nothing,
+  commandToRun = JustShow,
   prefix = Nothing,
   descrFormat = "%d",
   skipStatus = False,

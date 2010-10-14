@@ -20,6 +20,7 @@ import CommandParser
 import Config
 import CmdLine
 import Dates (getCurrentDateTime)
+import Dot
 
 main ∷  IO ()
 main = do
@@ -38,10 +39,12 @@ main = do
             queried = transformList q (composeAll currDate) todos'
             format item = item {itemDescr = printfItem (descrFormat q) item}
         case commandToRun q of
-          Nothing  → do
+          JustShow  → do
                printTodos q (mapT format queried)
                putStrLn ""
-          Just cmd → do
+          ShowAsDot → 
+               putStrLn $ showAsDot (mapT format queried)
+          SystemCommand cmd → do
                forT selected (\item → system $ printfItem cmd (format item))
                return ()
             where selected | outOnlyFirst q = [Node (rootLabel $ head queried) []]

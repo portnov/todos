@@ -105,8 +105,9 @@ buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors showIds srt
         | otherwise = getSorting (last srtFlags)
 
     cmdFlags  = filter isCommand mflags
-    command | null cmdFlags = Nothing
-            | otherwise     = Just $ unExecute (last cmdFlags)
+    command | DotExport ∈ oflags = ShowAsDot
+            | null cmdFlags      = JustShow
+            | otherwise          = SystemCommand $ unExecute (last cmdFlags)
 
     prefixFlags = filter isPrefix mflags
     aprefix | null prefixFlags = Nothing
@@ -187,6 +188,7 @@ options currDate = [
     Option "c" ["color"]      (NoArg (OF Colors))                    "show colored output",
     Option "I" ["show-ids"]   (NoArg (OF Ids))                       "show IDs of todos",
     Option "A" ["prefix"]     (OptArg mkPrefix "PREFIX")             "use alternate parser: read only lines starting with PREFIX",
+    Option ""  ["dot"]        (NoArg (OF DotExport))                 "output entries in DOT (graphviz) format",
     Option "D" ["describe"]   (OptArg mkDescribe "FORMAT")           "use FORMAT for descriptions",
     Option "w" ["no-status"]  (NoArg (MF DoNotReadStatus))           "do not read status field from TODOs",
     Option ""  ["set-status"] (ReqArg mkSetStatus "STRING")          "force all TODOs status to be equal to STRING",
