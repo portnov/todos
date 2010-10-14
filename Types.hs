@@ -5,6 +5,7 @@ module Types where
 import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
 import IO
 import System.Console.ANSI
+import Data.Hash
 
 import Control.Monad.Reader
 import Data.Function 
@@ -15,6 +16,7 @@ import Data.Tree
 import Data.List
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
+import Numeric
 
 import Unicode
 
@@ -85,6 +87,18 @@ data TodoItem = Item {
     lineNr ∷ Line}
   deriving (Eq,Data,Typeable)
 
+instance Hashable TodoItem where
+    hash item = foldl1 combine $ map ($ item) [hash ∘ itemName, hash ∘ itemDescr,
+                                               hash ∘ itemTags, hash ∘ itemStatus]
+
+makeId :: TodoItem → String
+makeId item =
+  let s = showHex (asWord64 $ hash item) ""
+      l = length s 
+  in  if l < 16 
+        then replicate (16-l) '0' ++ s
+        else s
+
 type Todo = Tree TodoItem
 
 type TodoMap = M.Map String Todo
@@ -108,6 +122,7 @@ data CmdLineFlag = QF {queryFlag ∷ QueryFlag}
 
 data QueryFlag = Tag String
                | Name {unName ∷ String}
+               | IdIs String
                | Status String
                | Description String
                | StartDateIs DateTime
@@ -130,6 +145,7 @@ data ModeFlag = Execute {unExecute ∷ String}
 
 data OutFlag = OnlyFirst 
              | Colors
+             | Ids
              | Sort {getSorting ∷ SortingType}
     deriving (Eq,Ord,Show)
 
@@ -167,27 +183,27 @@ data OutItem = OutString String
              | ResetAll
     deriving (Show)
 
-type ConfigM = Reader Config [OutItem]
+type Formatter = Reader Config [OutItem]
 
-newtype IOList = IOL [ConfigM]
+newtype IOList = IOL [Formatter]
 
-configM ∷ ConfigM
-configM = return []
+startFormat ∷ Formatter
+startFormat = return []
 
-outString ∷ String → ConfigM
+outString ∷ String → Formatter
 outString s = return [OutString s]
 
-newLine ∷ ConfigM
+newLine ∷ Formatter
 newLine = outString "\n"
 
 class ConfigAdd a where
-  (<++>) ∷ ConfigM → a → ConfigM
+  (<++>) ∷ Formatter → a → Formatter
 
-instance ConfigAdd ConfigM where
+instance ConfigAdd Formatter where
   (<++>) = liftM2 (⧺)
 
 instance ConfigAdd String where
-  cm <++> s = cm <++> ((return [OutString s]) ∷ ConfigM)
+  cm <++> s = cm <++> ((return [OutString s]) ∷ Formatter)
 
 setBold ∷  IO ()
 setBold = setSGR [SetConsoleIntensity BoldIntensity]
@@ -204,22 +220,22 @@ outItem (OutSetColor c) = setColor c
 outItem SetBold         = setBold
 outItem ResetAll        = reset
 
-runConfigM ∷ Config → ConfigM → IO ()
-runConfigM conf cm = 
+runFormatter ∷ Config → Formatter → IO ()
+runFormatter conf cm = 
   let lst = runReader cm conf
   in  mapM_ outItem lst
 
 class ConfigShow s where
-  configShow ∷ s → ConfigM
+  configShow ∷ s → Formatter
 
 instance ConfigShow String where
   configShow s = return [OutString s]
 
-instance ConfigShow ConfigM where
+instance ConfigShow Formatter where
   configShow = id
   
 showIO ∷ (ConfigShow a) ⇒ Config → a → IO ()
-showIO conf = (runConfigM conf) ∘ configShow
+showIO conf = (runFormatter conf) ∘ configShow
 
 instance (Ord a) ⇒ Ord (Tree a) where
   compare = compare `on` rootLabel
@@ -231,6 +247,7 @@ data Options = O [QueryFlag] [ModeFlag] [OutFlag] [LimitFlag]
 data Config = Config {
       outOnlyFirst ∷ 𝔹,
       outColors ∷ 𝔹,
+      outIds :: 𝔹,
       sorting ∷ SortingType,
       pruneL ∷ Limit,
       minL   ∷ Limit,
@@ -272,7 +289,7 @@ instance Show TodoItem where
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "
 
-bold ∷ String → ConfigM
+bold ∷ String → Formatter
 bold s = do
   col ← asks outColors 
   if col
@@ -291,7 +308,7 @@ statusColors =
    (["*"],             Red),
    (["?"],             Blue)]
 
-colorStatus ∷ String → ConfigM
+colorStatus ∷ String → Formatter
 colorStatus st =
   case lookupC st statusColors of
     Nothing → return [OutString st]
@@ -302,7 +319,7 @@ colorStatus st =
         else return [OutString st]
 
 instance ConfigShow TodoItem where
-    configShow item = configM <++> colorStatus s <++> " " <++> dates <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
+    configShow item = startFormat <++> colorStatus s <++> " " <++> dates <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
       where
         n = itemLevel item
         name = itemName item

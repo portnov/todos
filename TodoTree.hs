@@ -2,13 +2,14 @@
 module TodoTree 
   (delTag,
    pruneSelector,
-   tagPred, statusPred, grepPred, descPred, datePred,
+   tagPred, statusPred, grepPred, descPred, datePred, idPred,
    forT, mapT,
    printTodos)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import IO
+import System.Console.ANSI
 import Control.Monad
 import Control.Monad.Reader
 import qualified Data.Map as M
@@ -18,6 +19,8 @@ import Data.Function (on)
 import Data.Tree
 import Data.Maybe
 import Text.Regex.PCRE
+import Data.Hash
+import Numeric
 
 import Types
 import TodoLoader
@@ -35,15 +38,25 @@ sortBy' s | s == DoNotSort = id
           ByEndDate → show ∘ endDate
           ByDeadline → show ∘ deadline 
 
-showT ∷ SortingType → Int → Todo → [ConfigM]
+showT ∷ SortingType → Int → Todo → [Formatter]
 showT s n (Node item todos) = 
-  (configM <++> (replicate n ' ') <++> (configShow item)) :
-    (concatMap (showT s (n+2)) $ sortBy' s todos)
+    (startFormat <++> showId item <++> replicate n ' ' <++> configShow item) :
+      (concatMap (showT s (n+2)) $ sortBy' s todos)
+  where
+    showId :: TodoItem → Formatter
+    showId item = do
+      s ← asks outIds
+      c ← asks outColors
+      if s
+        then if c 
+               then return [OutSetColor Yellow, OutString $ makeId item ++ " ", ResetAll]
+               else return [OutString $ makeId item ++ " "]
+        else return [OutString ""]
 
-unlines'' ∷ [ConfigM] → ConfigM
+unlines'' ∷ [Formatter] → Formatter
 unlines'' lst = concat `fmap` (sequence $ intersperse newLine lst)
 
-showTodo ∷ Todo → ConfigM
+showTodo ∷ Todo → Formatter
 showTodo t = do
   conf ← ask
   let f = case outOnlyFirst conf of
@@ -51,7 +64,7 @@ showTodo t = do
             True  → head
   f $ showT (sorting conf) 0 t
 
-showTodos ∷ [Todo] → ConfigM
+showTodos ∷ [Todo] → Formatter
 showTodos lst = do
   conf ← ask
   let f = case outOnlyFirst conf of
@@ -104,6 +117,9 @@ grepPred pattern = \item → itemName item =~ pattern
 
 descPred ∷ String → TodoItem → 𝔹
 descPred pattern = \item → itemDescr item =~ pattern
+
+idPred :: String → TodoItem → 𝔹
+idPred hash = \item → makeId item == hash
 
 isLT ∷  (Ord t) ⇒ Maybe t → t → 𝔹
 isLT Nothing _ = False

@@ -38,6 +38,7 @@ compose _ (Pred (Tag s))    = tagPred s
 compose _ (Pred (Name s))   = grepPred s
 compose _ (Pred (Description s))   = descPred s
 compose _ (Pred (Status s)) = statusPred s
+compose _ (Pred (IdIs s)) = idPred s
 compose dt (Pred (StartDateIs d)) = datePred startDate dt d
 compose dt (Pred (EndDateIs d)) = datePred endDate dt d
 compose dt (Pred (DeadlineIs d)) = datePred deadline dt d
@@ -91,13 +92,14 @@ parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
 -- | Build Config (with query etc) from Options
 buildQuery ∷ Options → Config
-buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors srt limitP limitM command aprefix dformat composedFlags 
+buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors showIds srt limitP limitM command aprefix dformat composedFlags 
   where
     composedFlags = parseQuery qflags
     (limitP,limitM) = parseLimits lflags
 
     onlyFirst = OnlyFirst ∈ oflags
     colors = Colors ∈ oflags
+    showIds = Ids ∈ oflags
     srtFlags = filter isSort oflags
     srt | null srtFlags = DoNotSort 
         | otherwise = getSorting (last srtFlags)
@@ -174,6 +176,7 @@ options ∷ DateTime → [OptDescr CmdLineFlag]
 options currDate = [
     Option "1" ["only-first"] (NoArg (OF OnlyFirst))                 "show only first matching entry",
     Option "c" ["color"]      (NoArg (OF Colors))                    "show colored output",
+    Option "I" ["show-ids"]   (NoArg (OF Ids))                       "show IDs of todos",
     Option "A" ["prefix"]     (OptArg mkPrefix "PREFIX")             "use alternate parser: read only lines starting with PREFIX",
     Option "D" ["describe"]   (OptArg mkDescribe "FORMAT")           "use FORMAT for descriptions",
     Option "p" ["prune"]      (ReqArg mkPrune "N")                   "limit tree height to N",
@@ -182,6 +185,7 @@ options currDate = [
     Option "g" ["grep"]       (ReqArg mkName "PATTERN")              "find items with PATTERN in name",
     Option "G" ["description"] (ReqArg mkDescr "PATTERN")            "find items with PATTERN in description",
     Option "s" ["status"]     (ReqArg mkStatus "STRING")             "find items with status equal to STRING",
+    Option "i" ["id"]         (ReqArg mkIdQ "STRING")                "find items with ID equal to STRING",
     Option "a" ["and"]        (NoArg (QF AndCons))                   "logical AND",
     Option "o" ["or"]         (NoArg (QF OrCons))                    "logical OR",
     Option "n" ["not"]        (NoArg (QF NotCons))                   "logical NOT",
@@ -203,6 +207,9 @@ mkName n = QF $ Name n
 
 mkStatus ∷  String → CmdLineFlag
 mkStatus s = QF $ Status s
+
+mkIdQ ∷  String → CmdLineFlag
+mkIdQ s = QF $ IdIs s
 
 mkDescr ∷  String → CmdLineFlag
 mkDescr s = QF $ Description s
