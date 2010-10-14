@@ -21,7 +21,7 @@ Extra-source-files: CmdLine.hs CommandParser.hs Config.hs ConstrSet.hs Dates.hs 
 Executable todos
   Build-Depends:  base >= 3 && <= 5, haskell98, utf8-string, containers, parsec >= 2 && < 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
-                  process
+                  process, data-hash
   Main-Is:        todos.hs
 
 Source-repository head
