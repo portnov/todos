@@ -1,5 +1,5 @@
 Name:           todos
-Version:        0.1
+Version:        0.2
 Cabal-Version:  >= 1.6
 License:        BSD3
 License-File:   LICENSE
@@ -16,7 +16,7 @@ Description:    todos is a simple TODO manager. TODO records theirself are descr
 Extra-source-files: CmdLine.hs CommandParser.hs Config.hs ConstrSet.hs Dates.hs IO.hs
                     Makefile README README.ru Setup.hs test.hs test.txt TODO
                     TodoLoader.hs TodoParser.hs todos.hs TodoTree.hs Types.hs
-                    Unicode.hs
+                    Unicode.hs Dot.hs Color.hs Shapes.hs
 
 Executable todos
   Build-Depends:  base >= 3 && <= 5, haskell98, utf8-string, containers, parsec >= 2 && < 3,
