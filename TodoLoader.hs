@@ -104,16 +104,27 @@ allTags todos = nub $ sort $ concatMap getTags todos
   where
     getTags (Node item children) = itemTags item ⧺ concatMap getTags children
 
-grepByTag ∷ String → [Todo] → [Todo]
-grepByTag tag todos = concatMap grep todos
+allStatuses ∷ [Todo] → [String]
+allStatuses todos = nub $ sort $ concatMap getStatus todos
+  where
+    getStatus (Node item children) = itemStatus item: concatMap getStatus children
+
+grepBy ∷ (TodoItem → 𝔹) → [Todo] → [Todo]
+grepBy cond todos = concatMap grep todos
   where
     grep ∷ Todo → [Todo]
     grep n@(Node _ children) = test n ⧺ concatMap grep children
 
     test ∷ Todo → [Todo]
     test n@(Node item _)
-      | tag ∈ itemTags item = [n]
-      | otherwise           = []
+      | cond item = [n]
+      | otherwise = []
+
+grepByTag ∷ String → [Todo] → [Todo]
+grepByTag tag todos = grepBy (\item → tag ∈ itemTags item) todos
+
+grepByStatus ∷ String → [Todo] → [Todo]
+grepByStatus st todos = grepBy (\item → st == itemStatus item) todos
 
 tagTodo ∷ String → [Todo] → Todo
 tagTodo tag todos = Node item $ grepByTag tag todos
@@ -134,6 +145,26 @@ tagTodo tag todos = Node item $ grepByTag tag todos
 groupByTag' ∷ [Todo] → [Todo]
 groupByTag' todos = 
   map (\t → tagTodo t todos) (allTags todos) ⧺ todos
+
+statusTodo ∷ String → [Todo] → Todo
+statusTodo st todos = Node item $ grepByStatus st todos
+  where
+    item = Item {
+      itemLevel = 0,
+      itemName = st,
+      itemTags = ["STATUS"],
+      depends = [],
+      itemStatus = ":",
+      itemDescr = "",
+      startDate = Nothing,
+      endDate = Nothing,
+      deadline = Nothing,
+      fileName = "(no file)",
+      lineNr = 0 }
+
+groupByStatus' ∷ [Todo] → [Todo]
+groupByStatus' todos =
+  map (\s → statusTodo s todos) (allStatuses todos) ⧺ todos
 
 dirname ∷ FilePath → FilePath
 dirname path =
@@ -172,8 +203,11 @@ loadTodo conf date paths = do
                 else const id
     tss ← forM paths $ \path → grp path `fmap` loadFile conf date path
     let todos = stitchTodos (concat tss)
-        grouped = if groupByTag conf
-                    then groupByTag' todos
-                    else todos
-    return grouped
+        byTag = if groupByTag conf
+                  then groupByTag' todos
+                  else todos
+        byStatus = if groupByStatus conf
+                     then groupByStatus' byTag
+                     else byTag
+    return byStatus
 
