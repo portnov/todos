@@ -92,7 +92,21 @@ parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
 -- | Build Config (with query etc) from Options
 buildQuery ∷ Options → Config
-buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors showIds srt limitP limitM command aprefix dformat noStatus setStatus composedFlags 
+buildQuery (O qflags mflags oflags lflags) =
+    Config {
+      outOnlyFirst = onlyFirst,
+      outColors = colors,
+      outIds = showIds,
+      sorting = srt,
+      pruneL = limitP,
+      minL = limitM,
+      commandToRun = command,
+      prefix = aprefix,
+      descrFormat = dformat,
+      skipStatus = noStatus,
+      groupByFile = doGroup,
+      forcedStatus = setStatus,
+      query = composedFlags }
   where
     composedFlags = parseQuery qflags
     (limitP,limitM) = parseLimits lflags
@@ -103,6 +117,8 @@ buildQuery (O qflags mflags oflags lflags) = Config onlyFirst colors showIds srt
     srtFlags = filter isSort oflags
     srt | null srtFlags = DoNotSort 
         | otherwise = getSorting (last srtFlags)
+
+    doGroup = GroupByFile ∈ mflags
 
     cmdFlags  = filter isCommand mflags
     command | DotExport ∈ oflags = ShowAsDot
@@ -192,6 +208,7 @@ options currDate = [
     Option "D" ["describe"]   (OptArg mkDescribe "FORMAT")           "use FORMAT for descriptions",
     Option "w" ["no-status"]  (NoArg (MF DoNotReadStatus))           "do not read status field from TODOs",
     Option ""  ["set-status"] (ReqArg mkSetStatus "STRING")          "force all TODOs status to be equal to STRING",
+    Option "F" ["by-file"]    (NoArg (MF GroupByFile))               "group TODOs by source file",
     Option "p" ["prune"]      (ReqArg mkPrune "N")                   "limit tree height to N",
     Option "m" ["min-depth"]  (ReqArg mkMin "N")                     "show first N levels of tree unconditionally",
     Option "t" ["tag"]        (ReqArg mkTag "TAG")                   "find items marked with TAG",

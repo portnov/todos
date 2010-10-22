@@ -9,8 +9,10 @@ import IO
 import Control.Monad (forM)
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
+import System.FilePath
 import Data.Maybe
 import Data.Tree
+import Data.List (init)
 
 import Unicode
 import Types
@@ -63,6 +65,9 @@ loadFile conf year path =
 (~-) ∷  TodoItem → ℤ → TodoItem
 i@(Item {itemLevel=n}) ~- k = i {itemLevel=n-k}
 
+(~+) ∷  TodoItem → ℤ → TodoItem
+i@(Item {itemLevel=n}) ~+ k = i {itemLevel=n+k}
+
 iszero ∷  TodoItem → 𝔹
 iszero item = (itemLevel item)==0
 
@@ -94,11 +99,40 @@ stitchTodos items =
       t = mkTodo items
   in  normalizeList m t
 
+dirname ∷ FilePath → FilePath
+dirname path =
+  case dropFileName path of
+    [] → []
+    dir → takeFileName (init dir)
+
+fileTodo ∷ FilePath → TodoItem
+fileTodo path = Item {
+  itemLevel = 0,
+  itemName = takeFileName path,
+  itemTags = [dirname path],
+  depends = [],
+  itemStatus = ":",
+  itemDescr = path,
+  startDate = Nothing,
+  endDate = Nothing,
+  deadline = Nothing,
+  fileName = path,
+  lineNr = 0 }
+
+todosGroup ∷ FilePath → [TodoItem] -> [TodoItem]
+todosGroup path items =
+  if null items
+    then []
+    else fileTodo path: map (~+ 1) items
+
 -- | Load list of TODO trees from files
 loadTodo ∷ Config
          → DateTime      -- ^ Current date/time
          → [FilePath]    -- ^ List of files
          → IO [Todo]
 loadTodo conf date paths = do
-    tss ← forM paths (loadFile conf date)
+    let grp = if groupByFile conf
+                then todosGroup
+                else const id
+    tss ← forM paths $ \path → grp path `fmap` loadFile conf date path
     return $ stitchTodos (concat tss)
