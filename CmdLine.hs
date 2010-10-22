@@ -108,6 +108,7 @@ buildQuery (O qflags mflags oflags lflags) =
       groupByTag = doGroupByTag,
       groupByStatus = doGroupByStatus,
       forcedStatus = setStatus,
+      topStatus = setTopStatus,
       query = composedFlags }
   where
     composedFlags = parseQuery qflags
@@ -142,6 +143,10 @@ buildQuery (O qflags mflags oflags lflags) =
     setStatus | null newStatusFlags = Nothing
               | otherwise           = Just $ newStatus $ last newStatusFlags
 
+    topStatusFlags = filter isTopStatus mflags
+    setTopStatus | null topStatusFlags = Nothing
+                 | otherwise           = Just $ newTopStatus $ last topStatusFlags
+
     isSort (Sort _) = True
     isSort _        = False
     isDescribe (Describe _) = True
@@ -154,6 +159,8 @@ buildQuery (O qflags mflags oflags lflags) =
     isNoStatus _               = False
     isSetStatus (SetStatus _)  = True
     isSetStatus _              = False
+    isTopStatus (SetTopStatus _) = True
+    isTopStatus _                = False
 
 parseLimits ∷ [LimitFlag] → (Limit,Limit)
 parseLimits flags = (limitP,limitM)
@@ -212,6 +219,7 @@ options currDate = [
     Option "D" ["describe"]   (OptArg mkDescribe "FORMAT")           "use FORMAT for descriptions",
     Option "w" ["no-status"]  (NoArg (MF DoNotReadStatus))           "do not read status field from TODOs",
     Option ""  ["set-status"] (ReqArg mkSetStatus "STRING")          "force all TODOs status to be equal to STRING",
+    Option ""  ["set-root-status"] (ReqArg mkTopStatus "STRING")     "force statuses of root TODOs to be equal to STRING",
     Option "F" ["by-file"]    (NoArg (MF GroupByFile))               "group TODOs by source file",
     Option "T" ["by-tag"]     (NoArg (MF GroupByTag))                "group TODOs by tag",
     Option "Z" ["by-status"]  (NoArg (MF GroupByStatus))             "group TODOs by status",
@@ -269,6 +277,9 @@ mkDescribe (Just f) = MF $ Describe f
 
 mkSetStatus ∷ String → CmdLineFlag
 mkSetStatus st = MF $ SetStatus st
+
+mkTopStatus ∷ String → CmdLineFlag
+mkTopStatus st = MF $ SetTopStatus st
 
 mkPrune ∷  String → CmdLineFlag
 mkPrune s = LF $ Prune (read s)

@@ -192,6 +192,12 @@ todosGroup path items =
     then []
     else fileTodo path: map (~+ 1) items
 
+changeTopStatus ∷ Maybe String → [Todo] → [Todo]
+changeTopStatus Nothing   todos = todos
+changeTopStatus (Just st) todos = map setStatus todos
+  where
+    setStatus (Node item children) = Node (item {itemStatus = st}) children
+
 -- | Load list of TODO trees from files
 loadTodo ∷ Config
          → DateTime      -- ^ Current date/time
@@ -209,5 +215,5 @@ loadTodo conf date paths = do
         byStatus = if groupByStatus conf
                      then groupByStatus' byTag
                      else byTag
-    return byStatus
+    return $ changeTopStatus (topStatus conf) byStatus
 

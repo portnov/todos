@@ -143,6 +143,7 @@ data ModeFlag = Execute {unExecute ∷ String}
               | Describe {unDescribe ∷ String}
               | DoNotReadStatus
               | SetStatus {newStatus ∷ String}
+              | SetTopStatus {newTopStatus ∷ String}
               | GroupByFile
               | GroupByTag
               | GroupByStatus
@@ -271,6 +272,7 @@ data Config = Config {
       groupByTag ∷ 𝔹,
       groupByStatus ∷ 𝔹,
       forcedStatus ∷ Maybe String,
+      topStatus ∷ Maybe String,
       query ∷ Composed }
     deriving (Eq,Show)
 
@@ -289,6 +291,7 @@ emptyConfig = Config {
   groupByTag = False,
   groupByStatus = False,
   forcedStatus = Nothing,
+  topStatus = Nothing,
   query = Empty }
 
 data Composed = Pred QueryFlag
