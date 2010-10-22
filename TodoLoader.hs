@@ -12,7 +12,7 @@ import Text.ParserCombinators.Parsec
 import System.FilePath
 import Data.Maybe
 import Data.Tree
-import Data.List (init)
+import Data.List (init, nub, sort)
 
 import Unicode
 import Types
@@ -99,6 +99,42 @@ stitchTodos items =
       t = mkTodo items
   in  normalizeList m t
 
+allTags ∷ [Todo] → [String]
+allTags todos = nub $ sort $ concatMap getTags todos
+  where
+    getTags (Node item children) = itemTags item ⧺ concatMap getTags children
+
+grepByTag ∷ String → [Todo] → [Todo]
+grepByTag tag todos = concatMap grep todos
+  where
+    grep ∷ Todo → [Todo]
+    grep n@(Node _ children) = test n ⧺ concatMap grep children
+
+    test ∷ Todo → [Todo]
+    test n@(Node item _)
+      | tag ∈ itemTags item = [n]
+      | otherwise           = []
+
+tagTodo ∷ String → [Todo] → Todo
+tagTodo tag todos = Node item $ grepByTag tag todos
+  where
+    item = Item {
+      itemLevel = 0,
+      itemName = tag,
+      itemTags = ["TAG"],
+      depends = [],
+      itemStatus = ":",
+      itemDescr = "",
+      startDate = Nothing,
+      endDate = Nothing,
+      deadline = Nothing,
+      fileName = "(no file)",
+      lineNr = 0 }
+
+groupByTag' ∷ [Todo] → [Todo]
+groupByTag' todos = 
+  map (\t → tagTodo t todos) (allTags todos) ⧺ todos
+
 dirname ∷ FilePath → FilePath
 dirname path =
   case dropFileName path of
@@ -135,4 +171,9 @@ loadTodo conf date paths = do
                 then todosGroup
                 else const id
     tss ← forM paths $ \path → grp path `fmap` loadFile conf date path
-    return $ stitchTodos (concat tss)
+    let todos = stitchTodos (concat tss)
+        grouped = if groupByTag conf
+                    then groupByTag' todos
+                    else todos
+    return grouped
+

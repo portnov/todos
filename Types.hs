@@ -144,6 +144,7 @@ data ModeFlag = Execute {unExecute ∷ String}
               | DoNotReadStatus
               | SetStatus {newStatus ∷ String}
               | GroupByFile
+              | GroupByTag
     deriving (Eq,Ord,Show)
 
 data OutFlag = OnlyFirst 
@@ -266,6 +267,7 @@ data Config = Config {
       descrFormat ∷ String,
       skipStatus ∷ 𝔹,
       groupByFile ∷ 𝔹,
+      groupByTag ∷ 𝔹,
       forcedStatus ∷ Maybe String,
       query ∷ Composed }
     deriving (Eq,Show)
@@ -282,6 +284,7 @@ emptyConfig = Config {
   descrFormat = "%d",
   skipStatus = False,
   groupByFile = False,
+  groupByTag = False,
   forcedStatus = Nothing,
   query = Empty }
 

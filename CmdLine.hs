@@ -104,7 +104,8 @@ buildQuery (O qflags mflags oflags lflags) =
       prefix = aprefix,
       descrFormat = dformat,
       skipStatus = noStatus,
-      groupByFile = doGroup,
+      groupByFile = doGroupByFile,
+      groupByTag = doGroupByTag,
       forcedStatus = setStatus,
       query = composedFlags }
   where
@@ -118,7 +119,8 @@ buildQuery (O qflags mflags oflags lflags) =
     srt | null srtFlags = DoNotSort 
         | otherwise = getSorting (last srtFlags)
 
-    doGroup = GroupByFile ∈ mflags
+    doGroupByFile = GroupByFile ∈ mflags
+    doGroupByTag = GroupByTag ∈ mflags
 
     cmdFlags  = filter isCommand mflags
     command | DotExport ∈ oflags = ShowAsDot
@@ -209,6 +211,7 @@ options currDate = [
     Option "w" ["no-status"]  (NoArg (MF DoNotReadStatus))           "do not read status field from TODOs",
     Option ""  ["set-status"] (ReqArg mkSetStatus "STRING")          "force all TODOs status to be equal to STRING",
     Option "F" ["by-file"]    (NoArg (MF GroupByFile))               "group TODOs by source file",
+    Option "T" ["by-tag"]     (NoArg (MF GroupByTag))                "group TODOs by tag",
     Option "p" ["prune"]      (ReqArg mkPrune "N")                   "limit tree height to N",
     Option "m" ["min-depth"]  (ReqArg mkMin "N")                     "show first N levels of tree unconditionally",
     Option "t" ["tag"]        (ReqArg mkTag "TAG")                   "find items marked with TAG",

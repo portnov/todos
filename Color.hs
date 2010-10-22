@@ -26,6 +26,7 @@ tagHues = M.fromList $ [
   ("BUG",   0.07),
   ("NOTE",  0.25),
   ("ERROR", 0.0),
+  ("TAG",   0.16),
   ("TODO",  0.55)]
 
 hashAsDouble ∷ Hashable a ⇒ a → Double
