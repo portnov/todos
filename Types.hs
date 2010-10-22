@@ -91,7 +91,7 @@ instance Hashable TodoItem where
     hash item = foldl1 combine $ map ($ item) [hash ∘ itemName, hash ∘ itemDescr,
                                                hash ∘ itemTags, hash ∘ itemStatus]
 
-makeId :: TodoItem → String
+makeId :: (Hashable a) ⇒ a → String
 makeId item =
   let s = showHex (asWord64 $ hash item) ""
       l = length s 
