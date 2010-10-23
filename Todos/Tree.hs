@@ -1,5 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
-module Todos.TodoTree 
+module Todos.Tree 
   (delTag,
    pruneSelector,
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
@@ -23,7 +23,7 @@ import Data.Hash
 import Numeric
 
 import Todos.Types
-import Todos.TodoLoader
+import Todos.Loader
 import Todos.Unicode
 
 sortBy' s | s == DoNotSort = id

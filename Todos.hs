@@ -1,8 +1,8 @@
 module Todos 
   (module Todos.Unicode,
    module Todos.Types,
-   module Todos.TodoLoader,
-   module Todos.TodoTree,
+   module Todos.Loader,
+   module Todos.Tree,
    module Todos.CommandParser,
    module Todos.Config,
    module Todos.CmdLine,
@@ -12,8 +12,8 @@ module Todos
 
 import Todos.Unicode
 import Todos.Types
-import Todos.TodoLoader
-import Todos.TodoTree
+import Todos.Loader
+import Todos.Tree
 import Todos.CommandParser
 import Todos.Config
 import Todos.CmdLine

@@ -1,5 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, TypeSynonymInstances, DeriveDataTypeable #-}
-module Todos.TodoParser
+module Todos.Parser
     (parsePlain, parseAlternate)
     where
 

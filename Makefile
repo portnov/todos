@@ -5,4 +5,6 @@ todos: *.hs
 	$(GHC) $(GHCFLAGS) --make todos.hs
 
 clean:
-	rm -f *.hi *.o *~
+	find . -name \*.hi -delete
+	find . -name \*.o -delete
+	find . -name \*~ -delete

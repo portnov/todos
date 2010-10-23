@@ -22,7 +22,7 @@ import Control.Monad.Reader
 
 import Todos.Unicode
 import Todos.Types
-import Todos.TodoTree
+import Todos.Tree
 import Todos.Dates (parseDate)
 
 data CmdLineParseResult = 

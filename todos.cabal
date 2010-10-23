@@ -29,9 +29,9 @@ library
                    Todos.IO
                    Todos.Main
                    Todos.Shapes
-                   Todos.TodoLoader
-                   Todos.TodoParser
-                   Todos.TodoTree
+                   Todos.Loader
+                   Todos.Parser
+                   Todos.Tree
                    Todos.Types
                    Todos.Unicode
 
@@ -51,9 +51,9 @@ Executable todos
                  Todos.IO
                  Todos.Main
                  Todos.Shapes
-                 Todos.TodoLoader
-                 Todos.TodoParser
-                 Todos.TodoTree
+                 Todos.Loader
+                 Todos.Parser
+                 Todos.Tree
                  Todos.Types
                  Todos.Unicode
 

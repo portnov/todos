@@ -19,9 +19,9 @@ import Todos.Shapes
 import Todos.Dates
 import Todos.Dot
 import Todos.CmdLine
-import Todos.TodoTree
+import Todos.Tree
 import Todos.Config
-import Todos.TodoLoader
+import Todos.Loader
 import Todos.CommandParser
 
 data TodosConfig = Todos {
