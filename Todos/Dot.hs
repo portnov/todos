@@ -1,5 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, TypeSynonymInstances, FlexibleInstances #-}
-module Dot
+module Todos.Dot
   (showAsDot)
   where
 
@@ -8,10 +8,10 @@ import Data.Tree
 import Data.Hash
 import Text.Printf
 
-import Unicode
-import Types
-import Color
-import Shapes
+import Todos.Unicode
+import Todos.Types
+import Todos.Color
+import Todos.Shapes
 
 data Dot = Dot {
   dotVertices ∷ [TodoItem],
@@ -50,16 +50,17 @@ getSubgraphs (Node item forest)
 
 instance Show Dot where
   show (Dot vs es subs) = "digraph Todo {\n"
-                   ⧺ unlines (map showDotNode vs)
+                   ⧺ unlines (map (showDotNode getColor getShape) vs)
                    ⧺ unlines (map showDotEdge es)
                    ⧺ unlines (map showSubgraph subs)
                    ⧺ "}\n"
 
-showD ∷ [Dot] → String
-showD dots = "digraph Todo {\n"
+showD ∷ (TodoItem → HSV) → (TodoItem → Shape) → [Dot] → String
+showD colorFn shapeFn dots
+            = "digraph Todo {\n"
             ⧺ "  rankdir = \"RL\";\n"
             ⧺ "  node [shape=\"box\", style=\"filled\"];\n"
-            ⧺ unlines (map showDotNode $ nub $ sort $ concatMap dotVertices dots)
+            ⧺ unlines (map (showDotNode colorFn shapeFn) $ nub $ sort $ concatMap dotVertices dots)
             ⧺ unlines (map showDotEdge $ nub $ sort $ concatMap dotEdges dots)
             ⧺ unlines (map showSubgraph $ nub $ concatMap dotSubgraphs dots)
             ⧺ "}\n"
@@ -67,9 +68,9 @@ showD dots = "digraph Todo {\n"
 makeName ∷ TodoItem → String
 makeName item = "\"" ⧺ makeId item ⧺ "\""
 
-showDotNode ∷ TodoItem → String
-showDotNode item =
-  printf "  %s [label=\"%s\\n%s\\n%s\", fillcolor=%s, shape=\"%s\"];" (makeName item) (itemStatus item) (unwords $ itemTags item) (itemName item) (show $ getColor item) (show $ getShape item)
+showDotNode ∷ (TodoItem → HSV) → (TodoItem → Shape) → TodoItem → String
+showDotNode colorFn shapeFn item =
+  printf "  %s [label=\"%s\\n%s\\n%s\", fillcolor=%s, shape=\"%s\"];" (makeName item) (itemStatus item) (unwords $ itemTags item) (itemName item) (show $ colorFn item) (show $ shapeFn item)
 
 showDotEdge ∷ (TodoItem, TodoItem) → String
 showDotEdge (x,y) 
@@ -86,6 +87,6 @@ showSubgraph (Subgraph label items)
   where
     showItem item = makeName item ⧺ ";"
 
-showAsDot ∷ [Todo] → String
-showAsDot todos = showD (map toDot todos)
+showAsDot ∷ (TodoItem → HSV) → (TodoItem → Shape) → [Todo] → String
+showAsDot colorFn shapeFn todos = (showD colorFn shapeFn) (map toDot todos)
 

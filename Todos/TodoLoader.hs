@@ -1,11 +1,11 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 -- | Read TODOs from files and construct corresponding ADTs.
-module TodoLoader
+module Todos.TodoLoader
   (loadTodo)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import IO
+import Todos.IO
 import Control.Monad (forM)
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
@@ -14,9 +14,9 @@ import Data.Maybe
 import Data.Tree
 import Data.List (init, nub, sort)
 
-import Unicode
-import Types
-import TodoParser
+import Todos.Unicode
+import Todos.Types
+import Todos.TodoParser
 
 todoName ∷ Todo → String
 todoName todo = itemName ⋄ rootLabel todo

@@ -1,10 +1,10 @@
 {-# LANGUAGE UnicodeSyntax #-}
-module Shapes where
+module Todos.Shapes where
 
 import qualified Data.Map as M
 
-import Unicode
-import Types
+import Todos.Unicode
+import Todos.Types
 
 data Shape = 
     Box 

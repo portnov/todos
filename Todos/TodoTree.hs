@@ -1,14 +1,14 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
-module TodoTree 
+module Todos.TodoTree 
   (delTag,
    pruneSelector,
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
    forT, mapT,
-   printTodos)
+   defaultPrintTodos)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import IO
+import Todos.IO
 import System.Console.ANSI
 import Control.Monad
 import Control.Monad.Reader
@@ -22,9 +22,9 @@ import Text.Regex.PCRE
 import Data.Hash
 import Numeric
 
-import Types
-import TodoLoader
-import Unicode
+import Todos.Types
+import Todos.TodoLoader
+import Todos.Unicode
 
 sortBy' s | s == DoNotSort = id
           | otherwise = sortBy sorter
@@ -72,8 +72,8 @@ showTodos lst = do
             True  → head
   f $ map showTodo $ sortBy' (sorting conf) $ nub lst
 
-printTodos ∷ Config → [Todo] → IO ()
-printTodos conf lst = 
+defaultPrintTodos ∷ Config → [Todo] → IO ()
+defaultPrintTodos conf lst = 
   let lst' = runReader (showTodos lst) conf
   in  mapM_ outItem lst'
 

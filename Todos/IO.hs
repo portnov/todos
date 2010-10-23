@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 -- | Wrapper to support unicode IO with GHC 6.10 and 6.12
-module IO 
+module Todos.IO 
 #if __GLASGOW_HASKELL__ < 612
   (module System.IO.UTF8)
 #else

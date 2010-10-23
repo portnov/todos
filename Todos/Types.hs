@@ -1,9 +1,9 @@
 {-# LANGUAGE UnicodeSyntax, DeriveDataTypeable, TypeSynonymInstances, FlexibleInstances, NoMonomorphismRestriction #-}
 
-module Types where
+module Todos.Types where
 
 import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
-import IO
+import Todos.IO
 import System.Console.ANSI
 import Data.Hash
 
@@ -18,7 +18,7 @@ import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
 import Numeric
 
-import Unicode
+import Todos.Unicode
 
 data DateType = StartDate
               | EndDate

@@ -1,13 +1,13 @@
 {-# LANGUAGE UnicodeSyntax #-}
-module Color where
+module Todos.Color where
 
 import qualified Data.Map as M
 import Text.Printf
 import Data.Word
 import Data.Hash
 
-import Unicode
-import Types
+import Todos.Unicode
+import Todos.Types
 
 data HSV = HSV {
   colorHue ∷ Double,
@@ -17,9 +17,6 @@ data HSV = HSV {
 
 instance Show HSV where
   show (HSV h s v) = printf "\"%.3f %.3f %.3f\"" h s v
-
-(<#>) ∷ HSV → HSV → HSV
-(HSV h1 s1 v1) <#> (HSV h2 s2 v2) = HSV ((h1+h2)/2) ((s1+s2)/2) ((v1+v2)/2)
 
 tagHues ∷ M.Map String Double
 tagHues = M.fromList $ [

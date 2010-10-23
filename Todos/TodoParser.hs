@@ -1,10 +1,10 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, TypeSynonymInstances, DeriveDataTypeable #-}
-module TodoParser
+module Todos.TodoParser
     (parsePlain, parseAlternate)
     where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import IO
+import Todos.IO
 import Control.Monad
 import Data.List
 import Text.ParserCombinators.Parsec
@@ -14,9 +14,9 @@ import Data.Maybe
 import Data.Char
 import Data.Function
 
-import Unicode
-import Types
-import Dates
+import Todos.Unicode
+import Todos.Types
+import Todos.Dates
 
 strip ∷  String → String
 strip = reverse ∘ p ∘ reverse ∘ p

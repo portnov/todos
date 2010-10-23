@@ -1,5 +1,5 @@
 Name:           todos
-Version:        0.2
+Version:        0.3
 Cabal-Version:  >= 1.6
 License:        BSD3
 License-File:   LICENSE
@@ -18,11 +18,44 @@ Extra-source-files: CmdLine.hs CommandParser.hs Config.hs ConstrSet.hs Dates.hs 
                     TodoLoader.hs TodoParser.hs todos.hs TodoTree.hs Types.hs
                     Unicode.hs Dot.hs Color.hs Shapes.hs
 
-Executable todos
+library
+  Exposed-Modules: Todos
+                   Todos.CmdLine
+                   Todos.Color
+                   Todos.CommandParser
+                   Todos.Config
+                   Todos.Dates
+                   Todos.Dot
+                   Todos.IO
+                   Todos.Main
+                   Todos.Shapes
+                   Todos.TodoLoader
+                   Todos.TodoParser
+                   Todos.TodoTree
+                   Todos.Types
+                   Todos.Unicode
+
   Build-Depends:  base >= 3 && <= 5, haskell98, utf8-string, containers, parsec >= 2 && < 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
                   process, data-hash
-  Main-Is:        todos.hs
+
+Executable todos
+  Main-Is:       todos.hs
+  Other-Modules: Todos
+                 Todos.CmdLine
+                 Todos.Color
+                 Todos.CommandParser
+                 Todos.Config
+                 Todos.Dates
+                 Todos.Dot
+                 Todos.IO
+                 Todos.Main
+                 Todos.Shapes
+                 Todos.TodoLoader
+                 Todos.TodoParser
+                 Todos.TodoTree
+                 Todos.Types
+                 Todos.Unicode
 
 Source-repository head
   type:     git

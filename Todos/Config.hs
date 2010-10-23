@@ -1,12 +1,12 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
 -- | Module for parsing config files
-module Config
+module Todos.Config
   (readConfig)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import IO
+import Todos.IO
 import System.Environment
 import System.FilePath 
 import System.Directory (doesFileExist)
@@ -14,8 +14,8 @@ import Data.Maybe
 import Data.Either
 import Text.ParserCombinators.Parsec
 
-import Unicode
-import Types
+import Todos.Unicode
+import Todos.Types
 
 word ∷ Parser String
 word = choice $ map try [quotedOption, simpleOption, quoted, simpleWord]

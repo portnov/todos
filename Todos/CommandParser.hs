@@ -1,9 +1,9 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
-module CommandParser where
+module Todos.CommandParser where
 
-import Unicode
-import Types
+import Todos.Unicode
+import Todos.Types
 
 -- | Format item info
 printfItem ∷ String      -- ^ Format string

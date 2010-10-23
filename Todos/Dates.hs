@@ -1,6 +1,6 @@
 {-# LANGUAGE UnicodeSyntax #-}
 -- | Operations with dates
-module Dates
+module Todos.Dates
   (parseDate, getCurrentDateTime,
    pSpecDates)
   where
@@ -13,8 +13,8 @@ import Data.Time.Clock
 import Data.Time.LocalTime
 import Text.ParserCombinators.Parsec
 
-import Types
-import Unicode
+import Todos.Types
+import Todos.Unicode
 
 getCurrentDateTime ∷  IO DateTime
 getCurrentDateTime = do

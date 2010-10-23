@@ -1,8 +1,9 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 
 -- | Module for parsing command line options and build queries
-module CmdLine
-  (parseCmdLine,
+module Todos.CmdLine
+  (CmdLineParseResult (..),
+   parseCmdLine,
    glob,
    buildQuery,
    composeAll,
@@ -10,7 +11,7 @@ module CmdLine
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import IO
+import Todos.IO
 import Codec.Binary.UTF8.String
 import System (getArgs)
 import System.Console.GetOpt
@@ -19,10 +20,16 @@ import Data.Maybe
 import Data.List (sort)
 import Control.Monad.Reader
 
-import Unicode
-import Types
-import TodoTree
-import Dates (parseDate)
+import Todos.Unicode
+import Todos.Types
+import Todos.TodoTree
+import Todos.Dates (parseDate)
+
+data CmdLineParseResult = 
+     Parsed Config [FilePath]
+   | ParseError String
+   | CmdLineHelp
+   deriving (Eq,Show)
 
 -- | Default limit for tree height
 pruneByDefault ∷  Limit
@@ -188,12 +195,22 @@ parseQuery flags = foldl appendC Empty flags
 -- | Parse command line
 parseCmdLine ∷ DateTime              -- ^ Current date/time
              → [String]              -- ^ Command line args
-             → (Options, [FilePath]) -- ^ (Options, list of files)
+             → CmdLineParseResult
 parseCmdLine currDate args = 
+  case parseCmdLine' currDate args of
+    Right (opts, files) → case opts of
+                           Help → CmdLineHelp
+                           _    → Parsed (buildQuery opts) files
+    Left str            → ParseError str
+
+parseCmdLine' ∷ DateTime
+             → [String]
+             → Either String (Options, [FilePath]) -- ^ (Options, list of files)
+parseCmdLine' currDate args = 
   case getOpt Permute (options currDate) (map decodeString args) of
-        (flags, [],      [])     → (parseFlags flags, ["TODO"])
-        (flags, nonOpts, [])     → (parseFlags flags, nonOpts)
-        (_,     _,       msgs)   → error $ concat msgs ⧺ usage
+        (flags, [],      [])     → Right (parseFlags flags, ["TODO"])
+        (flags, nonOpts, [])     → Right (parseFlags flags, nonOpts)
+        (_,     _,       msgs)   → Left $ concat msgs ⧺ usage
 
 isPattern s = ('*' ∈ s) || ('?' ∈ s)
 
