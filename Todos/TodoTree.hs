@@ -75,7 +75,7 @@ showTodos lst = do
 defaultPrintTodos ∷ Config → [Todo] → IO ()
 defaultPrintTodos conf lst = 
   let lst' = runReader (showTodos lst) conf
-  in  mapM_ outItem lst'
+  in  mapM_ outItem lst' >> putStrLn ""
 
 mapTags ∷  (Data a) ⇒ ([String] → [String]) → [a] → [a]
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
