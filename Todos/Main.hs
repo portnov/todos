@@ -25,11 +25,12 @@ import Todos.Loader
 import Todos.CommandParser
 
 data TodosConfig = Todos {
-     parseCommandLine ∷ DateTime → [String] → CmdLineParseResult,
+     parseCommandLine ∷ DateTime → Config → [String] → CmdLineParseResult,
      filterTodos ∷ DateTime → Config → [Todo] → [Todo],
      itemColor ∷ TodoItem → HSV,
      itemShape ∷ TodoItem → Shape,
-     printTodos ∷ Config → [Todo] → IO ()
+     printTodos ∷ Config → [Todo] → IO (),
+     nullConfig ∷ Config
 }
 
 defaultConfig ∷ TodosConfig
@@ -38,7 +39,9 @@ defaultConfig = Todos {
   filterTodos = defaultTodosFilter,
   itemColor = getColor,
   itemShape = getShape,
-  printTodos = defaultPrintTodos }
+  printTodos = defaultPrintTodos,
+  nullConfig = emptyConfig
+}
 
 defaultTodosFilter ∷ DateTime → Config → [Todo] → [Todo]
 defaultTodosFilter dt conf todos =
@@ -50,7 +53,7 @@ todos tcfg = do
   currDate ← getCurrentDateTime 
   config ← readConfig
   args ← getArgs
-  let pres = (parseCommandLine tcfg) currDate (config ⧺ args)
+  let pres = (parseCommandLine tcfg) currDate (nullConfig tcfg) (config ⧺ args)
   case pres of
     Parsed q files' → do
       files ← glob files'

@@ -104,7 +104,7 @@ type Todo = Tree TodoItem
 type TodoMap = M.Map String Todo
 
 data Limit = Unlimited
-           | Limit ℤ
+           | Limit {unLimit ∷ ℤ}
   deriving (Eq,Show)
 
 instance Ord Limit where
@@ -281,8 +281,8 @@ emptyConfig = Config {
   outColors = False,
   outIds = False,
   sorting = DoNotSort,
-  pruneL = Unlimited,
-  minL = Unlimited,
+  pruneL = Limit 20,
+  minL = Limit 0,
   commandToRun = JustShow,
   prefix = Nothing,
   descrFormat = "%d",

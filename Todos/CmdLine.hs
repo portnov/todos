@@ -31,10 +31,6 @@ data CmdLineParseResult =
    | CmdLineHelp
    deriving (Eq,Show)
 
--- | Default limit for tree height
-pruneByDefault ∷  Limit
-pruneByDefault = Limit 20
-
 -- | Compose predicate from Composed
 compose ∷ DateTime       -- ^ Current date/time
         → Composed       -- ^ Composed query
@@ -98,61 +94,71 @@ parseFlags [] = O [] [] [] []
 parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
 -- | Build Config (with query etc) from Options
-buildQuery ∷ Options → Config
-buildQuery (O qflags mflags oflags lflags) =
+buildQuery ∷ Config    -- ^ Default config
+           → Options   -- ^ Cmdline options
+           → Config
+buildQuery dc (O qflags mflags oflags lflags) =
     Config {
-      outOnlyFirst = onlyFirst,
-      outColors = colors,
-      outIds = showIds,
-      sorting = srt,
-      pruneL = limitP,
-      minL = limitM,
-      commandToRun = command,
-      prefix = aprefix,
-      descrFormat = dformat,
-      skipStatus = noStatus,
-      groupByFile = doGroupByFile,
-      groupByTag = doGroupByTag,
-      groupByStatus = doGroupByStatus,
-      forcedStatus = setStatus,
-      topStatus = setTopStatus,
-      query = composedFlags }
+      outOnlyFirst = update outOnlyFirst onlyFirst,
+      outColors    = update outColors    colors,
+      outIds       = update outIds       showIds,
+      sorting      = update sorting      srt,
+      pruneL       = update pruneL       limitP,
+      minL         = update minL         limitM,
+      commandToRun = update commandToRun command,
+      prefix       = update prefix       aprefix,
+      descrFormat  = update descrFormat  dformat,
+      skipStatus   = update skipStatus   noStatus,
+      groupByFile  = update groupByFile  doGroupByFile,
+      groupByTag   = update groupByTag   doGroupByTag,
+      groupByStatus = update groupByStatus doGroupByStatus,
+      forcedStatus = update forcedStatus setStatus,
+      topStatus    = update topStatus    setTopStatus,
+      query        = update query        composedFlags }
   where
-    composedFlags = parseQuery qflags
-    (limitP,limitM) = parseLimits lflags
+    update fn Nothing  = fn dc
+    update _  (Just x) = x
 
-    onlyFirst = OnlyFirst ∈ oflags
-    colors = Colors ∈ oflags
-    showIds = Ids ∈ oflags
+    x ? lst | x ∈ lst   = Just True
+            | otherwise = Nothing
+
+    composedFlags | null qflags = Nothing
+                  | otherwise   = Just $ parseQuery qflags
+    (limitP,limitM) | null lflags = (Nothing, Nothing)
+                    | otherwise   = parseLimits (unLimit $ pruneL dc) (unLimit $ minL dc) lflags
+
+    onlyFirst = OnlyFirst ? oflags
+    colors    = Colors    ? oflags
+    showIds   = Ids       ? oflags
     srtFlags = filter isSort oflags
-    srt | null srtFlags = DoNotSort 
-        | otherwise = getSorting (last srtFlags)
+    srt | null srtFlags = Nothing
+        | otherwise     = Just $ getSorting (last srtFlags)
 
-    doGroupByFile   = GroupByFile   ∈ mflags
-    doGroupByTag    = GroupByTag    ∈ mflags
-    doGroupByStatus = GroupByStatus ∈ mflags
+    doGroupByFile   = GroupByFile   ? mflags
+    doGroupByTag    = GroupByTag    ? mflags
+    doGroupByStatus = GroupByStatus ? mflags
 
     cmdFlags  = filter isCommand mflags
-    command | DotExport ∈ oflags = ShowAsDot
-            | null cmdFlags      = JustShow
-            | otherwise          = SystemCommand $ unExecute (last cmdFlags)
+    command | DotExport ∈ oflags = Just $ ShowAsDot
+            | null cmdFlags      = Nothing
+            | otherwise          = Just $ SystemCommand $ unExecute (last cmdFlags)
 
     prefixFlags = filter isPrefix mflags
     aprefix | null prefixFlags = Nothing
-            | otherwise        = Just $ unPrefix (last prefixFlags)
+            | otherwise        = Just $ Just $ unPrefix (last prefixFlags)
 
     dflags = filter isDescribe mflags
-    dformat | null dflags = "%d"
-            | otherwise   = unDescribe $ last dflags
+    dformat | null dflags = Nothing
+            | otherwise   = Just $unDescribe $ last dflags
 
-    noStatus = not $ null $ filter isNoStatus mflags
+    noStatus = DoNotReadStatus ? mflags
     newStatusFlags = filter isSetStatus mflags
     setStatus | null newStatusFlags = Nothing
-              | otherwise           = Just $ newStatus $ last newStatusFlags
+              | otherwise           = Just $ Just $ newStatus $ last newStatusFlags
 
     topStatusFlags = filter isTopStatus mflags
     setTopStatus | null topStatusFlags = Nothing
-                 | otherwise           = Just $ newTopStatus $ last topStatusFlags
+                 | otherwise           = Just $ Just $ newTopStatus $ last topStatusFlags
 
     isSort (Sort _) = True
     isSort _        = False
@@ -169,18 +175,18 @@ buildQuery (O qflags mflags oflags lflags) =
     isTopStatus (SetTopStatus _) = True
     isTopStatus _                = False
 
-parseLimits ∷ [LimitFlag] → (Limit,Limit)
-parseLimits flags = (limitP,limitM)
+parseLimits ∷ ℤ → ℤ → [LimitFlag] → (Maybe Limit,Maybe Limit)
+parseLimits dlp dlm flags = (Just limitP, Just limitM)
   where
     pruneFlags = filter isPrune flags
     minFlags   = filter isMin flags
 
     limitP'       = foldl min Unlimited $ map (Limit ∘ unPrune) pruneFlags
-    limitP | Unlimited ← limitP' = pruneByDefault
+    limitP | Unlimited ← limitP' = Limit dlp
            | otherwise           = limitP'
 
     limitM'       = foldl max (Limit 0) $ map (Limit ∘ unMin) minFlags
-    limitM | Unlimited ← limitM' = pruneByDefault
+    limitM | Unlimited ← limitM' = Limit dlm
            | otherwise           = limitM'
 
     isPrune (Prune _) = True
@@ -194,13 +200,14 @@ parseQuery flags = foldl appendC Empty flags
 
 -- | Parse command line
 parseCmdLine ∷ DateTime              -- ^ Current date/time
+             → Config                -- ^ Default config
              → [String]              -- ^ Command line args
              → CmdLineParseResult
-parseCmdLine currDate args = 
+parseCmdLine currDate dc args = 
   case parseCmdLine' currDate args of
     Right (opts, files) → case opts of
                            Help → CmdLineHelp
-                           _    → Parsed (buildQuery opts) files
+                           _    → Parsed (buildQuery dc opts) files
     Left str            → ParseError str
 
 parseCmdLine' ∷ DateTime
