@@ -17,6 +17,8 @@ import Data.Function
 import Todos.Unicode
 import Todos.Types
 import Todos.Dates
+import Todos.ParserTypes
+import Todos.Config
 
 strip ∷  String → String
 strip = reverse ∘ p ∘ reverse ∘ p

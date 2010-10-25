@@ -5,6 +5,7 @@ module Todos
    module Todos.Tree,
    module Todos.CommandParser,
    module Todos.Config,
+   module Todos.ConfigUtils,
    module Todos.CmdLine,
    module Todos.Dot,
    module Todos.Main,
@@ -16,6 +17,7 @@ import Todos.Loader
 import Todos.Tree
 import Todos.CommandParser
 import Todos.Config
+import Todos.ConfigUtils
 import Todos.CmdLine
 import Todos.Dates (getCurrentDateTime)
 import Todos.Dot

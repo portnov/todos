@@ -20,33 +20,11 @@ import Todos.Dates
 import Todos.Dot
 import Todos.CmdLine
 import Todos.Tree
-import Todos.Config
+import Todos.ReadConfig
 import Todos.Loader
 import Todos.CommandParser
-
-data TodosConfig = Todos {
-     parseCommandLine ∷ DateTime → Config → [String] → CmdLineParseResult,
-     filterTodos ∷ DateTime → Config → [Todo] → [Todo],
-     itemColor ∷ TodoItem → HSV,
-     itemShape ∷ TodoItem → Shape,
-     printTodos ∷ Config → [Todo] → IO (),
-     nullConfig ∷ Config
-}
-
-defaultConfig ∷ TodosConfig
-defaultConfig = Todos {
-  parseCommandLine = parseCmdLine,
-  filterTodos = defaultTodosFilter,
-  itemColor = getColor,
-  itemShape = getShape,
-  printTodos = defaultPrintTodos,
-  nullConfig = emptyConfig
-}
-
-defaultTodosFilter ∷ DateTime → Config → [Todo] → [Todo]
-defaultTodosFilter dt conf todos =
-  let t = delTag "-" todos
-  in  transformList conf (composeAll dt) t
+import Todos.Config
+import Todos.ConfigUtils
 
 todos ∷ TodosConfig → IO ()
 todos tcfg = do

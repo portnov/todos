@@ -23,8 +23,9 @@ import Data.Hash
 import Numeric
 
 import Todos.Types
-import Todos.Loader
 import Todos.Unicode
+import Todos.Config
+import Todos.Formatters
 
 sortBy' s | s == DoNotSort = id
           | otherwise = sortBy sorter
@@ -49,7 +50,7 @@ showT s n (Node item todos) =
       c ← asks outColors
       if s
         then if c 
-               then return [OutSetColor Yellow, OutString $ makeId item ++ " ", ResetAll]
+               then return [OutSetColor Dull Yellow, OutString $ makeId item ++ " ", ResetAll]
                else return [OutString $ makeId item ++ " "]
         else return [OutString ""]
 

@@ -15,6 +15,8 @@ import Text.ParserCombinators.Parsec
 
 import Todos.Types
 import Todos.Unicode
+import Todos.Config
+import Todos.ParserTypes
 
 getCurrentDateTime ∷  IO DateTime
 getCurrentDateTime = do

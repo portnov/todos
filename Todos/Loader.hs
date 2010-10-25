@@ -16,6 +16,7 @@ import Data.List (init, nub, sort)
 
 import Todos.Unicode
 import Todos.Types
+import Todos.Config
 import Todos.Parser
 
 todoName ∷ Todo → String

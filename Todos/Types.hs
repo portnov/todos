@@ -4,7 +4,6 @@ module Todos.Types where
 
 import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
 import Todos.IO
-import System.Console.ANSI
 import Data.Hash
 
 import Control.Monad.Reader
@@ -175,75 +174,6 @@ readSort "end-date" = ByEndDate
 readSort "deadline" = ByDeadline
 readSort s = error $ "Unknown sorting type: "++s
 
-type Transformer = Reader Config (Todo → [Todo])
-type ListTransformer = Reader Config ([Todo] → [Todo])
-
-transformList ∷  r → Reader r (t → a) → t → a
-transformList conf tr list = do
-    f ← tr
-    return (f list)
-  `runReader` conf
-
-data OutItem = OutString String
-             | OutSetColor Color
-             | SetBold
-             | ResetAll
-    deriving (Show)
-
-type Formatter = Reader Config [OutItem]
-
-newtype IOList = IOL [Formatter]
-
-startFormat ∷ Formatter
-startFormat = return []
-
-outString ∷ String → Formatter
-outString s = return [OutString s]
-
-newLine ∷ Formatter
-newLine = outString "\n"
-
-class ConfigAdd a where
-  (<++>) ∷ Formatter → a → Formatter
-
-instance ConfigAdd Formatter where
-  (<++>) = liftM2 (⧺)
-
-instance ConfigAdd String where
-  cm <++> s = cm <++> ((return [OutString s]) ∷ Formatter)
-
-setBold ∷  IO ()
-setBold = setSGR [SetConsoleIntensity BoldIntensity]
-
-setColor ∷  Color → IO ()
-setColor clr = setSGR [SetColor Foreground Dull clr]
-
-reset ∷  IO ()
-reset = setSGR []
-
-outItem ∷  OutItem → IO ()
-outItem (OutString s)   = putStr s
-outItem (OutSetColor c) = setColor c
-outItem SetBold         = setBold
-outItem ResetAll        = reset
-
-runFormatter ∷ Config → Formatter → IO ()
-runFormatter conf cm = 
-  let lst = runReader cm conf
-  in  mapM_ outItem lst
-
-class ConfigShow s where
-  configShow ∷ s → Formatter
-
-instance ConfigShow String where
-  configShow s = return [OutString s]
-
-instance ConfigShow Formatter where
-  configShow = id
-  
-showIO ∷ (ConfigShow a) ⇒ Config → a → IO ()
-showIO conf = (runFormatter conf) ∘ configShow
-
 instance (Ord a) ⇒ Ord (Tree a) where
   compare = compare `on` rootLabel
 
@@ -256,43 +186,6 @@ data TodoCommand =
   | ShowAsDot
   | SystemCommand String
   deriving (Eq, Show)
-
-data Config = Config {
-      outOnlyFirst ∷ 𝔹,
-      outColors ∷ 𝔹,
-      outIds :: 𝔹,
-      sorting ∷ SortingType,
-      pruneL ∷ Limit,
-      minL   ∷ Limit,
-      commandToRun ∷ TodoCommand,
-      prefix ∷ Maybe String,
-      descrFormat ∷ String,
-      skipStatus ∷ 𝔹,
-      groupByFile ∷ 𝔹,
-      groupByTag ∷ 𝔹,
-      groupByStatus ∷ 𝔹,
-      forcedStatus ∷ Maybe String,
-      topStatus ∷ Maybe String,
-      query ∷ Composed }
-    deriving (Eq,Show)
-
-emptyConfig = Config {
-  outOnlyFirst = False,
-  outColors = False,
-  outIds = False,
-  sorting = DoNotSort,
-  pruneL = Limit 20,
-  minL = Limit 0,
-  commandToRun = JustShow,
-  prefix = Nothing,
-  descrFormat = "%d",
-  skipStatus = False,
-  groupByFile = False,
-  groupByTag = False,
-  groupByStatus = False,
-  forcedStatus = Nothing,
-  topStatus = Nothing,
-  query = Empty }
 
 data Composed = Pred QueryFlag
               | And Composed Composed
@@ -326,49 +219,10 @@ instance Show TodoItem where
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "
 
-bold ∷ String → Formatter
-bold s = do
-  col ← asks outColors 
-  if col
-    then return [SetBold, OutString s, ResetAll]
-    else return [OutString s]
-
 lookupC ∷  (Eq a1) ⇒ a1 → [([a1], a)] → Maybe a
 lookupC k [] = Nothing
 lookupC k ((lst,c):other) | k ∈ lst   = Just c
                           | otherwise = lookupC k other
-
-statusColors ∷  [([String], Color)]
-statusColors = 
-  [(["FIXED", "DONE"], Green),
-   (["INVALID"],       Magenta),
-   (["*"],             Red),
-   (["?"],             Blue)]
-
-colorStatus ∷ String → Formatter
-colorStatus st =
-  case lookupC st statusColors of
-    Nothing → return [OutString st]
-    Just clr → do
-      col ← asks outColors 
-      if col
-        then return [OutSetColor clr, OutString st, ResetAll]
-        else return [OutString st]
-
-instance ConfigShow TodoItem where
-    configShow item = startFormat <++> colorStatus s <++> " " <++> dates <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
-      where
-        n = itemLevel item
-        name = itemName item
-        ts = itemTags item
-        s = itemStatus item
-        descr = itemDescr item
-        dates | null dates' = ""
-              | otherwise = "(" ⧺ dates' ⧺ ") "
-        dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]
-        tags = if null ts
-                 then ""
-                 else "[" ⧺ (unwords ts) ⧺ "] "
 
 instance Ord TodoItem where
   compare item1 item2 = 
@@ -380,6 +234,4 @@ instance Ord TodoItem where
                    then c3
                    else c2
             else c1
-
-type TParser a = GenParser Char Config a
 

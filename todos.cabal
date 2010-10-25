@@ -22,18 +22,22 @@ library
   Exposed-Modules: Todos
                    Todos.CmdLine
                    Todos.Color
-                   Todos.CommandParser
-                   Todos.Config
+                   Todos.ParserTypes
                    Todos.Dates
+                   Todos.CommandParser
+                   Todos.Parser
+                   Todos.Config
+                   Todos.ConfigUtils
+                   Todos.ReadConfig
                    Todos.Dot
                    Todos.IO
                    Todos.Main
                    Todos.Shapes
                    Todos.Loader
-                   Todos.Parser
                    Todos.Tree
                    Todos.Types
                    Todos.Unicode
+                   Todos.Formatters
 
   Build-Depends:  base >= 3 && <= 5, haskell98, utf8-string, containers, parsec >= 2 && < 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
@@ -44,18 +48,22 @@ Executable todos
   Other-Modules: Todos
                  Todos.CmdLine
                  Todos.Color
-                 Todos.CommandParser
-                 Todos.Config
+                 Todos.ParserTypes
                  Todos.Dates
+                 Todos.CommandParser
+                 Todos.Parser
+                 Todos.Config
+                 Todos.ConfigUtils
+                 Todos.ReadConfig
                  Todos.Dot
                  Todos.IO
                  Todos.Main
                  Todos.Shapes
                  Todos.Loader
-                 Todos.Parser
                  Todos.Tree
                  Todos.Types
                  Todos.Unicode
+                 Todos.Formatters
 
 Source-repository head
   type:     git

@@ -2,11 +2,10 @@
 
 -- | Module for parsing command line options and build queries
 module Todos.CmdLine
-  (CmdLineParseResult (..),
-   parseCmdLine,
+  (parseCmdLine',
    glob,
    buildQuery,
-   composeAll,
+   compose,
    usage)
   where
 
@@ -23,13 +22,8 @@ import Control.Monad.Reader
 import Todos.Unicode
 import Todos.Types
 import Todos.Tree
+import Todos.Config
 import Todos.Dates (parseDate)
-
-data CmdLineParseResult = 
-     Parsed Config [FilePath]
-   | ParseError String
-   | CmdLineHelp
-   deriving (Eq,Show)
 
 -- | Compose predicate from Composed
 compose ∷ DateTime       -- ^ Current date/time
@@ -53,15 +47,6 @@ compose dt (Or (Pred NoFilter) p) = compose dt p
 compose dt (Or p (Pred NoFilter)) = compose dt p
 compose dt (Or p1 p2)       = \item → (compose dt p1 item) ∨ (compose dt p2 item)
 compose _ x = error $ show x
-
-concatMapM ∷ (Monad m) ⇒ m (t → [t]) → m ([t] → [t])
-concatMapM = liftM concatMap
-
--- | Make a list transformer
-composeAll ∷ DateTime → ListTransformer
-composeAll date = do
-  pred ← asks ((compose date) ∘ query)
-  concatMapM (pruneSelector pred)
 
 appendC ∷ Composed → QueryFlag → Composed
 appendC (Not (Pred NoFilter))   f = Not (Pred f)
@@ -199,20 +184,9 @@ parseQuery ∷ [QueryFlag] → Composed
 parseQuery flags = foldl appendC Empty flags
 
 -- | Parse command line
-parseCmdLine ∷ DateTime              -- ^ Current date/time
-             → Config                -- ^ Default config
+parseCmdLine' ∷ DateTime             -- ^ Current date/time
              → [String]              -- ^ Command line args
-             → CmdLineParseResult
-parseCmdLine currDate dc args = 
-  case parseCmdLine' currDate args of
-    Right (opts, files) → case opts of
-                           Help → CmdLineHelp
-                           _    → Parsed (buildQuery dc opts) files
-    Left str            → ParseError str
-
-parseCmdLine' ∷ DateTime
-             → [String]
-             → Either String (Options, [FilePath]) -- ^ (Options, list of files)
+             → Either String (Options, [FilePath]) -- ^ Error message or (Options, list of files)
 parseCmdLine' currDate args = 
   case getOpt Permute (options currDate) (map decodeString args) of
         (flags, [],      [])     → Right (parseFlags flags, ["TODO"])
@@ -287,13 +261,13 @@ forceEither (Right x) = x
 forceEither (Left x) = error $ show x
 
 mkStartDate ∷  DateTime → String → CmdLineFlag
-mkStartDate dt s = QF $ StartDateIs $ forceEither $ parseDate emptyConfig dt s
+mkStartDate dt s = QF $ StartDateIs $ forceEither $ parseDate undefined dt s
 
 mkEndDate ∷  DateTime → String → CmdLineFlag
-mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate emptyConfig dt s
+mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate undefined dt s
 
 mkDeadline ∷  DateTime → String → CmdLineFlag
-mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate emptyConfig dt s
+mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate undefined dt s
 
 mkDescribe ∷  Maybe String → CmdLineFlag
 mkDescribe Nothing = MF $ Describe "%d"
