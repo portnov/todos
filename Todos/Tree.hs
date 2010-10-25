@@ -27,6 +27,8 @@ import Todos.Unicode
 import Todos.Config
 import Todos.Formatters
 
+type Transformer = Reader Config (Todo → [Todo])
+
 sortBy' s | s == DoNotSort = id
           | otherwise = sortBy sorter
   where
@@ -46,8 +48,8 @@ showT s n (Node item todos) =
   where
     showId :: TodoItem → Formatter
     showId item = do
-      s ← asks outIds
-      c ← asks outColors
+      s ← asks (outIds ∘ printConfig)
+      c ← asks (outColors ∘ printConfig)
       if s
         then if c 
                then return [OutSetColor Dull Yellow, OutString $ makeId item ++ " ", ResetAll]
@@ -59,7 +61,7 @@ unlines'' lst = concat `fmap` (sequence $ intersperse newLine lst)
 
 showTodo ∷ Todo → Formatter
 showTodo t = do
-  conf ← ask
+  conf ← asks printConfig
   let f = case outOnlyFirst conf of
             False → unlines''
             True  → head
@@ -67,16 +69,16 @@ showTodo t = do
 
 showTodos ∷ [Todo] → Formatter
 showTodos lst = do
-  conf ← ask
+  conf ← asks printConfig
   let f = case outOnlyFirst conf of
             False → unlines''
             True  → head
   f $ map showTodo $ sortBy' (sorting conf) $ nub lst
 
-defaultPrintTodos ∷ Config → [Todo] → IO ()
-defaultPrintTodos conf lst = 
-  let lst' = runReader (showTodos lst) conf
-  in  mapM_ outItem lst' >> putStrLn ""
+defaultPrintTodos ∷ PrintConfig → [Todo] → IO ()
+defaultPrintTodos cfg lst = 
+  let lst' = runReader (showTodos lst) cfg
+  in  forM lst' outItem >> putStrLn ""
 
 mapTags ∷  (Data a) ⇒ ([String] → [String]) → [a] → [a]
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags

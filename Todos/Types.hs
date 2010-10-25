@@ -6,7 +6,6 @@ import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
 import Todos.IO
 import Data.Hash
 
-import Control.Monad.Reader
 import Data.Function 
 import Data.Generics hiding (GT)
 import Data.Char (toUpper)

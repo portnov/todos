@@ -10,15 +10,13 @@ import Todos.Types
 import Todos.Config
 import Todos.Color
 
-type Transformer = Reader Config (Todo → [Todo])
-
 data OutItem = OutString String
              | OutSetColor ColorIntensity Color
              | SetBold
              | ResetAll
     deriving (Show)
 
-type Formatter = Reader Config [OutItem]
+type Formatter = Reader PrintConfig [OutItem]
 
 newtype IOList = IOL [Formatter]
 
@@ -55,11 +53,6 @@ outItem (OutSetColor i c) = setColor i c
 outItem SetBold         = setBold
 outItem ResetAll        = reset
 
-runFormatter ∷ Config → Formatter → IO ()
-runFormatter conf cm = 
-  let lst = runReader cm conf
-  in  mapM_ outItem lst
-
 class ConfigShow s where
   configShow ∷ s → Formatter
 
@@ -69,29 +62,30 @@ instance ConfigShow String where
 instance ConfigShow Formatter where
   configShow = id
   
-showIO ∷ (ConfigShow a) ⇒ Config → a → IO ()
-showIO conf = (runFormatter conf) ∘ configShow
-
-bold ∷ String → Formatter
-bold s = do
-  col ← asks outColors 
-  if col
-    then return [SetBold, OutString s, ResetAll]
+bold ∷ TodoItem → Formatter
+bold item = do
+  let s = itemName item
+  showColors ← asks (outColors ∘ printConfig)
+  getclr ← asks printItemColor
+  if showColors
+    then case getclr item of
+           Nothing        → return [SetBold, OutString s, ResetAll]
+           Just (int,clr) → return [SetBold, OutSetColor int clr, OutString s, ResetAll]
     else return [OutString s]
 
 colorStatus ∷ String → Formatter
 colorStatus st = do
-  let (int, clr) = statusColor st
-  col ← asks outColors 
+  getclr ← asks printStatusColor
+  let (int, clr) = getclr st
+  col ← asks (outColors ∘ printConfig)
   if col
     then return [OutSetColor int clr, OutString st, ResetAll]
     else return [OutString st]
 
 instance ConfigShow TodoItem where
-    configShow item = startFormat <++> colorStatus s <++> " " <++> dates <++> tags <++> bold name <++> (if null descr then "" else "    "⧺descr)
+    configShow item = startFormat <++> colorStatus s <++> " " <++> dates <++> tags <++> bold item <++> (if null descr then "" else "    "⧺descr)
       where
         n = itemLevel item
-        name = itemName item
         ts = itemTags item
         s = itemStatus item
         descr = itemDescr item

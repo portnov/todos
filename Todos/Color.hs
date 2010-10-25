@@ -117,8 +117,8 @@ statusHue st =
 statusColor ∷ String → (ANSI.ColorIntensity, ANSI.Color)
 statusColor st = consoleColor $ HSV (statusHue st) (statusSat st) 0.2
 
-itemConsoleColor ∷ TodoItem → Maybe (ANSI.ColorIntensity, ANSI.Color)
-itemConsoleColor _ = Nothing
+defItemConsoleColor ∷ TodoItem → Maybe (ANSI.ColorIntensity, ANSI.Color)
+defItemConsoleColor _ = Nothing
 
 getColor ∷ TodoItem → HSV
 getColor item = HSV h s v 

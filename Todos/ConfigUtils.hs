@@ -39,6 +39,8 @@ defaultConfig ∷ TodosConfig
 defaultConfig = Todos {
   parseCommandLine = parseCmdLine,
   filterTodos = defaultTodosFilter,
+  statusConsoleColor = statusColor,
+  itemConsoleColor = defItemConsoleColor,
   itemColor = getColor,
   itemShape = getShape,
   printTodos = defaultPrintTodos,
