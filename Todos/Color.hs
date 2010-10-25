@@ -12,6 +12,7 @@ import qualified System.Console.ANSI as ANSI
 import Todos.Unicode
 import Todos.Types
 
+-- | Hue, saturation and value
 data HSV = HSV {
   colorHue ∷ Double,
   colorSaturation ∷ Double,
@@ -21,6 +22,7 @@ data HSV = HSV {
 instance Show HSV where
   show (HSV h s v) = printf "\"%.3f %.3f %.3f\"" h s v
 
+-- | Correspondence between console colors and HSV colors
 consoleColors ∷ [((ANSI.ColorIntensity, ANSI.Color), HSV)]
 consoleColors = 
   [((ANSI.Dull, ANSI.Black),  HSV 0 0 0),
@@ -40,12 +42,14 @@ consoleColors =
    ((ANSI.Vivid, ANSI.Cyan),   HSV 0.5 0.67 1),
    ((ANSI.Vivid, ANSI.White),  HSV 0 0 1) ]
 
+-- | Get console color which is nearest to given HSV color
 consoleColor ∷ HSV → (ANSI.ColorIntensity, ANSI.Color)
 consoleColor hsv = fst $ minimumBy (compare `on` ρ) consoleColors
   where ρ (_, clr) = sum $ map (^2) [colorHue hsv - colorHue clr,
                                      colorSaturation hsv - colorSaturation clr,
                                      colorValue hsv - colorValue clr ]
 
+-- | Hue values for some common tags
 tagHues ∷ M.Map String Double
 tagHues = M.fromList $ [
   ("BUG",   0.07),
@@ -57,12 +61,14 @@ tagHues = M.fromList $ [
 hashAsDouble ∷ Hashable a ⇒ a → Double
 hashAsDouble x = (fromIntegral $ asWord64 $ hash x) / (fromIntegral (maxBound :: Word64))
 
+-- | Get color hue from tag name
 tagHue ∷ String → Double
 tagHue tag =
   case M.lookup tag tagHues of
     Nothing → hashAsDouble tag
     Just h  → h
 
+-- | Color saturation values for some common statuses
 statusSats ∷ M.Map String Double
 statusSats = M.fromList $ [
   ("*",      1.0),
@@ -82,12 +88,14 @@ statusSats = M.fromList $ [
   ("o",      0.3),
   ("x",      0.2)]
 
+-- | Get color saturation from item status
 statusSat ∷ String → Double
 statusSat st = 
   case M.lookup st statusSats of
     Nothing → 0.4* hashAsDouble st
     Just s  → s
 
+-- | Color hue values for some common item statuses
 statusHues ∷ M.Map String Double
 statusHues = M.fromList $ [
   ("*",      0.0),
@@ -108,18 +116,22 @@ statusHues = M.fromList $ [
   ("o",      0.8),
   ("x",      0.2)]
 
+-- | Get color hue from item status
 statusHue ∷ String → Double
 statusHue st =
   case M.lookup st statusHues of
     Nothing → hashAsDouble st
     Just h  → h
 
+-- | Get console color for item status
 statusColor ∷ String → (ANSI.ColorIntensity, ANSI.Color)
 statusColor st = consoleColor $ HSV (statusHue st) (statusSat st) 0.2
 
+-- | Get console color for item name (this is const Nothing)
 defItemConsoleColor ∷ TodoItem → Maybe (ANSI.ColorIntensity, ANSI.Color)
 defItemConsoleColor _ = Nothing
 
+-- | Get color for item (this is used in DOT output)
 getColor ∷ TodoItem → HSV
 getColor item = HSV h s v 
   where

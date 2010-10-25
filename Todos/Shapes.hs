@@ -6,6 +6,7 @@ import qualified Data.Map as M
 import Todos.Unicode
 import Todos.Types
 
+-- | Supported node shapes for DOT output
 data Shape = 
     Box 
   | Ellipse
@@ -25,6 +26,7 @@ instance Show Shape where
   show Parallelogram = "parallelogram"
   show Folder        = "folder"
 
+-- | Node shapes for some common item statuses
 shapes ∷ M.Map String Shape
 shapes = M.fromList $ [
   ("o", Ellipse),
@@ -34,6 +36,7 @@ shapes = M.fromList $ [
   ("/", Parallelogram),
   ("NOTE", Note) ]
 
+-- | Get item shape for this item (default funciton)
 getShape ∷ TodoItem → Shape
 getShape item = 
   case M.lookup (itemStatus item) shapes of

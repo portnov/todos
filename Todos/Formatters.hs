@@ -1,5 +1,12 @@
 {-# LANGUAGE UnicodeSyntax, TypeSynonymInstances #-}
-module Todos.Formatters where
+module Todos.Formatters 
+  (OutItem (..),
+   Formatter,
+   outItem,
+   startFormat, newLine,
+   ConfigShow (..),
+   ConfigAdd (..)
+  ) where
 
 import Control.Monad
 import Control.Monad.Reader
@@ -10,26 +17,30 @@ import Todos.Types
 import Todos.Config
 import Todos.Color
 
+-- | Item which could be printed to the console
 data OutItem = OutString String
              | OutSetColor ColorIntensity Color
              | SetBold
              | ResetAll
     deriving (Show)
 
+-- | Produce a list of OutItem's depending on PrintConfig
 type Formatter = Reader PrintConfig [OutItem]
 
-newtype IOList = IOL [Formatter]
-
+-- | Empty Formatter
 startFormat ∷ Formatter
 startFormat = return []
 
+-- | Output given string
 outString ∷ String → Formatter
 outString s = return [OutString s]
 
+-- | Output new line
 newLine ∷ Formatter
 newLine = outString "\n"
 
 class ConfigAdd a where
+  -- | Execute Formatter and a consequently
   (<++>) ∷ Formatter → a → Formatter
 
 instance ConfigAdd Formatter where
@@ -44,15 +55,18 @@ setBold = setSGR [SetConsoleIntensity BoldIntensity]
 setColor ∷ ColorIntensity → Color → IO ()
 setColor int clr = setSGR [SetColor Foreground int clr]
 
+-- | Reset all (color, bold, ...) attributes
 reset ∷  IO ()
 reset = setSGR []
 
+-- | Print OutItem to console
 outItem ∷  OutItem → IO ()
 outItem (OutString s)   = putStr s
 outItem (OutSetColor i c) = setColor i c
 outItem SetBold         = setBold
 outItem ResetAll        = reset
 
+-- | Similar to Show, but output can depend on PrintConfig
 class ConfigShow s where
   configShow ∷ s → Formatter
 
@@ -62,6 +76,7 @@ instance ConfigShow String where
 instance ConfigShow Formatter where
   configShow = id
   
+-- | Output bold (and maybe colored) item name
 bold ∷ TodoItem → Formatter
 bold item = do
   let s = itemName item
@@ -73,6 +88,7 @@ bold item = do
            Just (int,clr) → return [SetBold, OutSetColor int clr, OutString s, ResetAll]
     else return [OutString s]
 
+-- | Output colored item status
 colorStatus ∷ String → Formatter
 colorStatus st = do
   getclr ← asks printStatusColor

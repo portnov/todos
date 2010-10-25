@@ -1,6 +1,6 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Todos.Main where
+module Todos.Main (todos) where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import IO

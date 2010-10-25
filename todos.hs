@@ -1,4 +1,4 @@
-{-# LANGUAGE UnicodeSyntax, PatternGuards #-}
+{-# LANGUAGE UnicodeSyntax #-}
 
 import Todos
 

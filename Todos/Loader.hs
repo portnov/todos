@@ -46,13 +46,15 @@ normalize m todo = Node item' ((map (normalize m) subTodos) ⧺ (map (normalize 
 normalizeList ∷ TodoMap → [Todo] → [Todo]
 normalizeList m todos = map (normalize m) todos
 
+-- | Almost same that readFile, but also works for special "-" file (stdin)
 readFile' ∷ FilePath → IO String
 readFile' "-"  = getContents
 readFile' file = readFile file
 
+-- | Load items from given file
 loadFile ∷ Config
-         → DateTime
-         → FilePath
+         → DateTime       -- ^ Current date/time
+         → FilePath       -- ^ Path to file
          → IO [TodoItem]
 loadFile conf year path =
   case prefix conf of
@@ -63,12 +65,15 @@ loadFile conf year path =
         text ← readFile' path
         return $ parseAlternate conf 2 p year path text
 
+-- | Decrease item level
 (~-) ∷  TodoItem → ℤ → TodoItem
 i@(Item {itemLevel=n}) ~- k = i {itemLevel=n-k}
 
+-- | Increase item level
 (~+) ∷  TodoItem → ℤ → TodoItem
 i@(Item {itemLevel=n}) ~+ k = i {itemLevel=n+k}
 
+-- | Check if item level is 0
 iszero ∷  TodoItem → 𝔹
 iszero item = (itemLevel item)==0
 
@@ -100,11 +105,13 @@ stitchTodos items =
       t = mkTodo items
   in  normalizeList m t
 
+-- | Get all (different) tags from Todo list
 allTags ∷ [Todo] → [String]
 allTags todos = nub $ sort $ concatMap getTags todos
   where
     getTags (Node item children) = itemTags item ⧺ concatMap getTags children
 
+-- | Get all (different) statuses from Todo list
 allStatuses ∷ [Todo] → [String]
 allStatuses todos = nub $ sort $ concatMap getStatus todos
   where

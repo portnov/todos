@@ -11,12 +11,7 @@ import Todos.Shapes
 import Todos.CmdLine
 import Todos.Tree
 
-transformList ∷  r → Reader r (t → a) → t → a
-transformList conf tr list = do
-    f ← tr
-    return (f list)
-  `runReader` conf
-
+-- | Default empty Config (nullConfig field of defaultConfig)
 emptyConfig = Config {
   outOnlyFirst = False,
   outColors = False,
@@ -35,6 +30,7 @@ emptyConfig = Config {
   topStatus = Nothing,
   query = Empty }
 
+-- | Default Todos config
 defaultConfig ∷ TodosConfig
 defaultConfig = Todos {
   parseCommandLine = parseCmdLine,
@@ -53,10 +49,17 @@ composeAll date = do
   pred ← asks ((compose date) ∘ query)
   concatMap `fmap` pruneSelector pred
 
+-- | Default filter for TODOs (filterTodos field of defaultConfig)
 defaultTodosFilter ∷ DateTime → Config → [Todo] → [Todo]
 defaultTodosFilter dt conf todos =
   let t = delTag "-" todos
   in  transformList conf (composeAll dt) t
+
+transformList ∷  r → Reader r (t → a) → t → a
+transformList conf tr list = do
+    f ← tr
+    return (f list)
+  `runReader` conf
 
 -- | Parse command line
 parseCmdLine ∷ DateTime              -- ^ Current date/time

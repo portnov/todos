@@ -87,6 +87,10 @@ showSubgraph (Subgraph label items)
   where
     showItem item = makeName item ⧺ ";"
 
-showAsDot ∷ (TodoItem → HSV) → (TodoItem → Shape) → [Todo] → String
+-- | Return DOT output for Todos
+showAsDot ∷ (TodoItem → HSV)   -- ^ Function to determine node color
+          → (TodoItem → Shape) -- ^ Function to determine node shape
+          → [Todo]             -- ^ Todo list
+          → String
 showAsDot colorFn shapeFn todos = (showD colorFn shapeFn) (map toDot todos)
 
