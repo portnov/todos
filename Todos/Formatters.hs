@@ -81,12 +81,17 @@ bold ∷ TodoItem → Formatter
 bold item = do
   let s = itemName item
   showColors ← asks (outColors ∘ printConfig)
+  hlOn ← asks (outHighlight ∘ printConfig)
   getclr ← asks printItemColor
-  if showColors
-    then case getclr item of
-           Nothing        → return [SetBold, OutString s, ResetAll]
-           Just (int,clr) → return [SetBold, OutSetColor int clr, OutString s, ResetAll]
-    else return [OutString s]
+  hlPred ← asks doHighlight
+  (hlInt, hlClr) ← asks printHighlightColor
+  return $ if showColors
+              then if hlOn && hlPred item
+                     then [SetBold, OutSetColor hlInt hlClr, OutString s, ResetAll]
+                     else case getclr item of
+                           Nothing        → [SetBold, OutString s, ResetAll]
+                           Just (int,clr) → [SetBold, OutSetColor int clr, OutString s, ResetAll]
+              else [OutString s]
 
 -- | Output colored item status
 colorStatus ∷ String → Formatter

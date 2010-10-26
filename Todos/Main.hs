@@ -40,7 +40,7 @@ realTodos tcfg = do
       let queried  = (filterTodos tcfg) currDate q todos
           format item = item {itemDescr = printfItem (descrFormat q) item}
       case commandToRun q of
-        JustShow  → printTodos tcfg (mkPrintConfig q tcfg) (mapT format queried)
+        JustShow  → printTodos tcfg (mkPrintConfig currDate q tcfg) (mapT format queried)
         ShowAsDot → 
              putStrLn $ showAsDot (itemColor tcfg) (itemShape tcfg) (mapT format queried)
         SystemCommand cmd → do

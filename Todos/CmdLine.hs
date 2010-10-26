@@ -87,6 +87,7 @@ buildQuery dc (O qflags mflags oflags lflags) =
       outOnlyFirst = update outOnlyFirst onlyFirst,
       outColors    = update outColors    colors,
       outIds       = update outIds       showIds,
+      outHighlight = update outHighlight highlight,
       sorting      = update sorting      srt,
       pruneL       = update pruneL       limitP,
       minL         = update minL         limitM,
@@ -114,7 +115,9 @@ buildQuery dc (O qflags mflags oflags lflags) =
 
     onlyFirst = OnlyFirst ? oflags
     colors    = Colors    ? oflags
+    highlight = Highlight ? oflags
     showIds   = Ids       ? oflags
+
     srtFlags = filter isSort oflags
     srt | null srtFlags = Nothing
         | otherwise     = Just $ getSorting (last srtFlags)
@@ -211,6 +214,7 @@ options ∷ DateTime → [OptDescr CmdLineFlag]
 options currDate = [
     Option "1" ["only-first"] (NoArg (OF OnlyFirst))                 "show only first matching entry",
     Option "c" ["color"]      (NoArg (OF Colors))                    "show colored output",
+    Option "H" ["highlight"]  (NoArg (OF Highlight))                 "instead of filtering TODOs, just highlight matching the query",
     Option "I" ["show-ids"]   (NoArg (OF Ids))                       "show IDs of todos",
     Option "A" ["prefix"]     (OptArg mkPrefix "PREFIX")             "use alternate parser: read only lines starting with PREFIX",
     Option ""  ["dot"]        (NoArg (OF DotExport))                 "output entries in DOT (graphviz) format",

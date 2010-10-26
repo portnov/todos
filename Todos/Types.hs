@@ -149,6 +149,7 @@ data ModeFlag = Execute {unExecute ∷ String}
 
 data OutFlag = OnlyFirst 
              | Colors
+             | Highlight
              | Ids
              | DotExport
              | Sort {getSorting ∷ SortingType}

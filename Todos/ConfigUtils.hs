@@ -2,6 +2,7 @@
 module Todos.ConfigUtils where
 
 import Control.Monad.Reader
+import System.Console.ANSI
 
 import Todos.Unicode
 import Todos.Types
@@ -16,6 +17,7 @@ emptyConfig = Config {
   outOnlyFirst = False,
   outColors = False,
   outIds = False,
+  outHighlight = False,
   sorting = DoNotSort,
   pruneL = Limit 20,
   minL = Limit 0,
@@ -37,6 +39,7 @@ defaultConfig = Todos {
   filterTodos = defaultTodosFilter,
   statusConsoleColor = statusColor,
   itemConsoleColor = defItemConsoleColor,
+  highlightColor = (Vivid, Magenta),
   itemColor = getColor,
   itemShape = getShape,
   printTodos = defaultPrintTodos,
@@ -53,7 +56,9 @@ composeAll date = do
 defaultTodosFilter ∷ DateTime → Config → [Todo] → [Todo]
 defaultTodosFilter dt conf todos =
   let t = delTag "-" todos
-  in  transformList conf (composeAll dt) t
+  in  if outHighlight conf
+        then t
+        else transformList conf (composeAll dt) t
 
 transformList ∷  r → Reader r (t → a) → t → a
 transformList conf tr list = do
@@ -72,4 +77,15 @@ parseCmdLine currDate dc args =
                            Help → CmdLineHelp
                            _    → Parsed (buildQuery dc opts) files
     Left str            → ParseError str
+
+mkPrintConfig ∷ DateTime → Config → TodosConfig → PrintConfig
+mkPrintConfig dt conf tcfg = PConfig {
+  printConfig      = conf,
+  printStatusColor = statusConsoleColor tcfg,
+  printItemColor   = itemConsoleColor tcfg,
+  printHighlightColor = highlightColor tcfg,
+  doHighlight      = mkHighlightFn dt conf }
+
+mkHighlightFn ∷ DateTime → Config → TodoItem → 𝔹
+mkHighlightFn dt conf = compose dt $ query conf
 

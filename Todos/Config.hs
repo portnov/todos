@@ -17,6 +17,7 @@ data Config = Config {
       outOnlyFirst ∷ 𝔹,
       outColors ∷ 𝔹,
       outIds :: 𝔹,
+      outHighlight ∷ 𝔹,
       sorting ∷ SortingType,
       pruneL ∷ Limit,
       minL   ∷ Limit,
@@ -35,21 +36,22 @@ data Config = Config {
 data PrintConfig = PConfig {
   printConfig ∷ Config,
   printStatusColor ∷  String → (ANSI.ColorIntensity, ANSI.Color),
-  printItemColor ∷  TodoItem → Maybe (ANSI.ColorIntensity, ANSI.Color) }
+  printItemColor ∷  TodoItem → Maybe (ANSI.ColorIntensity, ANSI.Color),
+  printHighlightColor ∷ (ANSI.ColorIntensity, ANSI.Color),
+  doHighlight ∷ TodoItem → 𝔹
+  }
 
 data TodosConfig = Todos {
      parseCommandLine ∷ DateTime → Config → [String] → CmdLineParseResult,
      filterTodos ∷ DateTime → Config → [Todo] → [Todo],
      statusConsoleColor ∷ String → (ANSI.ColorIntensity, ANSI.Color),
      itemConsoleColor ∷ TodoItem → Maybe (ANSI.ColorIntensity, ANSI.Color),
+     highlightColor ∷ (ANSI.ColorIntensity, ANSI.Color),
      itemColor ∷ TodoItem → HSV,
      itemShape ∷ TodoItem → Shape,
      printTodos ∷ PrintConfig → [Todo] → IO (),
      nullConfig ∷ Config
 }
-
-mkPrintConfig ∷ Config → TodosConfig → PrintConfig
-mkPrintConfig conf tcfg = PConfig conf (statusConsoleColor tcfg) (itemConsoleColor tcfg)
 
 data CmdLineParseResult = 
      Parsed Config [FilePath]
