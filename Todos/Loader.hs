@@ -52,7 +52,7 @@ readFile' "-"  = getContents
 readFile' file = readFile file
 
 -- | Load items from given file
-loadFile ∷ Config
+loadFile ∷ BaseConfig
          → DateTime       -- ^ Current date/time
          → FilePath       -- ^ Path to file
          → IO [TodoItem]
@@ -207,7 +207,7 @@ changeTopStatus (Just st) todos = map setStatus todos
     setStatus (Node item children) = Node (item {itemStatus = st}) children
 
 -- | Load list of TODO trees from files
-loadTodo ∷ Config
+loadTodo ∷ BaseConfig
          → DateTime      -- ^ Current date/time
          → [FilePath]    -- ^ List of files
          → IO [Todo]

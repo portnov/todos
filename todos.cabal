@@ -27,6 +27,7 @@ library
                    Todos.CommandParser
                    Todos.Parser
                    Todos.Config
+                   Todos.ConfigInstances
                    Todos.ConfigUtils
                    Todos.ReadConfig
                    Todos.Dot
@@ -38,6 +39,7 @@ library
                    Todos.Types
                    Todos.Unicode
                    Todos.Formatters
+                   Todos.Print
 
   Build-Depends:  base >= 3 && <= 5, haskell98, utf8-string, containers, parsec >= 2 && < 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
@@ -54,6 +56,7 @@ Executable todos
                  Todos.Parser
                  Todos.Config
                  Todos.ConfigUtils
+                 Todos.ConfigInstances
                  Todos.ReadConfig
                  Todos.Dot
                  Todos.IO
@@ -64,6 +67,7 @@ Executable todos
                  Todos.Types
                  Todos.Unicode
                  Todos.Formatters
+                 Todos.Print
 
 Source-repository head
   type:     git

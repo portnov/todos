@@ -3,8 +3,7 @@ module Todos.Tree
   (delTag,
    pruneSelector,
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
-   forT, mapT,
-   defaultPrintTodos)
+   forT, mapT)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
@@ -25,60 +24,6 @@ import Numeric
 import Todos.Types
 import Todos.Unicode
 import Todos.Config
-import Todos.Formatters
-
-type Transformer = Reader Config (Todo → [Todo])
-
-sortBy' s | s == DoNotSort = id
-          | otherwise = sortBy sorter
-  where
-    sorter = compare `on` (f ∘ rootLabel)
-    f = case s of
-          ByTitle → itemName
-          ByStatus → itemStatus
-          ByTags → unwords ∘ itemTags
-          ByStartDate → show ∘ startDate
-          ByEndDate → show ∘ endDate
-          ByDeadline → show ∘ deadline 
-
-showT ∷ SortingType → Int → Todo → [Formatter]
-showT s n (Node item todos) = 
-    (startFormat <++> showId item <++> replicate n ' ' <++> configShow item) :
-      (concatMap (showT s (n+2)) $ sortBy' s todos)
-  where
-    showId :: TodoItem → Formatter
-    showId item = do
-      s ← asks (outIds ∘ printConfig)
-      c ← asks (outColors ∘ printConfig)
-      if s
-        then if c 
-               then return [OutSetColor Dull Yellow, OutString $ makeId item ++ " ", ResetAll]
-               else return [OutString $ makeId item ++ " "]
-        else return [OutString ""]
-
-unlines'' ∷ [Formatter] → Formatter
-unlines'' lst = concat `fmap` (sequence $ intersperse newLine lst)
-
-showTodo ∷ Todo → Formatter
-showTodo t = do
-  conf ← asks printConfig
-  let f = case outOnlyFirst conf of
-            False → unlines''
-            True  → head
-  f $ showT (sorting conf) 0 t
-
-showTodos ∷ [Todo] → Formatter
-showTodos lst = do
-  conf ← asks printConfig
-  let f = case outOnlyFirst conf of
-            False → unlines''
-            True  → head
-  f $ map showTodo $ sortBy' (sorting conf) $ nub lst
-
-defaultPrintTodos ∷ PrintConfig → [Todo] → IO ()
-defaultPrintTodos cfg lst = 
-  let lst' = runReader (showTodos lst) cfg
-  in  forM lst' outItem >> putStrLn ""
 
 mapTags ∷  (Data a) ⇒ ([String] → [String]) → [a] → [a]
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
@@ -91,11 +36,11 @@ addTag t = mapTags (t:)
 delTag ∷  (Data a) ⇒ String → [a] → [a]
 delTag t = mapTags (delete t)
 
-pruneSelector ∷ (TodoItem → 𝔹) → Transformer
-pruneSelector pred = do
-  (Limit n) ← asks pruneL
-  (Limit m) ← asks minL
-  return $ pruneSelector' n m pred
+pruneSelector ∷  BaseConfig → (TodoItem → 𝔹) → (Todo → [Todo])
+pruneSelector bc pred =
+  let Limit n = pruneL bc
+      Limit m = minL   bc
+  in  pruneSelector' n m pred
         
 pruneSelector' ∷ ℤ → ℤ → (TodoItem → 𝔹) → (Todo → [Todo])
 pruneSelector' n m pred = select n 0 False

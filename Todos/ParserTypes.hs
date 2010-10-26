@@ -6,5 +6,5 @@ import Text.ParserCombinators.Parsec
 import Todos.Config
 
 
-type TParser a = GenParser Char Config a
+type TParser a = GenParser Char BaseConfig a
 
