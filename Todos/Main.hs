@@ -11,6 +11,7 @@ import System.Exit
 import System.Cmd (system)
 
 import System.Environment
+import Config.Dyre
 
 import Todos.Types
 import Todos.Unicode
@@ -26,8 +27,8 @@ import Todos.CommandParser
 import Todos.Config
 import Todos.ConfigUtils
 
-todos ∷ TodosConfig → IO ()
-todos tcfg = do
+realTodos ∷ TodosConfig → IO ()
+realTodos tcfg = do
   currDate ← getCurrentDateTime 
   config ← readConfig
   args ← getArgs
@@ -52,4 +53,10 @@ todos tcfg = do
     CmdLineHelp → do putStrLn usage
                      exitWith ExitSuccess
 
+todos ∷ TodosConfig → IO ()
+todos = wrapMain $ defaultParams {
+    projectName = "todos",
+    realMain    = realTodos,
+    statusOut   = const (return ())
+    }
 

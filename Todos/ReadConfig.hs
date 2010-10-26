@@ -81,7 +81,7 @@ readFile' path =
 readConfig ∷ IO [String]
 readConfig = do
   home ← getEnv "HOME"
-  let homepath = home </> ".config" </> "todos"
+  let homepath = home </> ".config" </> "todos" </> "todos.conf"
   homecfg ← readFile' homepath
   localcfg ← readFile' ".todos.conf"
   return $ homecfg ⧺ localcfg
