@@ -295,7 +295,7 @@ pSpecDates date = do
   return pairs
 
 -- | Parse date/time
-parseDate ∷ Config
+parseDate ∷ BaseConfig
           → DateTime  -- ^ Current date/time
           → String    -- ^ String to parse
           → Either ParseError DateTime

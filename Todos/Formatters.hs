@@ -1,4 +1,4 @@
-{-# LANGUAGE UnicodeSyntax, TypeSynonymInstances #-}
+{-# LANGUAGE UnicodeSyntax, TypeSynonymInstances, MultiParamTypeClasses, FlexibleInstances, ScopedTypeVariables #-}
 module Todos.Formatters 
   (OutItem (..),
    Formatter,
@@ -15,6 +15,7 @@ import System.Console.ANSI
 import Todos.Unicode
 import Todos.Types
 import Todos.Config
+import Todos.ConfigInstances
 import Todos.Color
 
 -- | Item which could be printed to the console
@@ -25,29 +26,29 @@ data OutItem = OutString String
     deriving (Show)
 
 -- | Produce a list of OutItem's depending on PrintConfig
-type Formatter = Reader PrintConfig [OutItem]
+type Formatter c = Reader (PrintConfig c) [OutItem]
 
 -- | Empty Formatter
-startFormat ∷ Formatter
+startFormat ∷ Formatter c
 startFormat = return []
 
 -- | Output given string
-outString ∷ String → Formatter
+outString ∷ String → Formatter c
 outString s = return [OutString s]
 
 -- | Output new line
-newLine ∷ Formatter
+newLine ∷ Formatter c
 newLine = outString "\n"
 
-class ConfigAdd a where
+class ConfigAdd c a where
   -- | Execute Formatter and a consequently
-  (<++>) ∷ Formatter → a → Formatter
+  (<++>) ∷ Formatter c → a → Formatter c
 
-instance ConfigAdd Formatter where
+instance ConfigAdd c (Formatter c) where
   (<++>) = liftM2 (⧺)
 
-instance ConfigAdd String where
-  cm <++> s = cm <++> ((return [OutString s]) ∷ Formatter)
+instance ConfigAdd c String where
+  cm <++> s = cm <++> ((return [OutString s]) ∷ Formatter c)
 
 setBold ∷  IO ()
 setBold = setSGR [SetConsoleIntensity BoldIntensity]
@@ -67,21 +68,21 @@ outItem SetBold         = setBold
 outItem ResetAll        = reset
 
 -- | Similar to Show, but output can depend on PrintConfig
-class ConfigShow s where
-  configShow ∷ s → Formatter
+class ConfigShow c s where
+  configShow ∷ s → Formatter c
 
-instance ConfigShow String where
+instance ConfigShow c String where
   configShow s = return [OutString s]
 
-instance ConfigShow Formatter where
+instance ConfigShow c (Formatter c) where
   configShow = id
   
 -- | Output bold (and maybe colored) item name
-bold ∷ TodoItem → Formatter
+bold ∷ (QueryConfig c) ⇒ TodoItem → Formatter c
 bold item = do
   let s = itemName item
-  showColors ← asks (outColors ∘ printConfig)
-  hlOn ← asks (outHighlight ∘ printConfig)
+  showColors ← askBase outColors
+  hlOn ← askBase outHighlight
   getclr ← asks printItemColor
   hlPred ← asks doHighlight
   (hlInt, hlClr) ← asks printHighlightColor
@@ -94,18 +95,20 @@ bold item = do
               else [OutString s]
 
 -- | Output colored item status
-colorStatus ∷ String → Formatter
+colorStatus ∷ (QueryConfig c) ⇒ String → Formatter c
 colorStatus st = do
   getclr ← asks printStatusColor
   let (int, clr) = getclr st
-  col ← asks (outColors ∘ printConfig)
+  col ← askBase outColors
   if col
     then return [OutSetColor int clr, OutString st, ResetAll]
     else return [OutString st]
 
-instance ConfigShow TodoItem where
-    configShow item = startFormat <++> colorStatus s <++> " " <++> dates <++> tags <++> bold item <++> (if null descr then "" else "    "⧺descr)
+instance (QueryConfig c) ⇒ ConfigShow c TodoItem where
+    configShow item = sf <++> (colorStatus s ∷ Formatter c) <++> " " <++> dates <++> tags <++> title <++> (if null descr then "" else "    "⧺descr)
       where
+        sf ∷ Formatter c
+        sf = startFormat
         n = itemLevel item
         ts = itemTags item
         s = itemStatus item
@@ -116,4 +119,6 @@ instance ConfigShow TodoItem where
         tags = if null ts
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "
+        title ∷ Formatter c
+        title = bold item
 

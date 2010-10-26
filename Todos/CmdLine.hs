@@ -79,28 +79,29 @@ parseFlags [] = O [] [] [] []
 parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
 -- | Build Config (with query etc) from Options
-buildQuery ∷ Config    -- ^ Default config
+buildQuery ∷ BaseConfig    -- ^ Default config
            → Options   -- ^ Cmdline options
            → Config
 buildQuery dc (O qflags mflags oflags lflags) =
     Config {
-      outOnlyFirst = update outOnlyFirst onlyFirst,
-      outColors    = update outColors    colors,
-      outIds       = update outIds       showIds,
-      outHighlight = update outHighlight highlight,
-      sorting      = update sorting      srt,
-      pruneL       = update pruneL       limitP,
-      minL         = update minL         limitM,
-      commandToRun = update commandToRun command,
-      prefix       = update prefix       aprefix,
-      descrFormat  = update descrFormat  dformat,
-      skipStatus   = update skipStatus   noStatus,
-      groupByFile  = update groupByFile  doGroupByFile,
-      groupByTag   = update groupByTag   doGroupByTag,
-      groupByStatus = update groupByStatus doGroupByStatus,
-      forcedStatus = update forcedStatus setStatus,
-      topStatus    = update topStatus    setTopStatus,
-      query        = update query        composedFlags }
+      baseConfig = BConfig {
+          outOnlyFirst = update outOnlyFirst onlyFirst,
+          outColors    = update outColors    colors,
+          outIds       = update outIds       showIds,
+          outHighlight = update outHighlight highlight,
+          sorting      = update sorting      srt,
+          pruneL       = update pruneL       limitP,
+          minL         = update minL         limitM,
+          commandToRun = update commandToRun command,
+          prefix       = update prefix       aprefix,
+          descrFormat  = update descrFormat  dformat,
+          skipStatus   = update skipStatus   noStatus,
+          groupByFile  = update groupByFile  doGroupByFile,
+          groupByTag   = update groupByTag   doGroupByTag,
+          groupByStatus = update groupByStatus doGroupByStatus,
+          forcedStatus = update forcedStatus setStatus,
+          topStatus    = update topStatus    setTopStatus },
+      query        = fromMaybe Empty composedFlags }
   where
     update fn Nothing  = fn dc
     update _  (Just x) = x

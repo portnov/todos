@@ -124,7 +124,7 @@ filterJoin n prefix str =
   in  (ns, unlines lns)
 
 -- | Read list of TODO items from plain format 
-parsePlain ∷ Config
+parsePlain ∷ BaseConfig
            → DateTime   -- ^ Current date/time
            → SourceName -- ^ Source file name
            → String     -- ^ String to parse
@@ -135,7 +135,7 @@ parsePlain conf date path text =
       Left e → error $ show e
 
 -- | Read list of TODO items from alternate format
-parseAlternate ∷ Config 
+parseAlternate ∷ BaseConfig 
                → Int        -- ^ Number of lones after matching to include to item's description
                → String     -- ^ Prefix to match
                → DateTime   -- ^ Current date/time
