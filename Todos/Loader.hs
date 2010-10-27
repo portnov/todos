@@ -85,6 +85,7 @@ mkTodo ∷ [TodoItem] → [Todo]
 mkTodo = (map mkTodo') ∘ group'
 
 mkTodo' ∷ [TodoItem] → Todo
+mkTodo' [] = error "Internal error: mkTodo' does not sense for empty list!"
 mkTodo' (x:xs) = Node x other
     where other = mkTodo ⋄ map (~-lvl) xs
           lvl = itemLevel (head xs)
