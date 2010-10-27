@@ -16,11 +16,13 @@ import Todos.Config
 import Todos.ConfigInstances ()
 import Todos.Formatters
 
+sortBy' ∷ SortingType → [Todo] → [Todo]
 sortBy' s | s == DoNotSort = id
           | otherwise = sortBy sorter
   where
     sorter = compare `on` (f ∘ rootLabel)
     f = case s of
+          DoNotSort → error "Internal error: sortBy' should not be called when DoNotSort is specified!"
           ByTitle → itemName
           ByStatus → itemStatus
           ByTags → unwords ∘ itemTags

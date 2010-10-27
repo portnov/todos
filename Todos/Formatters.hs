@@ -108,7 +108,6 @@ instance (RuntimeConfig c) ⇒ ConfigShow c TodoItem where
       where
         sf ∷ Formatter c
         sf = startFormat
-        n = itemLevel item
         ts = filter (not ∘ null) $ itemTags item
         s = itemStatus item
         descr = itemDescr item

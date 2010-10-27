@@ -64,11 +64,13 @@ appendC c@(Or _ _)              f = c `Or`  (Pred f)
 appendC c@(Pred _)              f = c `And` (Pred f)
 appendC c                       f = c `And` (Pred f)
 
+appendF ∷ Options → CmdLineFlag → Options
 appendF (O q m o l) (QF f) = O (f:q) m o l
 appendF (O q m o l) (MF f) = O q (f:m) o l
 appendF (O q m o l) (OF f) = O q m (f:o) l
 appendF (O q m o l) (LF f) = O q m o (f:l)
 appendF _ HelpF = Help
+appendF Help _  = Help
 
 parseFlags ∷ [CmdLineFlag] → Options
 parseFlags lst | HelpF ∈ lst = Help
@@ -79,6 +81,7 @@ parseFlags (f:fs) = (parseFlags fs) `appendF` f
 buildQuery ∷ BaseConfig    -- ^ Default config
            → Options       -- ^ Cmdline options
            → DefaultConfig
+buildQuery _ Help = error "Internal error: buildQuery does no sense for Help!"
 buildQuery dc (O qflags mflags oflags lflags) =
     DConfig {
       baseConfig = BConfig {
@@ -154,8 +157,6 @@ buildQuery dc (O qflags mflags oflags lflags) =
     isCommand _           = False
     isPrefix (Prefix _) = True
     isPrefix _          = False
-    isNoStatus DoNotReadStatus = True
-    isNoStatus _               = False
     isSetStatus (SetStatus _)  = True
     isSetStatus _              = False
     isTopStatus (SetTopStatus _) = True
@@ -178,7 +179,7 @@ parseLimits dlp dlm flags = (Just limitP, Just limitM)
     isPrune (Prune _) = True
     isPrune _         = False
 
-    isMin   (Start x) = True
+    isMin   (Start _) = True
     isMin   _         = False
 
 parseQuery ∷ [QueryFlag] → Composed

@@ -223,7 +223,6 @@ showDates = intercalate "; " ∘ map showDate ∘ catMaybes
 instance Show TodoItem where
     show item = s ⧺ " " ⧺ dates ⧺ tags ⧺ name ⧺ (if null descr then "" else "    "⧺descr)
       where
-        n = itemLevel item
         name = itemName item
         ts = itemTags item
         s = itemStatus item
