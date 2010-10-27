@@ -110,7 +110,7 @@ instance (RuntimeConfig c) ⇒ ConfigShow c TodoItem where
         sf ∷ Formatter c
         sf = startFormat
         n = itemLevel item
-        ts = itemTags item
+        ts = filter (not ∘ null) $ itemTags item
         s = itemStatus item
         descr = itemDescr item
         dates | null dates' = ""
