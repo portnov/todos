@@ -41,9 +41,12 @@ library
                    Todos.Formatters
                    Todos.Print
 
-  Build-Depends:  base >= 3 && <= 5, haskell98, utf8-string, containers, parsec >= 2 && < 3,
+  Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 2 && < 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
                   process, data-hash, dyre
+
+  if impl(GHC <= 6.10)
+    Build-Depends: utf8-string
 
 Executable todos
   Main-Is:       todos.hs
