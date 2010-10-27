@@ -13,7 +13,7 @@ import System.Console.ANSI
 import Todos.Unicode
 import Todos.Types
 import Todos.Config
-import Todos.ConfigInstances
+import Todos.ConfigInstances ()
 import Todos.Formatters
 
 sortBy' s | s == DoNotSort = id

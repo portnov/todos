@@ -3,7 +3,6 @@
 module Todos.Types where
 
 import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
-import Todos.IO
 import Data.Hash
 
 import Data.Function 

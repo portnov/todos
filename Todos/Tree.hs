@@ -7,19 +7,11 @@ module Todos.Tree
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import Todos.IO
-import System.Console.ANSI
 import Control.Monad
-import Control.Monad.Reader
-import qualified Data.Map as M
 import Data.Generics
 import Data.List
-import Data.Function (on)
 import Data.Tree
-import Data.Maybe
 import Text.Regex.PCRE
-import Data.Hash
-import Numeric
 
 import Todos.Types
 import Todos.Unicode

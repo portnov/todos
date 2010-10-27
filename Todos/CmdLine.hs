@@ -11,12 +11,10 @@ module Todos.CmdLine
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Todos.IO
-import System (getArgs)
 import System.Console.GetOpt
 import System.FilePath.Glob
 import Data.Maybe
 import Data.List (sort)
-import Control.Monad.Reader
 
 import Todos.Unicode
 import Todos.Types

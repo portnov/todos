@@ -6,10 +6,8 @@ module Todos.Dates
   where
 
 import Data.Char (toUpper)
-import Data.Function (on)
 import Data.List
 import Data.Time.Calendar
-import Data.Time.Clock
 import Data.Time.LocalTime
 import Text.ParserCombinators.Parsec
 

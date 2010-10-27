@@ -8,11 +8,10 @@ import Prelude hiding (putStrLn,readFile,getContents,print)
 import Todos.IO
 import Control.Monad (forM)
 import qualified Data.Map as M
-import Text.ParserCombinators.Parsec
 import System.FilePath
 import Data.Maybe
 import Data.Tree
-import Data.List (init, nub, sort)
+import Data.List (nub, sort)
 
 import Todos.Unicode
 import Todos.Types

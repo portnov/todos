@@ -8,7 +8,6 @@ import Todos.Unicode
 import Todos.Types
 import Todos.Color
 import Todos.Shapes
-import Text.ParserCombinators.Parsec
 import qualified System.Console.ANSI as ANSI
 
 -- | Any user-specified runtime config type should belong to this class

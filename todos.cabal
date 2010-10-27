@@ -45,6 +45,8 @@ library
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
                   process, data-hash, dyre
 
+  ghc-options: -fwarn-unused-imports
+
   if impl(GHC <= 6.10)
     Build-Depends: utf8-string
 
