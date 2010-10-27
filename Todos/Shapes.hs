@@ -3,7 +3,6 @@ module Todos.Shapes where
 
 import qualified Data.Map as M
 
-import Todos.Unicode
 import Todos.Types
 
 -- | Supported node shapes for DOT output

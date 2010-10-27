@@ -2,10 +2,8 @@
 -- | This module contains some empty configs definitions and some function fields of defaultConfig
 module Todos.ConfigUtils where
 
-import Control.Monad.Reader
 import System.Console.ANSI
 
-import Todos.Unicode
 import Todos.Types
 import Todos.Config
 import Todos.Color

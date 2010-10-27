@@ -15,8 +15,7 @@ import System.Console.ANSI
 import Todos.Unicode
 import Todos.Types
 import Todos.Config
-import Todos.ConfigInstances
-import Todos.Color
+import Todos.ConfigInstances ()
 
 -- | Item which could be printed to the console
 data OutItem = OutString String

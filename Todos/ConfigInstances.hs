@@ -3,7 +3,6 @@
 module Todos.ConfigInstances where
 
 import Todos.Unicode
-import Todos.Types
 import Todos.Config
 import Todos.CmdLine
 

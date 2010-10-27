@@ -9,7 +9,6 @@ import Data.List (minimumBy)
 import Data.Function (on)
 import qualified System.Console.ANSI as ANSI
 
-import Todos.Unicode
 import Todos.Types
 
 -- | Hue, saturation and value; all are in [0; 1] range.

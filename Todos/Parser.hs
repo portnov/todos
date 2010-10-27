@@ -4,15 +4,9 @@ module Todos.Parser
     where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import Todos.IO
-import Control.Monad
 import Data.List
 import Text.ParserCombinators.Parsec
-import qualified Data.Map as M
-import Data.Tree
-import Data.Maybe
 import Data.Char
-import Data.Function
 
 import Todos.Unicode
 import Todos.Types

@@ -5,7 +5,6 @@ module Todos.Dot
 
 import Data.List
 import Data.Tree
-import Data.Hash
 import Text.Printf
 
 import Todos.Unicode

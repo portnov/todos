@@ -5,7 +5,6 @@ module Todos.Main (todos) where
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import IO
 import Data.Tree
-import System (getArgs)
 import System.Exit
 import System.Cmd (system)
 
@@ -14,12 +13,9 @@ import Config.Dyre
 
 import Todos.Types
 import Todos.Unicode
-import Todos.Color
-import Todos.Shapes
 import Todos.Dates
 import Todos.Dot
 import Todos.CmdLine
-import Todos.Print
 import Todos.Tree
 import Todos.ReadConfig
 import Todos.Loader
