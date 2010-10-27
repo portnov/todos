@@ -5,20 +5,15 @@ module Todos.IO
    encodeString, decodeString)
   where
 
+import Codec.Binary.UTF8.String (encodeString, decodeString)
+
 #if __GLASGOW_HASKELL__ < 612
 
-   import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
-   import System.IO.UTF8
-   import Codec.Binary.UTF8.String (encodeString, decodeString)
+import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
+import System.IO.UTF8
 
 #else
 
-  import Prelude
-
-  encodeString :: String -> String
-  encodeString = id
-
-  decodeString :: String -> String
-  decodeString = id
+import Prelude
 
 #endif
