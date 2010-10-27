@@ -43,12 +43,9 @@ library
 
   Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 2 && < 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
-                  process, data-hash, dyre
+                  process, data-hash, dyre, utf8-string
 
   ghc-options: -fwarn-unused-imports
-
-  if impl(GHC <= 6.10)
-    Build-Depends: utf8-string
 
 Executable todos
   Main-Is:       todos.hs
