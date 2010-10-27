@@ -11,12 +11,14 @@ import Todos.Shapes
 import Text.ParserCombinators.Parsec
 import qualified System.Console.ANSI as ANSI
 
-type ListTransformer c = Reader c ([Todo] → [Todo])
-
-class QueryConfig c where
-  getPredicate ∷ DateTime → c → (TodoItem → 𝔹)
+-- | Any user-specified runtime config type should belong to this class
+class RuntimeConfig c where
+  -- | Does given TODO item match query?
+  getPredicate ∷ DateTime → c → (TodoItem → 𝔹) 
+  -- | Get basic configuration
   toBaseConfig ∷ c → BaseConfig
 
+-- | Any user-specified runtime config type should include at least this properties
 data BaseConfig = BConfig {
       outOnlyFirst ∷ 𝔹,           -- ^ Output only first matching entry
       outColors ∷ 𝔹,              -- ^ Show colored output
@@ -37,8 +39,8 @@ data BaseConfig = BConfig {
       }
     deriving (Eq, Show)
 
--- | Runtime configuration. Is read from command line and configs.
-data Config = Config {
+-- | Default runtime configuration type. Is read from command line and configs.
+data DefaultConfig = DConfig {
       baseConfig ∷ BaseConfig,
       query ∷ Composed }
     deriving (Eq,Show)
@@ -72,6 +74,6 @@ data CmdLineParseResult c =
    | CmdLineHelp               -- ^ User asked for help
    deriving (Eq,Show)
 
-askBase ∷ (QueryConfig c) ⇒ (BaseConfig → a) → Reader c a
+askBase ∷ (RuntimeConfig c) ⇒ (BaseConfig → a) → Reader c a
 askBase field = asks (field ∘ toBaseConfig)
 

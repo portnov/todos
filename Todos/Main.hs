@@ -28,7 +28,7 @@ import Todos.CommandParser
 import Todos.Config
 import Todos.ConfigUtils
 
-realTodos ∷ (QueryConfig c) ⇒ TodosConfig c → IO ()
+realTodos ∷ (RuntimeConfig c) ⇒ TodosConfig c → IO ()
 realTodos tcfg = do
   currDate ← getCurrentDateTime 
   config ← readConfig
@@ -55,7 +55,9 @@ realTodos tcfg = do
     CmdLineHelp → do putStrLn usage
                      exitWith ExitSuccess
 
-todos ∷ (QueryConfig c) ⇒ TodosConfig c → IO ()
+-- | Main function to run. User can specify TodosConfig with any runtime config
+-- type. By default (in todos.hs) defaultConfig is used, which uses DefaultConfig type.
+todos ∷ (RuntimeConfig c) ⇒ TodosConfig c → IO ()
 todos = wrapMain $ defaultParams {
     projectName = "todos",
     realMain    = realTodos,

@@ -78,7 +78,7 @@ instance ConfigShow c (Formatter c) where
   configShow = id
   
 -- | Output bold (and maybe colored) item name
-bold ∷ (QueryConfig c) ⇒ TodoItem → Formatter c
+bold ∷ (RuntimeConfig c) ⇒ TodoItem → Formatter c
 bold item = do
   let s = itemName item
   showColors ← askBase outColors
@@ -95,7 +95,7 @@ bold item = do
               else [OutString s]
 
 -- | Output colored item status
-colorStatus ∷ (QueryConfig c) ⇒ String → Formatter c
+colorStatus ∷ (RuntimeConfig c) ⇒ String → Formatter c
 colorStatus st = do
   getclr ← asks printStatusColor
   let (int, clr) = getclr st
@@ -104,7 +104,7 @@ colorStatus st = do
     then return [OutSetColor int clr, OutString st, ResetAll]
     else return [OutString st]
 
-instance (QueryConfig c) ⇒ ConfigShow c TodoItem where
+instance (RuntimeConfig c) ⇒ ConfigShow c TodoItem where
     configShow item = sf <++> (colorStatus s ∷ Formatter c) <++> " " <++> dates <++> tags <++> title <++> (if null descr then "" else "    "⧺descr)
       where
         sf ∷ Formatter c

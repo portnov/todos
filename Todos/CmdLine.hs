@@ -81,9 +81,9 @@ parseFlags (f:fs) = (parseFlags fs) `appendF` f
 -- | Build Config (with query etc) from Options
 buildQuery ∷ BaseConfig    -- ^ Default config
            → Options   -- ^ Cmdline options
-           → Config
+           → DefaultConfig
 buildQuery dc (O qflags mflags oflags lflags) =
-    Config {
+    DConfig {
       baseConfig = BConfig {
           outOnlyFirst = update outOnlyFirst onlyFirst,
           outColors    = update outColors    colors,
