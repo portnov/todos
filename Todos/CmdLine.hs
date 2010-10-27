@@ -11,7 +11,6 @@ module Todos.CmdLine
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Todos.IO
-import Codec.Binary.UTF8.String
 import System (getArgs)
 import System.Console.GetOpt
 import System.FilePath.Glob

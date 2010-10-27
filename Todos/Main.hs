@@ -5,7 +5,6 @@ module Todos.Main (todos) where
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import IO
 import Data.Tree
-import Codec.Binary.UTF8.String
 import System (getArgs)
 import System.Exit
 import System.Cmd (system)
