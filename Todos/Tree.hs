@@ -95,7 +95,7 @@ flattern = concatMap flat
 
 -- | For each item in the tree, execute given monadic action (this is similar
 -- to forM, but for trees instead of lists).
-forT ∷ (Monad m, Eq ta) ⇒ [Tree t] → (t → m a) → m [b]
+forT ∷ (Monad m, Eq t) ⇒ [Tree t] → (t → m a) → m [b]
 forT todos f = forM (nub todos) forT'
   where
     forT' (Node item trees) =
