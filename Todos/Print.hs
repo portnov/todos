@@ -1,5 +1,7 @@
 {-# LANGUAGE UnicodeSyntax #-}
-module Todos.Print where
+module Todos.Print
+  (defaultPrintTodos, showTodos)
+  where
 
 import Control.Monad
 import Control.Monad.Reader
@@ -58,6 +60,7 @@ showTodo t = do
             True  → head
   f $ showT (sorting conf) 0 t
 
+-- | Prepare TODOs for console output
 showTodos ∷ [Todo] → Formatter DefaultConfig
 showTodos lst = do
   conf ← asks toBaseConfig
@@ -66,6 +69,7 @@ showTodos lst = do
             True  → head
   f $ map showTodo $ sortBy' (sorting conf) $ nub lst
 
+-- | Default function to output TODOs to console
 defaultPrintTodos ∷ PrintConfig DefaultConfig → [Todo] → IO ()
 defaultPrintTodos cfg lst = 
   let lst' = runReader (showTodos lst) cfg

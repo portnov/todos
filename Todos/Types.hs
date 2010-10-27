@@ -18,6 +18,7 @@ import Numeric
 
 import Todos.Unicode
 
+-- | Kind of date
 data DateType = StartDate
               | EndDate
               | Deadline
@@ -38,6 +39,7 @@ data DateTime =
     second ∷ Int }
   deriving (Eq,Ord,Data,Typeable)
 
+-- | 12 months names.
 months ∷ [String]
 months = ["january",
           "february",
@@ -52,10 +54,12 @@ months = ["january",
           "november",
           "december"]
 
+-- | capitalize first letter of the string
 capitalize ∷ String → String
 capitalize [] = []
 capitalize (x:xs) = (toUpper x):xs
 
+-- | Show name of given month
 showMonth ∷  Int → String
 showMonth i = capitalize $ months !! (i-1)
 
@@ -64,6 +68,7 @@ instance Show DateTime where
     show d ⧺ " " ⧺ showMonth m ⧺ " " ⧺ show y ⧺ ", " ⧺
       show h ⧺ ":" ⧺ show min ⧺ ":" ⧺ show s
 
+-- | Only time, without date
 data Time = 
   Time {
     tHour ∷ Int,
@@ -71,24 +76,27 @@ data Time =
     tSecond ∷ Int }
   deriving (Eq,Ord,Show,Data,Typeable)
 
+-- | TODO item itself.
 data TodoItem = Item {
-    itemLevel ∷ ℤ,
-    itemName ∷ String,
-    itemTags ∷ [String],
-    depends ∷ [String],
-    itemStatus ∷ String,
-    itemDescr ∷ String,
-    startDate ∷ Maybe DateTime,
-    endDate ∷ Maybe DateTime,
-    deadline ∷ Maybe DateTime,
-    fileName ∷ FilePath,
-    lineNr ∷ Line}
+    itemLevel ∷ ℤ,               -- ^ Indentation level (from source file)
+    itemName ∷ String,           -- ^ Name (title) of the item
+    itemTags ∷ [String],         -- ^ Tags of the item
+    depends ∷ [String],          -- ^ Names (titles) of item's depends
+    itemStatus ∷ String,         -- ^ Status of the item
+    itemDescr ∷ String,          -- ^ Description of the item
+    startDate ∷ Maybe DateTime,  -- ^ Date when TODO is planned to start
+    endDate ∷ Maybe DateTime,    -- ^ Date when TODO is planned to end
+    deadline ∷ Maybe DateTime,   -- ^ Deadline for this TODO
+    fileName ∷ FilePath,         -- ^ Path to the source file
+    lineNr ∷ Line                -- ^ Line in the source file, where this item was defined
+  }
   deriving (Eq,Data,Typeable)
 
 instance Hashable TodoItem where
     hash item = foldl1 combine $ map ($ item) [hash ∘ itemName, hash ∘ itemDescr,
                                                hash ∘ itemTags, hash ∘ itemStatus]
 
+-- | Make an ID for any hashable item. 16 hexadecimal digits.
 makeId :: (Hashable a) ⇒ a → String
 makeId item =
   let s = showHex (asWord64 $ hash item) ""
@@ -97,6 +105,7 @@ makeId item =
         then replicate (16-l) '0' ++ s
         else s
 
+-- | Tree of TODO items.
 type Todo = Tree TodoItem
 
 type TodoMap = M.Map String Todo
@@ -111,6 +120,7 @@ instance Ord Limit where
     compare _ Unlimited = LT
     compare (Limit x) (Limit y) = compare x y
 
+-- | Command line flag
 data CmdLineFlag = QF {queryFlag ∷ QueryFlag}
                  | MF {modeFlag ∷ ModeFlag}
                  | OF {outFlag ∷ OutFlag}
@@ -118,6 +128,7 @@ data CmdLineFlag = QF {queryFlag ∷ QueryFlag}
                  | HelpF
     deriving (Eq,Show)
 
+-- | Flags to specify query
 data QueryFlag = Tag String
                | Name {unName ∷ String}
                | IdIs String
@@ -136,6 +147,7 @@ data LimitFlag = Prune {unPrune ∷ ℤ}
                | Start {unMin ∷ ℤ}
     deriving (Eq,Show)
 
+-- | Flags to specify parsing mode
 data ModeFlag = Execute {unExecute ∷ String}
               | Prefix {unPrefix ∷ String}
               | Describe {unDescribe ∷ String}
@@ -147,6 +159,7 @@ data ModeFlag = Execute {unExecute ∷ String}
               | GroupByStatus
     deriving (Eq,Ord,Show)
 
+-- | Flags to control output
 data OutFlag = OnlyFirst 
              | Colors
              | Highlight
@@ -155,6 +168,7 @@ data OutFlag = OnlyFirst
              | Sort {getSorting ∷ SortingType}
     deriving (Eq,Ord,Show)
 
+-- | Type of sorting
 data SortingType = DoNotSort
                  | ByTitle
                  | ByStatus
@@ -178,30 +192,33 @@ instance (Ord a) ⇒ Ord (Tree a) where
   compare = compare `on` rootLabel
 
 -- TODO: - rename Options → QueryOptions or similar
+-- | Result of parsing command line
 data Options = O [QueryFlag] [ModeFlag] [OutFlag] [LimitFlag]
              | Help
 
+-- | What to do with selected items
 data TodoCommand =
-    JustShow
-  | ShowAsDot
-  | SystemCommand String
+    JustShow              -- ^ Just output items to console
+  | ShowAsDot             -- ^ Output graph in DOT format
+  | SystemCommand String  -- ^ Execute this system command for each item
   deriving (Eq, Show)
 
-data Composed = Pred QueryFlag
-              | And Composed Composed
-              | Or Composed Composed
-              | Not Composed
-              | Empty
-              | HelpC
+-- | Data type to store complex queries
+data Composed = Pred QueryFlag            -- ^ Simple query
+              | And Composed Composed     -- ^ Logical AND
+              | Or Composed Composed      -- ^ Logical OR
+              | Not Composed              -- ^ Logical NOT
+              | Empty                     -- ^ Empty query
+              | HelpC                     -- ^ User requests help
     deriving (Eq,Show)
 
 is ∷  (Functor f) ⇒ t → f a → f (t, a)
 t `is`  x = (\a → (t,a)) `fmap` x
 
-showDate ∷  (Show t, Show t1) ⇒ (t, t1) → [Char]
+showDate ∷  (DateType, DateTime) → String
 showDate (t,d) = show t ⧺ ": " ⧺ show d
 
-showDates ∷  (Show t, Show t1) ⇒ [Maybe (t, t1)] → [Char]
+showDates ∷  [Maybe (DateType, DateTime)] → String
 showDates = intercalate "; " ∘ map showDate ∘ catMaybes
 
 instance Show TodoItem where
@@ -218,11 +235,6 @@ instance Show TodoItem where
         tags = if null ts
                  then ""
                  else "[" ⧺ (unwords ts) ⧺ "] "
-
-lookupC ∷  (Eq a1) ⇒ a1 → [([a1], a)] → Maybe a
-lookupC k [] = Nothing
-lookupC k ((lst,c):other) | k ∈ lst   = Just c
-                          | otherwise = lookupC k other
 
 instance Ord TodoItem where
   compare item1 item2 = 

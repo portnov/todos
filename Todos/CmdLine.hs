@@ -77,9 +77,9 @@ parseFlags lst | HelpF ∈ lst = Help
 parseFlags [] = O [] [] [] []
 parseFlags (f:fs) = (parseFlags fs) `appendF` f
 
--- | Build Config (with query etc) from Options
+-- | Build DefaultConfig (with query etc) from Options
 buildQuery ∷ BaseConfig    -- ^ Default config
-           → Options   -- ^ Cmdline options
+           → Options       -- ^ Cmdline options
            → DefaultConfig
 buildQuery dc (O qflags mflags oflags lflags) =
     DConfig {
@@ -198,6 +198,7 @@ parseCmdLine' currDate args =
 
 isPattern s = ('*' ∈ s) || ('?' ∈ s)
 
+-- | For given list of glob masks, return list of matching files
 glob ∷ [FilePath] → IO [FilePath]
 glob list = do
   let patterns = filter isPattern list
@@ -205,6 +206,7 @@ glob list = do
   (matches, _) ← globDir (map compile patterns) "." 
   return $ sort $ files ⧺ concat matches
 
+-- | Usage help for default command line options
 usage ∷  String
 usage = usageInfo header (options undefined)
   where 

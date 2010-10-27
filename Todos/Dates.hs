@@ -280,6 +280,7 @@ dateType "end"   = EndDate
 dateType "deadline" = Deadline
 dateType _ = error "unknown date type"
 
+-- | Parse date/time with date type
 pSpecDate ∷ DateTime → TParser (DateType, DateTime)
 pSpecDate date = do
   tp ← choice $ map string ["start","end","deadline"]
@@ -287,6 +288,7 @@ pSpecDate date = do
   dt ← pDate date
   return (dateType tp, dt)
 
+-- | Parse set of dates with types (in parenthesis)
 pSpecDates ∷ DateTime → TParser [(DateType, DateTime)]
 pSpecDates date = do
   char '('
