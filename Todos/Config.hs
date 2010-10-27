@@ -74,6 +74,7 @@ data CmdLineParseResult c =
    | CmdLineHelp               -- ^ User asked for help
    deriving (Eq,Show)
 
+-- | ask field from BaseConfig
 askBase ∷ (RuntimeConfig c) ⇒ (BaseConfig → a) → Reader c a
 askBase field = asks (field ∘ toBaseConfig)
 

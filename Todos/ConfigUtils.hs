@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, MultiParamTypeClasses #-}
+-- | This module contains some empty configs definitions and some function fields of defaultConfig
 module Todos.ConfigUtils where
 
 import Control.Monad.Reader
@@ -70,7 +71,7 @@ defaultTodosFilter dt conf todos =
         then t
         else concatMap (composeAll dt conf) t
 
--- | Parse command line
+-- | Parse command line (default function)
 parseCmdLine ∷ DateTime              -- ^ Current date/time
              → DefaultConfig         -- ^ Default config
              → [String]              -- ^ Command line args

@@ -136,7 +136,7 @@ parsePlain conf date path text =
 
 -- | Read list of TODO items from alternate format
 parseAlternate ∷ BaseConfig 
-               → Int        -- ^ Number of lones after matching to include to item's description
+               → Int        -- ^ Number of lines after matching to include to item's description
                → String     -- ^ Prefix to match
                → DateTime   -- ^ Current date/time
                → SourceName -- ^ Source file name
