@@ -26,18 +26,18 @@ sortBy' s | s == DoNotSort = id
           ByEndDate → show ∘ endDate
           ByDeadline → show ∘ deadline 
 
-showT ∷ SortingType → Int → Todo → [Formatter Config]
+showT ∷ SortingType → Int → Todo → [Formatter DefaultConfig]
 showT s n (Node item todos) = 
     (sf <++> showId item <++> replicate n ' ' <++> item') :
       (concatMap (showT s (n+2)) $ sortBy' s todos)
   where
-    sf ∷ Formatter Config
+    sf ∷ Formatter DefaultConfig
     sf = startFormat
 
-    item' ∷ Formatter Config
+    item' ∷ Formatter DefaultConfig
     item' = configShow item
 
-    showId :: TodoItem → Formatter Config
+    showId :: TodoItem → Formatter DefaultConfig
     showId item = do
       s ← askBase outIds
       c ← askBase outColors
@@ -50,7 +50,7 @@ showT s n (Node item todos) =
 unlines'' ∷ [Formatter c] → Formatter c
 unlines'' lst = concat `fmap` (sequence $ intersperse newLine lst)
 
-showTodo ∷ Todo → Formatter Config
+showTodo ∷ Todo → Formatter DefaultConfig
 showTodo t = do
   conf ← asks toBaseConfig
   let f = case outOnlyFirst conf of
@@ -58,7 +58,7 @@ showTodo t = do
             True  → head
   f $ showT (sorting conf) 0 t
 
-showTodos ∷ [Todo] → Formatter Config
+showTodos ∷ [Todo] → Formatter DefaultConfig
 showTodos lst = do
   conf ← asks toBaseConfig
   let f = case outOnlyFirst conf of
@@ -66,7 +66,7 @@ showTodos lst = do
             True  → head
   f $ map showTodo $ sortBy' (sorting conf) $ nub lst
 
-defaultPrintTodos ∷ PrintConfig Config → [Todo] → IO ()
+defaultPrintTodos ∷ PrintConfig DefaultConfig → [Todo] → IO ()
 defaultPrintTodos cfg lst = 
   let lst' = runReader (showTodos lst) cfg
   in  forM lst' outItem >> putStrLn ""

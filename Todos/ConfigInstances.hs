@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax #-}
+-- | This module contains instances of RuntimeConfig class for DefaultConfig and PrintConfig
 module Todos.ConfigInstances where
 
 import Todos.Unicode
@@ -6,11 +7,11 @@ import Todos.Types
 import Todos.Config
 import Todos.CmdLine
 
-instance QueryConfig Config where
+instance RuntimeConfig DefaultConfig where
   getPredicate dt conf = compose dt $ query conf
   toBaseConfig = baseConfig
 
-instance (QueryConfig c) ⇒ QueryConfig (PrintConfig c) where
+instance (RuntimeConfig c) ⇒ RuntimeConfig (PrintConfig c) where
   getPredicate = const doHighlight
   toBaseConfig = toBaseConfig ∘ printConfig
 

@@ -13,6 +13,7 @@ import Todos.CmdLine
 import Todos.Print
 import Todos.Tree
 
+-- | Empty BaseConfig
 emptyBaseConfig ∷ BaseConfig
 emptyBaseConfig = BConfig {
   outOnlyFirst = False,
@@ -33,13 +34,14 @@ emptyBaseConfig = BConfig {
   topStatus = Nothing
 }
 
--- | Default empty Config (nullConfig field of defaultConfig)
-emptyConfig = Config {
+-- | Default empty DefaultConfig (nullConfig field of defaultConfig)
+emptyConfig ∷ DefaultConfig
+emptyConfig = DConfig {
   baseConfig = emptyBaseConfig,
   query = Empty }
 
 -- | Default Todos config
-defaultConfig ∷ TodosConfig Config
+defaultConfig ∷ TodosConfig DefaultConfig
 defaultConfig = Todos {
   parseCommandLine = parseCmdLine,
   filterTodos = defaultTodosFilter,
@@ -53,14 +55,14 @@ defaultConfig = Todos {
 }
 
 -- | Make a list transformer
-composeAll ∷ DateTime → Config → (Todo → [Todo])
+composeAll ∷ DateTime → DefaultConfig → (Todo → [Todo])
 composeAll date conf =
   let pred = compose date $ query conf
       bc = baseConfig conf
   in  pruneSelector bc pred
 
 -- | Default filter for TODOs (filterTodos field of defaultConfig)
-defaultTodosFilter ∷ DateTime → Config → [Todo] → [Todo]
+defaultTodosFilter ∷ DateTime → DefaultConfig → [Todo] → [Todo]
 defaultTodosFilter dt conf todos =
   let t = delTag "-" todos
       bc = baseConfig conf
@@ -70,9 +72,9 @@ defaultTodosFilter dt conf todos =
 
 -- | Parse command line
 parseCmdLine ∷ DateTime              -- ^ Current date/time
-             → Config                -- ^ Default config
+             → DefaultConfig         -- ^ Default config
              → [String]              -- ^ Command line args
-             → CmdLineParseResult Config
+             → CmdLineParseResult DefaultConfig
 parseCmdLine currDate dc args = 
   case parseCmdLine' currDate args of
     Right (opts, files) → case opts of
@@ -80,7 +82,8 @@ parseCmdLine currDate dc args =
                            _    → Parsed (buildQuery (baseConfig dc) opts) files
     Left str            → ParseError str
 
-mkPrintConfig ∷ (QueryConfig c) ⇒ DateTime → c → TodosConfig c → PrintConfig c
+-- | Prepare PrintConfig for console output functions. Is called from realTodos.
+mkPrintConfig ∷ (RuntimeConfig c) ⇒ DateTime → c → TodosConfig c → PrintConfig c
 mkPrintConfig dt conf tcfg = PConfig {
   printConfig      = conf,
   printStatusColor = statusConsoleColor tcfg,
