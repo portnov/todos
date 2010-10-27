@@ -13,10 +13,7 @@ Description:    todos is a simple TODO manager. TODO records theirself are descr
                 plain-text file, and todos allows you to show only needed of
                 them. So, todos works as specialized `grep' utility.
 
-Extra-source-files: CmdLine.hs CommandParser.hs Config.hs ConstrSet.hs Dates.hs IO.hs
-                    Makefile README README.ru Setup.hs test.hs test.txt TODO
-                    TodoLoader.hs TodoParser.hs todos.hs TodoTree.hs Types.hs
-                    Unicode.hs Dot.hs Color.hs Shapes.hs
+Extra-source-files: Makefile README README.ru TODO
 
 library
   Exposed-Modules: Todos
