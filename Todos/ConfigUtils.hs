@@ -25,6 +25,7 @@ emptyBaseConfig = BConfig {
   commandToRun = JustShow,
   prefix = Nothing,
   outputFormat = "%s %D%t%n  %d",
+  indentString = "  ",
   skipStatus = False,
   groupByFile = False,
   groupByTag = False,

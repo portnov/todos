@@ -164,6 +164,7 @@ data OutFlag = OnlyFirst
              | Highlight
              | Ids
              | DotExport
+             | IndentWith {getIndentString ∷ String}
              | Sort {getSorting ∷ SortingType}
     deriving (Eq,Ord,Show)
 
