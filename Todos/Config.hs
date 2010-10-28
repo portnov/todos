@@ -29,6 +29,7 @@ data BaseConfig = BConfig {
       commandToRun ∷ TodoCommand,
       prefix ∷ Maybe String,      -- ^ Nothing — use default parser, Just p — use alternate parser with prefix «p»
       outputFormat ∷ String,
+      indentString ∷ String,      -- ^ String to use for output tree indenting (two spaces by default)
       skipStatus ∷ 𝔹,             -- ^ Skip status field in input
       groupByFile ∷ 𝔹,
       groupByTag ∷ 𝔹,

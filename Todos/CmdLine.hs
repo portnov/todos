@@ -95,6 +95,7 @@ buildQuery dc (O qflags mflags oflags lflags) =
           commandToRun = update commandToRun command,
           prefix       = update prefix       aprefix,
           outputFormat = update outputFormat dformat,
+          indentString = update indentString indent,
           skipStatus   = update skipStatus   noStatus,
           groupByFile  = update groupByFile  doGroupByFile,
           groupByTag   = update groupByTag   doGroupByTag,
@@ -140,6 +141,10 @@ buildQuery dc (O qflags mflags oflags lflags) =
     dformat | null dflags = Nothing
             | otherwise   = Just $ getFormat $ last dflags
 
+    iflags = filter isIndent oflags
+    indent | null iflags = Nothing
+           | otherwise   = Just $ getIndentString $ last iflags
+
     noStatus = DoNotReadStatus ? mflags
     newStatusFlags = filter isSetStatus mflags
     setStatus | null newStatusFlags = Nothing
@@ -153,6 +158,8 @@ buildQuery dc (O qflags mflags oflags lflags) =
     isSort _        = False
     isFormat (Format _) = True
     isFormat _          = False
+    isIndent (IndentWith _) = True
+    isIndent _              = False
     isCommand (Execute _) = True
     isCommand _           = False
     isPrefix (Prefix _) = True
@@ -220,6 +227,7 @@ options currDate = [
     Option "A" ["prefix"]     (OptArg mkPrefix "PREFIX")             "use alternate parser: read only lines starting with PREFIX",
     Option ""  ["dot"]        (NoArg (OF DotExport))                 "output entries in DOT (graphviz) format",
     Option "D" ["format"]     (ReqArg mkFormat "FORMAT")             "use FORMAT to format items",
+    Option "k" ["indent-with"] (ReqArg mkIndent "STRING")            "use STRING instead of two spaces for items indentation",
     Option "w" ["no-status"]  (NoArg (MF DoNotReadStatus))           "do not read status field from TODOs",
     Option ""  ["set-status"] (ReqArg mkSetStatus "STRING")          "force all TODOs status to be equal to STRING",
     Option ""  ["set-root-status"] (ReqArg mkTopStatus "STRING")     "force statuses of root TODOs to be equal to STRING",
@@ -276,6 +284,9 @@ mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate undefined dt s
 
 mkFormat ∷  String → CmdLineFlag
 mkFormat f = MF $ Format f
+
+mkIndent ∷ String → CmdLineFlag
+mkIndent s = OF $ IndentWith s
 
 mkSetStatus ∷ String → CmdLineFlag
 mkSetStatus st = MF $ SetStatus st

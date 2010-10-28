@@ -30,13 +30,15 @@ sortBy' s | s == DoNotSort = id
           ByEndDate → show ∘ endDate
           ByDeadline → show ∘ deadline 
 
-showT ∷ SortingType → Int → Todo → [Formatter DefaultConfig]
-showT s n (Node item todos) = 
-    (sf <++> showId item <++> replicate n ' ' <++> item') :
-      (concatMap (showT s (n+2)) $ sortBy' s todos)
+showT ∷ SortingType → Int → String → Todo → [Formatter DefaultConfig]
+showT s n sep (Node item todos) = 
+    (sf <++> showId item <++> seps <++> item') :
+      (concatMap (showT s (n+1) sep) $ sortBy' s todos)
   where
     sf ∷ Formatter DefaultConfig
     sf = startFormat
+
+    seps = concat (replicate n sep)
 
     item' ∷ Formatter DefaultConfig
     item' = configShow item
@@ -57,10 +59,11 @@ unlines'' lst = concat `fmap` (sequence $ intersperse newLine lst)
 showTodo ∷ Todo → Formatter DefaultConfig
 showTodo t = do
   conf ← asks toBaseConfig
+  sep ← askBase indentString
   let f = case outOnlyFirst conf of
             False → unlines''
             True  → head
-  f $ showT (sorting conf) 0 t
+  f $ showT (sorting conf) 0 sep t
 
 -- | Prepare TODOs for console output
 showTodos ∷ [Todo] → Formatter DefaultConfig
