@@ -103,20 +103,34 @@ colorStatus st = do
     then return [OutSetColor int clr, OutString st, ResetAll]
     else return [OutString st]
 
-instance (RuntimeConfig c) ⇒ ConfigShow c TodoItem where
-    configShow item = sf <++> (colorStatus s ∷ Formatter c) <++> " " <++> dates <++> tags <++> title <++> (if null descr then "" else "    "⧺descr)
-      where
-        sf ∷ Formatter c
-        sf = startFormat
-        ts = filter (not ∘ null) $ itemTags item
-        s = itemStatus item
-        descr = itemDescr item
-        dates | null dates' = ""
-              | otherwise = "(" ⧺ dates' ⧺ ") "
-        dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]
-        tags = if null ts
-                 then ""
-                 else "[" ⧺ (unwords ts) ⧺ "] "
-        title ∷ Formatter c
-        title = bold item
+printM ∷ (RuntimeConfig c) ⇒ TodoItem → Formatter c
+printM item = askBase outputFormat >>= printf
+  where
+    printf :: (RuntimeConfig c) ⇒ String → Formatter c
+    printf ""         = return []
+    printf [c]        = return [OutString [c]]
+    printf ('%':c:xs) = liftM2 (⧺) (itemPart c) (printf xs)
+    printf (x:xs)     = do r ← printf xs
+                           return $ (OutString [x]):r
 
+    tags = filter (not ∘ null) $ itemTags item
+    string s = return [OutString s]
+
+    itemPart ∷ (RuntimeConfig c) ⇒ Char → Formatter c
+    itemPart 'L' = string (show $ itemLevel item)
+    itemPart 'n' = bold item 
+    itemPart 't' = if null tags
+                     then return []
+                     else string ("[" ⧺ unwords tags ⧺ "] ")
+    itemPart 's' = colorStatus (itemStatus item)
+    itemPart 'd' = string (itemDescr item)
+    itemPart 'f' = string (fileName item)
+    itemPart 'l' = string (show $ lineNr item)
+    itemPart 'D' | null dates' = return []
+                 | otherwise = string $ "(" ⧺ dates' ⧺ ") "
+    itemPart c   = string [c]
+
+    dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]
+
+instance (RuntimeConfig c) ⇒ ConfigShow c TodoItem where
+    configShow item = (startFormat ∷ Formatter c) <++> (printM item ∷ Formatter c)

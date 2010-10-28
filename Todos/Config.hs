@@ -28,7 +28,7 @@ data BaseConfig = BConfig {
       minL   ∷ Limit,
       commandToRun ∷ TodoCommand,
       prefix ∷ Maybe String,      -- ^ Nothing — use default parser, Just p — use alternate parser with prefix «p»
-      descrFormat ∷ String,
+      outputFormat ∷ String,
       skipStatus ∷ 𝔹,             -- ^ Skip status field in input
       groupByFile ∷ 𝔹,
       groupByTag ∷ 𝔹,
