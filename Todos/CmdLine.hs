@@ -94,7 +94,7 @@ buildQuery dc (O qflags mflags oflags lflags) =
           minL         = update minL         limitM,
           commandToRun = update commandToRun command,
           prefix       = update prefix       aprefix,
-          descrFormat  = update descrFormat  dformat,
+          outputFormat = update outputFormat dformat,
           skipStatus   = update skipStatus   noStatus,
           groupByFile  = update groupByFile  doGroupByFile,
           groupByTag   = update groupByTag   doGroupByTag,
@@ -136,9 +136,9 @@ buildQuery dc (O qflags mflags oflags lflags) =
     aprefix | null prefixFlags = Nothing
             | otherwise        = Just $ Just $ unPrefix (last prefixFlags)
 
-    dflags = filter isDescribe mflags
+    dflags = filter isFormat mflags
     dformat | null dflags = Nothing
-            | otherwise   = Just $unDescribe $ last dflags
+            | otherwise   = Just $ getFormat $ last dflags
 
     noStatus = DoNotReadStatus ? mflags
     newStatusFlags = filter isSetStatus mflags
@@ -151,8 +151,8 @@ buildQuery dc (O qflags mflags oflags lflags) =
 
     isSort (Sort _) = True
     isSort _        = False
-    isDescribe (Describe _) = True
-    isDescribe _            = False
+    isFormat (Format _) = True
+    isFormat _          = False
     isCommand (Execute _) = True
     isCommand _           = False
     isPrefix (Prefix _) = True
@@ -219,7 +219,7 @@ options currDate = [
     Option "I" ["show-ids"]   (NoArg (OF Ids))                       "show IDs of todos",
     Option "A" ["prefix"]     (OptArg mkPrefix "PREFIX")             "use alternate parser: read only lines starting with PREFIX",
     Option ""  ["dot"]        (NoArg (OF DotExport))                 "output entries in DOT (graphviz) format",
-    Option "D" ["describe"]   (OptArg mkDescribe "FORMAT")           "use FORMAT for descriptions",
+    Option "D" ["format"]     (ReqArg mkFormat "FORMAT")             "use FORMAT to format items",
     Option "w" ["no-status"]  (NoArg (MF DoNotReadStatus))           "do not read status field from TODOs",
     Option ""  ["set-status"] (ReqArg mkSetStatus "STRING")          "force all TODOs status to be equal to STRING",
     Option ""  ["set-root-status"] (ReqArg mkTopStatus "STRING")     "force statuses of root TODOs to be equal to STRING",
@@ -274,9 +274,8 @@ mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate undefined dt s
 mkDeadline ∷  DateTime → String → CmdLineFlag
 mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate undefined dt s
 
-mkDescribe ∷  Maybe String → CmdLineFlag
-mkDescribe Nothing = MF $ Describe "%d"
-mkDescribe (Just f) = MF $ Describe f
+mkFormat ∷  String → CmdLineFlag
+mkFormat f = MF $ Format f
 
 mkSetStatus ∷ String → CmdLineFlag
 mkSetStatus st = MF $ SetStatus st

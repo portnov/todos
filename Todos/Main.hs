@@ -35,13 +35,12 @@ realTodos tcfg = do
       files ← glob files'
       todos ← loadTodo bc currDate files
       let queried  = (filterTodos tcfg) currDate q todos
-          format item = item {itemDescr = printfItem (descrFormat bc) item}
       case commandToRun bc of
-        JustShow  → printTodos tcfg (mkPrintConfig currDate q tcfg) (mapT format queried)
+        JustShow  → printTodos tcfg (mkPrintConfig currDate q tcfg) queried
         ShowAsDot → 
-             putStrLn $ showAsDot (itemColor tcfg) (itemShape tcfg) (mapT format queried)
+             putStrLn $ showAsDot (itemColor tcfg) (itemShape tcfg) queried
         SystemCommand cmd → do
-             forT selected (\item → system $ printfItem cmd (format item))
+             forT selected (\item → system $ printfItem cmd item)
              return ()
           where selected | outOnlyFirst bc = [Node (rootLabel $ head queried) []]
                          | otherwise       = queried

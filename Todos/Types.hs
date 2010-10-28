@@ -149,7 +149,7 @@ data LimitFlag = Prune {unPrune ∷ ℤ}
 -- | Flags to specify parsing mode
 data ModeFlag = Execute {unExecute ∷ String}
               | Prefix {unPrefix ∷ String}
-              | Describe {unDescribe ∷ String}
+              | Format {getFormat ∷ String}
               | DoNotReadStatus
               | SetStatus {newStatus ∷ String}
               | SetTopStatus {newTopStatus ∷ String}
