@@ -274,13 +274,13 @@ forceEither (Right x) = x
 forceEither (Left x) = error $ show x
 
 mkStartDate ∷  DateTime → String → CmdLineFlag
-mkStartDate dt s = QF $ StartDateIs $ forceEither $ parseDate undefined dt s
+mkStartDate dt s = QF $ StartDateIs $ forceEither $ parseDate dt s
 
 mkEndDate ∷  DateTime → String → CmdLineFlag
-mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate undefined dt s
+mkEndDate dt s = QF $ EndDateIs $ forceEither $ parseDate dt s
 
 mkDeadline ∷  DateTime → String → CmdLineFlag
-mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate undefined dt s
+mkDeadline dt s = QF $ DeadlineIs $ forceEither $ parseDate dt s
 
 mkFormat ∷  String → CmdLineFlag
 mkFormat f = MF $ Format f

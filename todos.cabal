@@ -19,7 +19,6 @@ library
   Exposed-Modules: Todos
                    Todos.CmdLine
                    Todos.Color
-                   Todos.ParserTypes
                    Todos.Dates
                    Todos.CommandParser
                    Todos.Parser
@@ -49,7 +48,6 @@ Executable todos
   Other-Modules: Todos
                  Todos.CmdLine
                  Todos.Color
-                 Todos.ParserTypes
                  Todos.Dates
                  Todos.CommandParser
                  Todos.Parser
