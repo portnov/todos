@@ -13,8 +13,6 @@ import Text.ParserCombinators.Parsec
 
 import Todos.Types
 import Todos.Unicode
-import Todos.Config
-import Todos.ParserTypes
 
 getCurrentDateTime ∷  IO DateTime
 getCurrentDateTime = do
@@ -54,7 +52,7 @@ addTime dt t = dt {
                  minute = tMinute t + minute dt,
                  second = tSecond t + second dt }
 
-times ∷ Int → TParser t → TParser [t]
+times ∷ Int → CharParser st t → CharParser st [t]
 times 0 _ = return []
 times n p = do
   ts ← times (n-1) p
@@ -63,27 +61,27 @@ times n p = do
     Just t' → return (ts ++ [t'])
     Nothing → return ts
                                
-number ∷ Int → Int → TParser Int
+number ∷ Int → Int → CharParser st Int
 number n m = do
   t ← read `fmap` (n `times` digit)
   if t > m
     then fail "number too large"
     else return t
 
-pYear ∷ TParser Int
+pYear ∷ CharParser st Int
 pYear = do
   y ← number 4 10000
   if y < 2000
     then return (y+2000)
     else return y
 
-pMonth ∷ TParser Int
+pMonth ∷ CharParser st Int
 pMonth = number 2 12
 
-pDay ∷ TParser Int
+pDay ∷ CharParser st Int
 pDay = number 2 31
 
-euroNumDate ∷ TParser DateTime
+euroNumDate ∷ CharParser st DateTime
 euroNumDate = do
   d ← pDay
   char '.'
@@ -92,7 +90,7 @@ euroNumDate = do
   y ← pYear
   return $ date y m d
 
-americanDate ∷ TParser DateTime
+americanDate ∷ CharParser st DateTime
 americanDate = do
   y ← pYear
   char '/'
@@ -101,21 +99,21 @@ americanDate = do
   d ← pDay
   return $ date y m d
 
-euroNumDate' ∷ Int → TParser DateTime
+euroNumDate' ∷ Int → CharParser st DateTime
 euroNumDate' year = do
   d ← pDay
   char '.'
   m ← pMonth
   return $ date year m d
 
-americanDate' ∷ Int → TParser DateTime
+americanDate' ∷ Int → CharParser st DateTime
 americanDate' year = do
   m ← pMonth
   char '/'
   d ← pDay
   return $ date year m d
 
-strDate ∷ TParser DateTime
+strDate ∷ CharParser st DateTime
 strDate = do
   d ← pDay
   space
@@ -128,7 +126,7 @@ strDate = do
       notFollowedBy $ char ':'
       return $ date y m d
 
-strDate' ∷ Int → TParser DateTime
+strDate' ∷ Int → CharParser st DateTime
 strDate' year = do
   d ← pDay
   space
@@ -137,7 +135,7 @@ strDate' year = do
     Nothing → fail $ "unknown month: "++ms
     Just m  → return $ date year m d
 
-time24 ∷ TParser Time
+time24 ∷ CharParser st Time
 time24 = do
   h ← number 2 23
   char ':'
@@ -150,7 +148,7 @@ time24 = do
       notFollowedBy letter
       return $ Time h m s
 
-ampm ∷ TParser Int
+ampm ∷ CharParser st Int
 ampm = do
   s ← many1 letter
   case map toUpper s of
@@ -158,7 +156,7 @@ ampm = do
     "PM" → return 12
     _ → fail "AM/PM expected"
 
-time12 ∷ TParser Time
+time12 ∷ CharParser st Time
 time12 = do
   h ← number 2 12
   char ':'
@@ -171,7 +169,7 @@ time12 = do
   hd ← ampm
   return $ Time (h+hd) m s
 
-pAbsDate ∷ Int → TParser DateTime
+pAbsDate ∷ Int → CharParser st DateTime
 pAbsDate year = do
   date ← choice $ map try $ map ($ year) $ [
                               const euroNumDate,
@@ -214,23 +212,23 @@ addInterval dt (Weeks ws) = modifyDate addDays (ws*7) dt
 addInterval dt (Months ms) = modifyDate addGregorianMonthsClip ms dt
 addInterval dt (Years ys) = modifyDate addGregorianYearsClip ys dt
 
-maybePlural ∷ String → TParser String
+maybePlural ∷ String → CharParser st String
 maybePlural str = do
   r ← string str
   optional $ char 's'
   return (capitalize r)
 
-pDateInterval ∷ TParser DateIntervalType
+pDateInterval ∷ CharParser st DateIntervalType
 pDateInterval = do
   s ← choice $ map maybePlural ["day", "week", "month", "year"]
   return $ read s
 
-pRelDate ∷ DateTime → TParser DateTime
+pRelDate ∷ DateTime → CharParser st DateTime
 pRelDate date = do
   offs ← (try futureDate) <|> (try passDate) <|> (try today) <|> (try tomorrow) <|> yesterday
   return $ date `addInterval` offs
 
-futureDate ∷ TParser DateInterval
+futureDate ∷ CharParser st DateInterval
 futureDate = do
   string "in "
   n ← many1 digit
@@ -242,7 +240,7 @@ futureDate = do
     Month → return $ Months (read n)
     Year →  return $ Years (read n)
 
-passDate ∷ TParser DateInterval
+passDate ∷ CharParser st DateInterval
 passDate = do
   n ← many1 digit
   char ' '
@@ -254,22 +252,22 @@ passDate = do
     Month → return $ Months $ - (read n)
     Year →  return $ Years $ - (read n)
 
-today ∷ TParser DateInterval
+today ∷ CharParser st DateInterval
 today = do
   string "today"
   return $ Days 0
 
-tomorrow ∷ TParser DateInterval
+tomorrow ∷ CharParser st DateInterval
 tomorrow = do
   string "tomorrow"
   return $ Days 1
 
-yesterday ∷ TParser DateInterval
+yesterday ∷ CharParser st DateInterval
 yesterday = do
   string "yesterday"
   return $ Days (-1)
 
-pDate ∷ DateTime → TParser DateTime
+pDate ∷ DateTime → CharParser st DateTime
 pDate date =  (try $ pRelDate date) <|> (try $ pAbsDate $ year date)
 
 dateType ∷ String → DateType
@@ -279,7 +277,7 @@ dateType "deadline" = Deadline
 dateType _ = error "unknown date type"
 
 -- | Parse date/time with date type
-pSpecDate ∷ DateTime → TParser (DateType, DateTime)
+pSpecDate ∷ DateTime → CharParser st (DateType, DateTime)
 pSpecDate date = do
   tp ← choice $ map string ["start","end","deadline"]
   string ": "
@@ -287,7 +285,7 @@ pSpecDate date = do
   return (dateType tp, dt)
 
 -- | Parse set of dates with types (in parenthesis)
-pSpecDates ∷ DateTime → TParser [(DateType, DateTime)]
+pSpecDates ∷ DateTime → CharParser st [(DateType, DateTime)]
 pSpecDates date = do
   char '('
   pairs ← (pSpecDate date) `sepBy1` (string "; ")
@@ -295,9 +293,8 @@ pSpecDates date = do
   return pairs
 
 -- | Parse date/time
-parseDate ∷ BaseConfig
-          → DateTime  -- ^ Current date/time
+parseDate ∷ DateTime  -- ^ Current date/time
           → String    -- ^ String to parse
           → Either ParseError DateTime
-parseDate conf date s = runParser (pDate date) conf "" s
+parseDate date s = runParser (pDate date) () "" s
 

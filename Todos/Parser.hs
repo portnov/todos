@@ -11,8 +11,9 @@ import Data.Char
 import Todos.Unicode
 import Todos.Types
 import Todos.Dates
-import Todos.ParserTypes
 import Todos.Config
+
+type TParser a = GenParser Char BaseConfig a
 
 strip ∷  String → String
 strip = reverse ∘ p ∘ reverse ∘ p
