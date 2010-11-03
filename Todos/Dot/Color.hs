@@ -1,4 +1,6 @@
 {-# LANGUAGE UnicodeSyntax #-}
+-- | This module contains data type for storing HSV color, used in DOT output,
+-- and some default functions to calculate items' colors.
 module Todos.Dot.Color where
 
 import qualified Data.Map as M

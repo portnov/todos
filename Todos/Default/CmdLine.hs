@@ -1,6 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 
--- | Module for parsing command line options and build queries
+-- | Module for parsing command line options and build queries. These functions
+-- are used by default, but user can supply his own functions.
 module Todos.Default.CmdLine
   (parseCmdLine',
    glob,

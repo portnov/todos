@@ -1,5 +1,7 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
+-- | Todos.Default.* modules contain implementation of RuntimeConfig instance for DefaultConfig type.
+
 module Todos.Default
   (module Todos.Default.CmdLine,
    module Todos.Default.Instances,

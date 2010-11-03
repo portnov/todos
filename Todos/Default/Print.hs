@@ -1,4 +1,6 @@
 {-# LANGUAGE UnicodeSyntax #-}
+-- | This module implements printing TODOs tree to console. Here is default
+-- function, but user can supply his own.
 module Todos.Default.Print
   (defaultPrintTodos, showTodos)
   where

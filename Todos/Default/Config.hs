@@ -1,5 +1,6 @@
 {-# LANGUAGE UnicodeSyntax #-}
-
+-- | This module contains declaration of DefaultConfig data type, which is used
+-- by default to store runtime config.
 module Todos.Default.Config
   (module Todos.Config,
    DefaultConfig (..)
