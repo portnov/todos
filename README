@@ -54,7 +54,8 @@ Next commandline options are supported:
   -I           --show-ids                show IDs of todos
   -A[PREFIX]   --prefix[=PREFIX]         use alternate parser: read only lines starting with PREFIX
                --dot                     output entries in DOT (graphviz) format
-  -D[FORMAT]   --describe[=FORMAT]       use FORMAT for descriptions
+  -D FORMAT    --format=FORMAT           use FORMAT to format items
+  -k[STRING]   --indent-with[=STRING]    use STRING instead of two spaces for items indentation
   -w           --no-status               do not read status field from TODOs
                --set-status=STRING       force all TODOs status to be equal to STRING
                --set-root-status=STRING  force statuses of root TODOs to be equal to STRING
@@ -91,7 +92,12 @@ That ID is simply hash  from item's title, status, tags and description, so
 only identical items will have identical ID. One can ask todos to show item
 with specified ID using «-i» option.
 
-For «--describe» and «--exec» options, printf-style format strings should be
+With «-k» option one can specify another indentation string instead of default
+two spaces. For example, `todos -k"| "` will print vertical lines between items
+of same level. «-k» option without argument will force todos to not use
+indentation at all.
+
+For «--format» and «--exec» options, printf-style format strings should be
 specified. Following substitution sequences are supported:
 
 %n :: title of the record
@@ -100,6 +106,7 @@ specified. Following substitution sequences are supported:
 %d :: description of the record
 %f :: name of file, in which record was found
 %l :: number of line in source file
+%D :: dates of item
 
 For example, «todos -tBUG -e"vi %f +%l"» command for each record with «BUG» tag
 will open vi with corresponding file on corresponding line.
