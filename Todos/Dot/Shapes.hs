@@ -1,5 +1,5 @@
 {-# LANGUAGE UnicodeSyntax #-}
-module Todos.Shapes where
+module Todos.Dot.Shapes where
 
 import qualified Data.Map as M
 

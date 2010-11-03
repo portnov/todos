@@ -1,15 +1,14 @@
 {-# LANGUAGE UnicodeSyntax, MultiParamTypeClasses #-}
 -- | This module contains some empty configs definitions and some function fields of defaultConfig
-module Todos.ConfigUtils where
+module Todos.Default.Utils where
 
 import System.Console.ANSI
 
 import Todos.Types
-import Todos.Config
-import Todos.Color
-import Todos.Shapes
-import Todos.CmdLine
-import Todos.Print
+import Todos.Dot
+import Todos.Default.CmdLine
+import Todos.Default.Config
+import Todos.Default.Print
 import Todos.Tree
 
 -- | Empty BaseConfig

@@ -1,5 +1,5 @@
 {-# LANGUAGE UnicodeSyntax #-}
-module Todos.Print
+module Todos.Default.Print
   (defaultPrintTodos, showTodos)
   where
 
@@ -12,8 +12,8 @@ import System.Console.ANSI
 
 import Todos.Unicode
 import Todos.Types
-import Todos.Config
-import Todos.ConfigInstances ()
+import Todos.Default.Config
+import Todos.Default.Instances ()
 import Todos.Formatters
 
 sortBy' ∷ SortingType → [Todo] → [Todo]
