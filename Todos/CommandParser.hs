@@ -4,6 +4,7 @@ module Todos.CommandParser where
 
 import Todos.Unicode
 import Todos.Types
+import Todos.Formatters (is)
 
 -- | Format item info
 printfItem ∷ String      -- ^ Format string
@@ -23,4 +24,9 @@ printfItem pattern item = printf pattern
     itemPart 'd' = itemDescr item
     itemPart 'f' = fileName item
     itemPart 'l' = show $ lineNr item
+    itemPart 'D' | null dates = ""
+                 | otherwise  = "(" ⧺ dates ⧺ ") "
     itemPart x   = [x]
+
+    dates = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]
+
