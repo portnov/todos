@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, TypeSynonymInstances, FlexibleInstances #-}
+-- | Output TODOs tree as DOT graph
 module Todos.Dot.Render
   (showAsDot)
   where

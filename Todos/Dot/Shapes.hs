@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax #-}
+-- | Support for DOT node shapes
 module Todos.Dot.Shapes where
 
 import qualified Data.Map as M
