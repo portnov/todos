@@ -1,5 +1,5 @@
 {-# LANGUAGE UnicodeSyntax #-}
-module Todos.Color where
+module Todos.Dot.Color where
 
 import qualified Data.Map as M
 import Text.Printf

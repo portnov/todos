@@ -1,10 +1,11 @@
 {-# LANGUAGE UnicodeSyntax #-}
 -- | This module contains instances of RuntimeConfig class for DefaultConfig and PrintConfig
-module Todos.ConfigInstances where
+module Todos.Default.Instances where
 
 import Todos.Unicode
 import Todos.Config
-import Todos.CmdLine
+import Todos.Default.Config
+import Todos.Default.CmdLine
 
 instance RuntimeConfig DefaultConfig where
   getPredicate dt conf = compose dt $ query conf

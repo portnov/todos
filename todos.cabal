@@ -17,25 +17,28 @@ Extra-source-files: Makefile README README.ru TODO
 
 library
   Exposed-Modules: Todos
-                   Todos.CmdLine
-                   Todos.Color
+                   Todos.Default
+                   Todos.Default.CmdLine
+                   Todos.Default.Instances
+                   Todos.Default.Utils
+                   Todos.Default.Print
+                   Todos.Default.Config
+                   Todos.Dot
+                   Todos.Dot.Color
+                   Todos.Dot.Shapes
+                   Todos.Dot.Render
                    Todos.Dates
                    Todos.CommandParser
                    Todos.Parser
                    Todos.Config
-                   Todos.ConfigInstances
-                   Todos.ConfigUtils
                    Todos.ReadConfig
-                   Todos.Dot
                    Todos.IO
                    Todos.Main
-                   Todos.Shapes
                    Todos.Loader
                    Todos.Tree
                    Todos.Types
                    Todos.Unicode
                    Todos.Formatters
-                   Todos.Print
 
   Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 2 && < 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
@@ -46,25 +49,28 @@ library
 Executable todos
   Main-Is:       todos.hs
   Other-Modules: Todos
-                 Todos.CmdLine
-                 Todos.Color
+                 Todos.Default
+                 Todos.Default.CmdLine
+                 Todos.Default.Instances
+                 Todos.Default.Utils
+                 Todos.Default.Print
+                 Todos.Default.Config
+                 Todos.Dot
+                 Todos.Dot.Color
+                 Todos.Dot.Shapes
+                 Todos.Dot.Render
                  Todos.Dates
                  Todos.CommandParser
                  Todos.Parser
                  Todos.Config
-                 Todos.ConfigUtils
-                 Todos.ConfigInstances
                  Todos.ReadConfig
-                 Todos.Dot
                  Todos.IO
                  Todos.Main
-                 Todos.Shapes
                  Todos.Loader
                  Todos.Tree
                  Todos.Types
                  Todos.Unicode
                  Todos.Formatters
-                 Todos.Print
 
 Source-repository head
   type:     git

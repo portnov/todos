@@ -1,7 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, PatternGuards #-}
 
 -- | Module for parsing command line options and build queries
-module Todos.CmdLine
+module Todos.Default.CmdLine
   (parseCmdLine',
    glob,
    buildQuery,
@@ -19,7 +19,7 @@ import Data.List (sort)
 import Todos.Unicode
 import Todos.Types
 import Todos.Tree
-import Todos.Config
+import Todos.Default.Config
 import Todos.Dates (parseDate)
 
 -- | Compose predicate from Composed

@@ -1,6 +1,11 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Todos.Main (todos) where
+module Todos.Main
+  (module Todos.Default,
+   module Todos.Config,
+   module Todos.Dot,
+   todos
+  ) where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import IO
@@ -15,13 +20,12 @@ import Todos.Types
 import Todos.Unicode
 import Todos.Dates
 import Todos.Dot
-import Todos.CmdLine
 import Todos.Tree
 import Todos.ReadConfig
 import Todos.Loader
 import Todos.CommandParser
 import Todos.Config
-import Todos.ConfigUtils
+import Todos.Default
 
 realTodos ∷ (RuntimeConfig c) ⇒ TodosConfig c → IO ()
 realTodos tcfg = do

@@ -1,4 +1,4 @@
-{-# LANGUAGE UnicodeSyntax, TypeSynonymInstances, MultiParamTypeClasses, FlexibleInstances, ScopedTypeVariables #-}
+{-# LANGUAGE UnicodeSyntax, TypeSynonymInstances, MultiParamTypeClasses, FlexibleInstances, ScopedTypeVariables, FlexibleContexts, UndecidableInstances #-}
 module Todos.Formatters 
   (OutItem (..),
    Formatter,
@@ -15,7 +15,7 @@ import System.Console.ANSI
 import Todos.Unicode
 import Todos.Types
 import Todos.Config
-import Todos.ConfigInstances ()
+-- import Todos.Default.ConfigInstances ()
 
 -- | Item which could be printed to the console
 data OutItem = OutString String
@@ -77,7 +77,7 @@ instance ConfigShow c (Formatter c) where
   configShow = id
   
 -- | Output bold (and maybe colored) item name
-bold ∷ (RuntimeConfig c) ⇒ TodoItem → Formatter c
+bold ∷ (RuntimeConfig (PrintConfig c)) ⇒ TodoItem → Formatter c
 bold item = do
   let s = itemName item
   showColors ← askBase outColors
@@ -94,7 +94,7 @@ bold item = do
               else [OutString s]
 
 -- | Output colored item status
-colorStatus ∷ (RuntimeConfig c) ⇒ String → Formatter c
+colorStatus ∷ (RuntimeConfig (PrintConfig c)) ⇒ String → Formatter c
 colorStatus st = do
   getclr ← asks printStatusColor
   let (int, clr) = getclr st
@@ -103,10 +103,10 @@ colorStatus st = do
     then return [OutSetColor int clr, OutString st, ResetAll]
     else return [OutString st]
 
-printM ∷ (RuntimeConfig c) ⇒ TodoItem → Formatter c
+printM ∷ (RuntimeConfig (PrintConfig c)) ⇒ TodoItem → Formatter c
 printM item = askBase outputFormat >>= printf
   where
-    printf :: (RuntimeConfig c) ⇒ String → Formatter c
+    printf :: (RuntimeConfig (PrintConfig c)) ⇒ String → Formatter c
     printf ""         = return []
     printf [c]        = return [OutString [c]]
     printf ('%':c:xs) = liftM2 (⧺) (itemPart c) (printf xs)
@@ -116,7 +116,7 @@ printM item = askBase outputFormat >>= printf
     tags = filter (not ∘ null) $ itemTags item
     string s = return [OutString s]
 
-    itemPart ∷ (RuntimeConfig c) ⇒ Char → Formatter c
+    itemPart ∷ (RuntimeConfig (PrintConfig c)) ⇒ Char → Formatter c
     itemPart 'L' = string (show $ itemLevel item)
     itemPart 'n' = bold item 
     itemPart 't' = if null tags
@@ -132,5 +132,5 @@ printM item = askBase outputFormat >>= printf
 
     dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]
 
-instance (RuntimeConfig c) ⇒ ConfigShow c TodoItem where
+instance (RuntimeConfig (PrintConfig c)) ⇒ ConfigShow c TodoItem where
     configShow item = (startFormat ∷ Formatter c) <++> (printM item ∷ Formatter c)

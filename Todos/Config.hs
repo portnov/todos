@@ -6,8 +6,7 @@ import Control.Monad.Reader
 
 import Todos.Unicode
 import Todos.Types
-import Todos.Color
-import Todos.Shapes
+import Todos.Dot
 import qualified System.Console.ANSI as ANSI
 
 -- | Any user-specified runtime config type should belong to this class
@@ -38,12 +37,6 @@ data BaseConfig = BConfig {
       topStatus ∷ Maybe String
       }
     deriving (Eq, Show)
-
--- | Default runtime configuration type. Is read from command line and configs.
-data DefaultConfig = DConfig {
-      baseConfig ∷ BaseConfig,
-      query ∷ Composed }
-    deriving (Eq,Show)
 
 -- | Configuration for console output. Is generated in runtime from TodosConfig and Config.
 data PrintConfig c = PConfig {
