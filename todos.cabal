@@ -40,7 +40,7 @@ library
                    Todos.Unicode
                    Todos.Formatters
 
-  Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 2 && < 3,
+  Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
                   process, data-hash, dyre, utf8-string
 
