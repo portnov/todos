@@ -1,5 +1,5 @@
 Name:           todos
-Version:        0.4
+Version:        0.5
 Cabal-Version:  >= 1.6
 License:        BSD3
 License-File:   LICENSE
@@ -23,6 +23,7 @@ library
                    Todos.Default.Utils
                    Todos.Default.Print
                    Todos.Default.Config
+                   Todos.Default.Curses
                    Todos.Dot
                    Todos.Dot.Color
                    Todos.Dot.Shapes
@@ -42,7 +43,7 @@ library
 
   Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
-                  process, data-hash, dyre, utf8-string
+                  process, data-hash, dyre, utf8-string, hscurses, setlocale
 
   ghc-options: -fwarn-unused-imports
 
