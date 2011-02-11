@@ -8,7 +8,6 @@ import Data.Tree
 import System.Console.ANSI as ANSI
 import UI.HSCurses.Curses  as Curses
 import System.Locale.SetLocale
-import Codec.Binary.UTF8.String
 
 import Todos.Types
 import Todos.Default.Config
@@ -53,14 +52,14 @@ cursesPrintTodos ∷ PrintConfig DefaultConfig → [Todo] → IO ()
 cursesPrintTodos cfg lst = do
   setLocale LC_ALL Nothing
   initCurses
-  np <- colorPairs
-  nc <- colors
+  np ← colorPairs
+  nc ← colors
   let m = min np nc
-  forM_ [1..m] $ \i ->
-    initPair (Pair i) (Curses.Color $ i-1) (Curses.Color (-1))
-  (lines,cols) <- scrSize
+  forM_ [0..m-1] $ \i →
+    initPair (Pair i) (Curses.Color i) (Curses.Color (-1))
+  (lines,cols) ← scrSize
   let nLines = todoLines lst
-  pad <- newPad nLines cols
+  pad ← newPad nLines cols
   let lst' = runReader (showTodos lst) cfg
   forM lst' (outItem pad)
   echo False
@@ -79,24 +78,19 @@ scrollPad pad padLines lines cols = do
     waitForKeys 0
   where
     scrollToLine i = pRefresh pad i 0 0 0 (lines-1) (cols-1)
+    
+    scroll i = scrollToLine i >> waitForKeys i
+    
+    moveDown i = scroll $ min (padLines - lines) (i+1)
+               
+    moveUp i = scroll $ max 0 (i-1)
 
     waitForKeys i = do
-      c <- getCh
+      c ← getCh
       case c of
-        KeyChar 'q' -> return ()
-        KeyChar 'j' -> do
-                         let i' = min padLines (i+1)
-                         scrollToLine i'
-                         waitForKeys  i'
-        KeyChar 'k' -> do
-                         let i' = max 0 (i-1)
-                         scrollToLine i'
-                         waitForKeys  i'
-        KeyChar 'g' -> do
-                         scrollToLine 0
-                         waitForKeys 0
-        KeyChar 'G' -> do
-                         let i' = lines - padLines
-                         scrollToLine i'
-                         waitForKeys i'
-        _           -> beep >> waitForKeys i
+        KeyChar 'q' → return ()
+        KeyChar 'j' → moveDown i
+        KeyChar 'k' → moveUp i
+        KeyChar 'g' → scroll 0
+        KeyChar 'G' → scroll (padLines - lines)
+        _           → beep >> waitForKeys i
