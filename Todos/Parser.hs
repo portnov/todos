@@ -7,6 +7,7 @@ import Prelude hiding (putStrLn,readFile,getContents,print)
 import Data.List
 import Text.ParserCombinators.Parsec
 import Data.Char
+import Text.Regex.PCRE
 
 import Todos.Unicode
 import Todos.Types
@@ -109,8 +110,10 @@ filterN n prefix lst =
       lns    = map fst good
       sub k l = (take l) ∘ (drop k)
       ans = map (unwords' prefix) [sub j n lst | j ← lns]
-      isGood x = prefix `isPrefixOf` x
-      cut = drop (1+length prefix) 
+      regex = '^': prefix
+      isGood x = x =~ regex
+      cut x = drop (1+n) x
+                where (_,n) = x =~ regex :: (MatchOffset, MatchLength)
   in (map (+1) lns, map cut ans)
 
 filterJoin ∷ Int → String → String → ([Int], String)
