@@ -9,7 +9,7 @@ import Prelude hiding (putStrLn,readFile,getContents,print)
 import Todos.IO
 import System.Environment
 import System.FilePath 
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, getCurrentDirectory)
 import Text.ParserCombinators.Parsec
 
 import Todos.Unicode
@@ -74,12 +74,23 @@ readFile' path =
               str ← readFile path
               return $ parseConfig (unwords $ lines str)
 
+readFiles ∷ [FilePath] → IO [String]
+readFiles [] = return []
+readFiles (path:other) = do
+  content ← readFile' path
+  case content of
+    "%":options → do otherOptions ← readFiles other
+                     return $ otherOptions ⧺ options
+    []          → readFiles other
+    _           → return content
+
 -- | Read list of options from config files
 readConfig ∷ IO [String]
 readConfig = do
   home ← getEnv "HOME"
   let homepath = home </> ".config" </> "todos" </> "todos.conf"
   homecfg ← readFile' homepath
-  localcfg ← readFile' ".todos.conf"
+  pwd <- getCurrentDirectory
+  localcfg ← readFiles $ map (</> ".todos.conf") $ scanl1 (</>) $ splitPath pwd
   return $ homecfg ⧺ localcfg
   
