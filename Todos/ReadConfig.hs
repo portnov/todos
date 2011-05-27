@@ -2,7 +2,7 @@
 
 -- | Module for parsing config files
 module Todos.ReadConfig
-  (readConfig)
+  (readAllConfigs, readConfigFile)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
@@ -65,8 +65,9 @@ parseConfig str =
     Right lst → lst
     Left err → error $ show err
 
-readFile' ∷ FilePath → IO [String]
-readFile' path = 
+-- | Read list of options from given config file
+readConfigFile ∷ FilePath → IO [String]
+readConfigFile path = 
   do b ← doesFileExist path
      if not b
        then return []
@@ -77,7 +78,7 @@ readFile' path =
 readFiles ∷ [FilePath] → IO [String]
 readFiles [] = return []
 readFiles (path:other) = do
-  content ← readFile' path
+  content ← readConfigFile path
   case content of
     "%":options → do otherOptions ← readFiles other
                      return $ otherOptions ⧺ options
@@ -85,11 +86,11 @@ readFiles (path:other) = do
     _           → return content
 
 -- | Read list of options from config files
-readConfig ∷ IO [String]
-readConfig = do
+readAllConfigs ∷ IO [String]
+readAllConfigs = do
   home ← getEnv "HOME"
   let homepath = home </> ".config" </> "todos" </> "todos.conf"
-  homecfg ← readFile' homepath
+  homecfg ← readConfigFile homepath
   pwd <- getCurrentDirectory
   localcfg ← readFiles $ map (</> ".todos.conf") $ scanl1 (</>) $ splitPath pwd
   return $ homecfg ⧺ localcfg
