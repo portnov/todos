@@ -11,10 +11,18 @@ printfItem ∷ String      -- ^ Format string
            → String
 printfItem pattern item = printf pattern
   where
-    printf "" = ""
-    printf [x] = [x]
-    printf ('%':c:xs) = (itemPart c) ⧺ printf xs
-    printf (x:xs) = x:printf xs
+    printf ""          = ""
+    printf [x]         = [x]
+    printf ('%':c:xs)  = itemPart c ⧺ printf xs
+    printf ('\\':c:xs) = escape c : printf xs
+    printf (x:xs)      = x:printf xs
+
+    escape '\\' = '\\'
+    escape 't'  = '\t'
+    escape 'n'  = '\n'
+    escape 'b'  = '\b'
+    escape 'v'  = '\v'
+    escape c    = c
 
     itemPart 'L' = show $ itemLevel item
     itemPart 'n' = itemName item

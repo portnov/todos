@@ -107,11 +107,21 @@ printM ∷ (RuntimeConfig (PrintConfig c)) ⇒ TodoItem → Formatter c
 printM item = askBase outputFormat >>= printf
   where
     printf :: (RuntimeConfig (PrintConfig c)) ⇒ String → Formatter c
-    printf ""         = return []
-    printf [c]        = return [OutString [c]]
-    printf ('%':c:xs) = liftM2 (⧺) (itemPart c) (printf xs)
-    printf (x:xs)     = do r ← printf xs
-                           return $ (OutString [x]):r
+    printf ""          = return []
+    printf [c]         = return [OutString [c]]
+    printf ('%':c:xs)  = liftM2 (⧺) (itemPart c) (printf xs)
+    printf ('\\':c:xs) = liftM2 (:) (outChar $ escape c) (printf xs)
+    printf (x:xs)      = do r ← printf xs
+                            return $ (OutString [x]):r
+    
+    outChar c = return (OutString [c])
+
+    escape '\\' = '\\'
+    escape 't'  = '\t'
+    escape 'n'  = '\n'
+    escape 'b'  = '\b'
+    escape 'v'  = '\v'
+    escape c    = c
 
     tags = filter (not ∘ null) $ itemTags item
     string s = return [OutString s]
