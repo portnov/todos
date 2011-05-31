@@ -55,7 +55,7 @@ pItem prefix date = do
                 w ← many1 (noneOf " \t\n\r")
                 if w =~ prefix
                   then return w
-                  else fail "Internal error: invalid prefix"
+                  else fail $ "Internal error: invalid prefix: " ⧺ w ⧺ " =~ " ⧺ prefix
     pos ← getPosition
     s ← pSpaces
     conf ← getState
@@ -118,9 +118,12 @@ filterN n prefix lst =
       lns    = map fst good
       sub k l = (take l) ∘ (drop k)
       ans = map (unwords' prefix) [sub j n lst | j ← lns]
-      regex = '^': prefix
+      regex = makeRE prefix
       isGood x = x =~ regex
   in (map (+1) lns, ans)
+
+makeRE ∷ String → String
+makeRE x = "^(" ⧺ x ⧺ ")"
 
 filterJoin ∷ Int → String → String → ([Int], String)
 filterJoin n prefix str = 
@@ -150,7 +153,7 @@ parseAlternate conf next prefix date path text =
   let (ns, filtered) = filterJoin next prefix text
       renumber lst = zipWith renumber1 ns lst
       renumber1 n item = item {lineNr=n}
-  in case runParser (pItems ('^':prefix) date) conf path filtered of
+  in case runParser (pItems (makeRE prefix) date) conf path filtered of
        Right items → renumber items
        Left e      → error $ show e
 
