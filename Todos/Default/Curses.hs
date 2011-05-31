@@ -5,13 +5,14 @@ module Todos.Default.Curses (cursesPrintTodos) where
 import Control.Monad
 import Control.Monad.Reader
 import Data.Tree
+import System.IO
 import System.Console.ANSI as ANSI
 import UI.HSCurses.Curses  as Curses
 import System.Locale.SetLocale
 
 import Todos.Types
 import Todos.Default.Config
-import Todos.Default.Print (showTodos)
+import Todos.Default.Print (showTodos, defaultPrintTodos)
 import Todos.Formatters hiding (outItem)
 
 toCursesColor ∷ ANSI.Color → Curses.Color
@@ -50,22 +51,31 @@ outItem pad ResetAll          = reset pad
 
 cursesPrintTodos ∷ PrintConfig DefaultConfig → [Todo] → IO ()
 cursesPrintTodos cfg lst = do
-  setLocale LC_ALL Nothing
-  initCurses
-  np ← colorPairs
-  nc ← colors
-  let m = min np nc
-  forM_ [0..m-1] $ \i →
-    initPair (Pair i) (Curses.Color i) (Curses.Color (-1))
-  (lines,cols) ← scrSize
-  let nLines = todoLines lst
-  pad ← newPad nLines cols
-  let lst' = runReader (showTodos lst) cfg
-  forM lst' (outItem pad)
-  echo False
-  scrollPad pad nLines lines cols
-  delWin pad
-  endWin
+  tty ← hIsTerminalDevice stdout
+  if not tty
+    then defaultPrintTodos cfg lst
+    else do
+      setLocale LC_ALL Nothing
+      initCurses
+      (lines,cols) ← scrSize
+      let nLines = todoLines lst
+      if nLines >= lines
+        then do
+          np ← colorPairs
+          nc ← colors
+          let m = min np nc
+          forM_ [0..m-1] $ \i →
+            initPair (Pair i) (Curses.Color i) (Curses.Color (-1))
+          pad ← newPad nLines cols
+          let lst' = runReader (showTodos lst) cfg
+          forM lst' (outItem pad)
+          echo False
+          scrollPad pad nLines lines cols
+          delWin pad
+          endWin
+        else do
+          endWin
+          defaultPrintTodos cfg lst
   
 todoLines ∷ [Todo] → Int
 todoLines todos = sum $ map todoLines' todos
