@@ -15,6 +15,9 @@ Description:    todos is a simple TODO manager. TODO records theirself are descr
 
 Extra-source-files: Makefile README README.ru TODO
 
+flag with_curses
+  Description: Build Todos.Default.Curses module, for ncurses output.
+
 library
   Exposed-Modules: Todos
                    Todos.Default
@@ -23,7 +26,6 @@ library
                    Todos.Default.Utils
                    Todos.Default.Print
                    Todos.Default.Config
-                   Todos.Default.Curses
                    Todos.Dot
                    Todos.Dot.Color
                    Todos.Dot.Shapes
@@ -43,7 +45,11 @@ library
 
   Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
-                  process, data-hash, dyre, utf8-string, hscurses, setlocale
+                  process, data-hash, dyre, utf8-string
+
+  if flag(with_curses)
+    Exposed-Modules: Todos.Default.Curses
+    Build-Depends:   hscurses, setlocale
 
   ghc-options: -fwarn-unused-imports
 
