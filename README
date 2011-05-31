@@ -97,6 +97,7 @@ specified. Following substitution sequences are supported:
 %n :: title of the record
 %t :: list of record's tags
 %s :: status of the record
+%p :: prefix before record in source file
 %d :: description of the record
 %f :: name of file, in which record was found
 %l :: number of line in source file
