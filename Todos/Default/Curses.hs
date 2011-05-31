@@ -84,16 +84,39 @@ todoLines todos = sum $ map todoLines' todos
     
 scrollPad ∷ Window → Int → Int → Int → IO ()
 scrollPad pad padLines lines cols = do
+    wMove pad 0 0
     scrollToLine 0
     waitForKeys 0
   where
     scrollToLine i = pRefresh pad i 0 0 0 (lines-1) (cols-1)
     
-    scroll i = scrollToLine i >> waitForKeys i
+    scroll i = do
+      scrollToLine i
+      waitForKeys i
     
-    moveDown i = scroll $ min (padLines - lines) (i+1)
+    moveDown i = do
+      (y,x) ← getYX pad
+      wMove pad (min (padLines-1) (y+1)) x
+      if y-i == lines - 1
+        then scroll $ min (padLines - lines) (i+1)
+        else scroll i
                
-    moveUp i = scroll $ max 0 (i-1)
+    moveUp i = do
+      (y,x) ← getYX pad
+      wMove pad (max 0 (y-1)) x
+      if y == i
+        then scroll $ max 0 (i-1)
+        else scroll i
+
+    moveRight i = do
+      (y,x) ← getYX pad
+      wMove pad y $ min (cols-1) (x+1)
+      scroll i
+
+    moveLeft i = do
+      (y,x) ← getYX pad
+      wMove pad y $ max 0 (x-1)
+      scroll i
 
     waitForKeys i = do
       c ← getCh
@@ -101,6 +124,9 @@ scrollPad pad padLines lines cols = do
         KeyChar 'q' → return ()
         KeyChar 'j' → moveDown i
         KeyChar 'k' → moveUp i
+        KeyChar 'h' → moveLeft i
+        KeyChar 'l' → moveRight i
         KeyChar 'g' → scroll 0
         KeyChar 'G' → scroll (padLines - lines)
         _           → beep >> waitForKeys i
+
