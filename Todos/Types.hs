@@ -78,6 +78,7 @@ data Time =
 -- | TODO item itself.
 data TodoItem = Item {
     itemLevel ∷ ℤ,               -- ^ Indentation level (from source file)
+    itemPrefix ∷ String,         -- ^ A prefix before item in source file (or empty string)
     itemName ∷ String,           -- ^ Name (title) of the item
     itemTags ∷ [String],         -- ^ Tags of the item
     depends ∷ [String],          -- ^ Names (titles) of item's depends

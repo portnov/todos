@@ -47,13 +47,20 @@ pTags = do
   where
     word = many1 (noneOf " \t\n\r]")
 
-pItem ∷ DateTime → TParser TodoItem
-pItem date = do
+pItem ∷ String → DateTime → TParser TodoItem
+pItem prefix date = do
+    pr ← if null prefix
+           then return ""
+           else do
+                w ← many1 (noneOf " \t\n\r")
+                if w =~ prefix
+                  then return w
+                  else fail "Internal error: invalid prefix"
     pos ← getPosition
     s ← pSpaces
     conf ← getState
     stat ← if skipStatus conf
-             then case forcedStatus conf of
+            then case forcedStatus conf of
                     Just fs → return fs
                     Nothing → return "*"
             else do 
@@ -72,6 +79,7 @@ pItem date = do
     many ⋄ oneOf "\n\r"
     return ⋄ Item {
         itemLevel = fromIntegral $ length s,
+        itemPrefix = pr,
         itemName = unwords namew,
         itemTags = tags,
         depends = deps,
@@ -89,9 +97,9 @@ pWord = do
     (try pSpace') <|> (return w)
     return w
 
-pItems ∷ DateTime → TParser [TodoItem]
-pItems date = do
-  its ← many (pItem date)
+pItems ∷ String → DateTime → TParser [TodoItem]
+pItems prefix date = do
+  its ← many (pItem prefix date)
   eof
   return its
 
@@ -101,7 +109,7 @@ unwords' prefix lst =
       addLines = filter (not ∘ (prefix `isPrefixOf`)) tl
   in  case addLines of
         [] → hd
-        _  → hd ⧺ "    {" ++ (unwords addLines) ++ "}"
+        _  → hd ⧺ "    {" ⧺ unwords addLines ⧺ "}"
 
 filterN ∷ (Num a, Enum a) ⇒ Int → String → [String] → ([a], [String])
 filterN n prefix lst = 
@@ -112,9 +120,7 @@ filterN n prefix lst =
       ans = map (unwords' prefix) [sub j n lst | j ← lns]
       regex = '^': prefix
       isGood x = x =~ regex
-      cut x = drop (1+n) x
-                where (_,n) = x =~ regex :: (MatchOffset, MatchLength)
-  in (map (+1) lns, map cut ans)
+  in (map (+1) lns, ans)
 
 filterJoin ∷ Int → String → String → ([Int], String)
 filterJoin n prefix str = 
@@ -128,7 +134,7 @@ parsePlain ∷ BaseConfig
            → String     -- ^ String to parse
            → [TodoItem]
 parsePlain conf date path text = 
-  case runParser (pItems date) conf path text of
+  case runParser (pItems "" date) conf path text of
       Right items → items
       Left e → error $ show e
 
@@ -144,7 +150,7 @@ parseAlternate conf next prefix date path text =
   let (ns, filtered) = filterJoin next prefix text
       renumber lst = zipWith renumber1 ns lst
       renumber1 n item = item {lineNr=n}
-  in case runParser (pItems date) conf path filtered of
+  in case runParser (pItems ('^':prefix) date) conf path filtered of
        Right items → renumber items
        Left e      → error $ show e
 

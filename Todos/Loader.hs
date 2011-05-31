@@ -136,6 +136,7 @@ tagTodo tag todos = Node item $ grepByTag tag todos
   where
     item = Item {
       itemLevel = 0,
+      itemPrefix = "",
       itemName = tag,
       itemTags = ["TAG"],
       depends = [],
@@ -156,6 +157,7 @@ statusTodo st todos = Node item $ grepByStatus st todos
   where
     item = Item {
       itemLevel = 0,
+      itemPrefix = "",
       itemName = st,
       itemTags = ["STATUS"],
       depends = [],
@@ -180,6 +182,7 @@ dirname path =
 fileTodo ∷ FilePath → TodoItem
 fileTodo path = Item {
   itemLevel = 0,
+  itemPrefix = "",
   itemName = takeFileName path,
   itemTags = [dirname path],
   depends = [],
