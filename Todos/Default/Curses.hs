@@ -49,8 +49,8 @@ outItem pad (OutSetColor i c) = setColor pad i c
 outItem pad SetBold           = setBoldW pad
 outItem pad ResetAll          = reset pad
 
-cursesPrintTodos ∷ PrintConfig DefaultConfig → [Todo] → IO ()
-cursesPrintTodos cfg lst = do
+cursesPrintTodos ∷ (TodoItem → IO ()) → PrintConfig DefaultConfig → [Todo] → IO ()
+cursesPrintTodos run cfg lst = do
   tty ← hIsTerminalDevice stdout
   if not tty
     then defaultPrintTodos cfg lst
@@ -58,7 +58,7 @@ cursesPrintTodos cfg lst = do
       setLocale LC_ALL Nothing
       initCurses
       (lines,cols) ← scrSize
-      let nLines = todoLines lst
+      let nLines = fromIntegral $ treeLines lst
       if nLines >= lines
         then do
           np ← colorPairs
@@ -70,15 +70,21 @@ cursesPrintTodos cfg lst = do
           let lst' = runReader (showTodos lst) cfg
           forM lst' (outItem pad)
           echo False
-          scrollPad pad nLines lines cols
+          scrollPad pad nLines lines cols (runByNumber run lst)
           delWin pad
           endWin
         else do
           endWin
           defaultPrintTodos cfg lst
+
+runByNumber ∷ (TodoItem → IO ()) → [Todo] → Int → IO ()
+runByNumber run todos i =
+  case itemByNumber todos (fromIntegral i) of
+    Nothing → putStrLn $ "Not found: " ++ show i
+    Just x  → run x
   
-scrollPad ∷ Window → Int → Int → Int → IO ()
-scrollPad pad padLines lines cols = do
+scrollPad ∷ Window → Int → Int → Int → (Int → IO ()) → IO ()
+scrollPad pad padLines lines cols run = do
     wMove pad 0 0
     scrollToLine 0
     waitForKeys 0
@@ -113,6 +119,11 @@ scrollPad pad padLines lines cols = do
       wMove pad y $ max 0 (x-1)
       scroll i
 
+    runSelected = do
+      (y,_) ← getYX pad
+      wAddStr pad (show y)
+      run (y+1)
+
     waitForKeys i = do
       c ← getCh
       case c of
@@ -123,5 +134,6 @@ scrollPad pad padLines lines cols = do
         KeyChar 'l' → moveRight i
         KeyChar 'g' → scroll 0
         KeyChar 'G' → scroll (padLines - lines)
+        KeyChar 'e' → runSelected
         _           → beep >> waitForKeys i
 

@@ -11,7 +11,6 @@ import Prelude hiding (putStrLn,readFile,getContents,print)
 import IO
 import Data.Tree
 import System.Exit
-import System.Cmd (system)
 
 import System.Environment
 import Config.Dyre
@@ -23,7 +22,6 @@ import Todos.Dot
 import Todos.Tree
 import Todos.ReadConfig
 import Todos.Loader
-import Todos.CommandParser
 import Todos.Config
 import Todos.Default
 
@@ -60,7 +58,7 @@ realTodos tcfg = do
         ShowAsDot → 
              putStrLn $ showAsDot (itemColor tcfg) (itemShape tcfg) queried
         SystemCommand cmd → do
-             forT selected (\item → system $ printfItem cmd item)
+             forT selected (spawnWith cmd)
              return ()
           where selected | outOnlyFirst bc = [Node (rootLabel $ head queried) []]
                          | otherwise       = queried
