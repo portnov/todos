@@ -58,7 +58,7 @@ realTodos tcfg = do
         ShowAsDot → 
              putStrLn $ showAsDot (itemColor tcfg) (itemShape tcfg) queried
         SystemCommand cmd → do
-             forT selected (spawnWith cmd)
+             forT selected (spawn cmd)
              return ()
           where selected | outOnlyFirst bc = [Node (rootLabel $ head queried) []]
                          | otherwise       = queried

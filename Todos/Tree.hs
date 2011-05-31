@@ -6,7 +6,7 @@ module Todos.Tree
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
    forT, mapT,
    treeLines, enumerateTodos, itemByNumber,
-   spawnWith)
+   spawn)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
@@ -126,8 +126,8 @@ itemByNumber todos i = listToMaybe $ everything (⧺) (listify check) todos
     check ∷ TodoItem → 𝔹
     check item = itemNumber item == i
 
-spawnWith ∷ String → TodoItem → IO ()
-spawnWith format item = do
+spawn ∷ String → TodoItem → IO ()
+spawn format item = do
   system $ printfItem format item
   return ()
 
