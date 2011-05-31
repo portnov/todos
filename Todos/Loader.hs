@@ -24,9 +24,6 @@ todoName todo = itemName ⋄ rootLabel todo
 getDepends ∷ TodoMap → TodoItem → [Todo]
 getDepends m item = catMaybes [M.lookup name m | name ← depends item] 
 
-normalizeItem ∷ TodoMap → TodoItem → Todo
-normalizeItem m item = Node item (map (normalize m) ⋄ getDepends m item)
-
 normalize ∷ TodoMap → Todo → Todo 
 normalize m todo = Node item' ((map (normalize m) subTodos) ⧺ (map (normalize m) deps))
   where
@@ -139,6 +136,7 @@ tagTodo tag todos = Node item $ grepByTag tag todos
   where
     item = Item {
       itemLevel = 0,
+      itemPrefix = "",
       itemName = tag,
       itemTags = ["TAG"],
       depends = [],
@@ -148,7 +146,8 @@ tagTodo tag todos = Node item $ grepByTag tag todos
       endDate = Nothing,
       deadline = Nothing,
       fileName = "(no file)",
-      lineNr = 0 }
+      lineNr = 0,
+      itemNumber = 0}
 
 groupByTag' ∷ [Todo] → [Todo]
 groupByTag' todos = 
@@ -159,6 +158,7 @@ statusTodo st todos = Node item $ grepByStatus st todos
   where
     item = Item {
       itemLevel = 0,
+      itemPrefix = "",
       itemName = st,
       itemTags = ["STATUS"],
       depends = [],
@@ -168,7 +168,8 @@ statusTodo st todos = Node item $ grepByStatus st todos
       endDate = Nothing,
       deadline = Nothing,
       fileName = "(no file)",
-      lineNr = 0 }
+      lineNr = 0,
+      itemNumber = 0}
 
 groupByStatus' ∷ [Todo] → [Todo]
 groupByStatus' todos =
@@ -183,6 +184,7 @@ dirname path =
 fileTodo ∷ FilePath → TodoItem
 fileTodo path = Item {
   itemLevel = 0,
+  itemPrefix = "",
   itemName = takeFileName path,
   itemTags = [dirname path],
   depends = [],
@@ -192,7 +194,8 @@ fileTodo path = Item {
   endDate = Nothing,
   deadline = Nothing,
   fileName = path,
-  lineNr = 0 }
+  lineNr = 0,
+  itemNumber = 0}
 
 todosGroup ∷ FilePath → [TodoItem] -> [TodoItem]
 todosGroup path items =

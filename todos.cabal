@@ -1,5 +1,5 @@
 Name:           todos
-Version:        0.4
+Version:        0.5
 Cabal-Version:  >= 1.6
 License:        BSD3
 License-File:   LICENSE
@@ -14,6 +14,9 @@ Description:    todos is a simple TODO manager. TODO records theirself are descr
                 them. So, todos works as specialized `grep' utility.
 
 Extra-source-files: Makefile README README.ru TODO
+
+flag with_curses
+  Description: Build Todos.Default.Curses module, for ncurses output.
 
 library
   Exposed-Modules: Todos
@@ -40,9 +43,13 @@ library
                    Todos.Unicode
                    Todos.Formatters
 
-  Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 2 && < 3,
+  Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
                   process, data-hash, dyre, utf8-string
+
+  if flag(with_curses)
+    Exposed-Modules: Todos.Default.Curses
+    Build-Depends:   hscurses, setlocale
 
   ghc-options: -fwarn-unused-imports
 

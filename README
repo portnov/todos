@@ -103,10 +103,13 @@ specified. Following substitution sequences are supported:
 %n :: title of the record
 %t :: list of record's tags
 %s :: status of the record
+%p :: prefix before record in source file
 %d :: description of the record
 %f :: name of file, in which record was found
 %l :: number of line in source file
 %D :: dates of item
+
+Backslash-escaping is supported too. Supported sequences are: `\t \n \v \b`.
 
 For example, «todos -tBUG -e"vi %f +%l"» command for each record with «BUG» tag
 will open vi with corresponding file on corresponding line.
@@ -123,10 +126,35 @@ limitation in DOT: it can not draw graphs where one item is in several clusters
 properly, it will draw such item only in one cluster.
 
 todos can read configuration files: `~/.config/todos/todos.conf` («global») and
-`./.todos.conf` («local»). Config files contain command line options, in the same
-format as in the commandline. Resulting commandline is composed as: (options in
-global config) + (options in local config) + (options in the actual command
-line). If there is no one of configs, todos will ignore it.
+`./.todos.conf` («local»). Also, if there is not `./.todos.conf`, todos looks
+for file named `.todos.conf` in all ancestor directories. For example, if
+current directory is `/home/user/work/projects`, these files are checked:
+
+  * `/home/user/work/projects/.todos.conf`
+  * `/home/user/work/.todos.conf`
+  * `/home/user/.todos.conf`
+  * `/home/.todos.conf`
+  * `/.todos.conf`
+
+If one of these files is found, todos checks if it starts with «%» (single
+percent character) word. If so, options from «ancestor» config file are
+prepended to options from this file. Otherwise, ancestor config is not read.
+
+Config files contain command line options, in the same format as in the
+commandline. Resulting commandline is composed as: (options in global config)
++ (options in local config) + (options in the actual command line). If there is
+no one of configs, todos will ignore it.
+
+For example, if  `/home/user/work/projects/.todos.conf` file contents is `% --dot`,
+and `/home/user/work/.todos.conf` contains `-A -F`, «effective command line» would be
+`-A -F --dot`.
+
+Config files might be specified in the command line. `@path/to/file.conf`
+option will force todos to read options from `path/to/file.conf`, and add them
+to «effective command line» before other command line options.
+`@@path/to/file.conf` is almost the same, but here todos will not read «global»
+and «local» configs at all. Specifying only `@@` in the command line, one can
+disable reading config files at all.
 
 Moreover, todos could be customized in «xmonad way». You write file
 `~/.config/todos/todos.hs` and run todos. todos will compile and run that file.

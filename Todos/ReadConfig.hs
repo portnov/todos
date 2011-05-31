@@ -2,14 +2,14 @@
 
 -- | Module for parsing config files
 module Todos.ReadConfig
-  (readConfig)
+  (readAllConfigs, readConfigFile)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Todos.IO
 import System.Environment
 import System.FilePath 
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, getCurrentDirectory)
 import Text.ParserCombinators.Parsec
 
 import Todos.Unicode
@@ -17,8 +17,10 @@ import Todos.Unicode
 word ∷ Parser String
 word = choice $ map try [quotedOption, simpleOption, quoted, simpleWord]
 
+simpleWord ∷ Parser String
 simpleWord = many1 $ noneOf " \t\r\n=\"'"
 
+quotedOption ∷ Parser String
 quotedOption = (try quotedLongOption) <|> quotedShortOption
 
 quotedLongOption ∷ Parser String
@@ -36,25 +38,27 @@ quotedShortOption = do
   v ← quoted
   return ("-" ⧺ o ⧺ v)
 
+simpleOption ∷ Parser String
 simpleOption = do
   o ← simpleWord
   optional $ char '='
   v ← simpleWord
   return (o ⧺ "=" ⧺ v)
 
+quoted ∷ Parser String
 quoted = quoted1 <|> quoted2
+  where
+    quoted1 = do
+      char '\''
+      s ← many1 $ noneOf "'"
+      char '\''
+      return s
 
-quoted1 = do
-  char '\''
-  s ← many1 $ noneOf "'"
-  char '\''
-  return s
-
-quoted2 = do
-  char '"'
-  s ← many1 $ noneOf "\""
-  char '"'
-  return s
+    quoted2 = do
+      char '"'
+      s ← many1 $ noneOf "\""
+      char '"'
+      return s
 
 pConfig ∷ Parser [String]
 pConfig = word `sepBy` space
@@ -65,8 +69,9 @@ parseConfig str =
     Right lst → lst
     Left err → error $ show err
 
-readFile' ∷ FilePath → IO [String]
-readFile' path = 
+-- | Read list of options from given config file
+readConfigFile ∷ FilePath → IO [String]
+readConfigFile path = 
   do b ← doesFileExist path
      if not b
        then return []
@@ -74,12 +79,23 @@ readFile' path =
               str ← readFile path
               return $ parseConfig (unwords $ lines str)
 
+readFiles ∷ [FilePath] → IO [String]
+readFiles [] = return []
+readFiles (path:other) = do
+  content ← readConfigFile path
+  case content of
+    "%":options → do otherOptions ← readFiles other
+                     return $ otherOptions ⧺ options
+    []          → readFiles other
+    _           → return content
+
 -- | Read list of options from config files
-readConfig ∷ IO [String]
-readConfig = do
+readAllConfigs ∷ IO [String]
+readAllConfigs = do
   home ← getEnv "HOME"
   let homepath = home </> ".config" </> "todos" </> "todos.conf"
-  homecfg ← readFile' homepath
-  localcfg ← readFile' ".todos.conf"
+  homecfg ← readConfigFile homepath
+  pwd <- getCurrentDirectory
+  localcfg ← readFiles $ map (</> ".todos.conf") $ scanl1 (</>) $ splitPath pwd
   return $ homecfg ⧺ localcfg
   

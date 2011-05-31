@@ -63,9 +63,9 @@ showMonth ∷  Int → String
 showMonth i = capitalize $ months !! (i-1)
 
 instance Show DateTime where
-  show (DateTime y m d h min s) = 
+  show (DateTime y m d h mins s) = 
     show d ⧺ " " ⧺ showMonth m ⧺ " " ⧺ show y ⧺ ", " ⧺
-      show h ⧺ ":" ⧺ show min ⧺ ":" ⧺ show s
+      show h ⧺ ":" ⧺ show mins ⧺ ":" ⧺ show s
 
 -- | Only time, without date
 data Time = 
@@ -78,6 +78,7 @@ data Time =
 -- | TODO item itself.
 data TodoItem = Item {
     itemLevel ∷ ℤ,               -- ^ Indentation level (from source file)
+    itemPrefix ∷ String,         -- ^ A prefix before item in source file (or empty string)
     itemName ∷ String,           -- ^ Name (title) of the item
     itemTags ∷ [String],         -- ^ Tags of the item
     depends ∷ [String],          -- ^ Names (titles) of item's depends
@@ -87,7 +88,8 @@ data TodoItem = Item {
     endDate ∷ Maybe DateTime,    -- ^ Date when TODO is planned to end
     deadline ∷ Maybe DateTime,   -- ^ Deadline for this TODO
     fileName ∷ FilePath,         -- ^ Path to the source file
-    lineNr ∷ Line                -- ^ Line in the source file, where this item was defined
+    lineNr ∷ Line,               -- ^ Line in the source file, where this item was defined
+    itemNumber ∷ ℤ               -- ^ Raw number of item
   }
   deriving (Eq,Data,Typeable)
 

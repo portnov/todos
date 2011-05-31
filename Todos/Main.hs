@@ -11,7 +11,6 @@ import Prelude hiding (putStrLn,readFile,getContents,print)
 import IO
 import Data.Tree
 import System.Exit
-import System.Cmd (system)
 
 import System.Environment
 import Config.Dyre
@@ -23,28 +22,43 @@ import Todos.Dot
 import Todos.Tree
 import Todos.ReadConfig
 import Todos.Loader
-import Todos.CommandParser
 import Todos.Config
 import Todos.Default
 
+-- | Sort command line arguments:
+-- (should we read other configs, command-line specified config files, command-line options)
+sortCmdLine ∷ [String] → (𝔹, [String], [String])
+sortCmdLine args = foldr sortOne (True, [],[]) args
+  where
+    sortOne "@@"           (_, configs, as) = (False, configs, as)
+    sortOne ('@':'@':path) (_, configs, as) = (False, path:configs, as)
+    sortOne ('@':path)     (r, configs, as) = (r, path:configs, as)
+    sortOne option         (r, configs, as) = (r, configs, option:as)
+
+-- | Real main funciton. Is called by dyre.
 realTodos ∷ (RuntimeConfig c) ⇒ TodosConfig c → IO ()
 realTodos tcfg = do
   currDate ← getCurrentDateTime 
-  config ← readConfig
   args ← getArgs
-  let pres = (parseCommandLine tcfg) currDate (nullConfig tcfg) (config ⧺ args)
+  let (readOther, configs, args') = sortCmdLine args
+  config ← if readOther
+             then readAllConfigs
+             else return []
+  -- Read options from command-line specified config files
+  cmdLineConfig ← concat `fmap` mapM readConfigFile configs
+  let pres = (parseCommandLine tcfg) currDate (nullConfig tcfg) (config ⧺ cmdLineConfig ⧺ args')
   case pres of
     Parsed q files' → do
       let bc = toBaseConfig q
       files ← glob files'
       todos ← loadTodo bc currDate files
-      let queried  = (filterTodos tcfg) currDate q todos
+      let queried  = enumerateTodos $ (filterTodos tcfg) currDate q todos
       case commandToRun bc of
         JustShow  → printTodos tcfg (mkPrintConfig currDate q tcfg) queried
         ShowAsDot → 
              putStrLn $ showAsDot (itemColor tcfg) (itemShape tcfg) queried
         SystemCommand cmd → do
-             forT selected (\item → system $ printfItem cmd item)
+             forT selected (spawnWith cmd)
              return ()
           where selected | outOnlyFirst bc = [Node (rootLabel $ head queried) []]
                          | otherwise       = queried

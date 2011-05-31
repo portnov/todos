@@ -19,9 +19,7 @@ data Dot = Dot {
   dotSubgraphs ∷ [Subgraph]
   }
 
-data Subgraph = Subgraph {
-  subLabel ∷ String,
-  subItems ∷ [TodoItem] }
+data Subgraph = Subgraph String [TodoItem]
   deriving (Eq)
 
 toDot ∷ Todo → Dot

@@ -203,6 +203,7 @@ parseCmdLine' currDate args =
         (flags, nonOpts, [])     → Right (parseFlags flags, nonOpts)
         (_,     _,       msgs)   → Left $ concat msgs ⧺ usage
 
+isPattern ∷ String → 𝔹
 isPattern s = ('*' ∈ s) || ('?' ∈ s)
 
 -- | For given list of glob masks, return list of matching files
@@ -253,6 +254,7 @@ options currDate = [
     Option "h" ["help"]       (NoArg HelpF)                          "display this help"
   ]
 
+mkSort ∷  String → CmdLineFlag
 mkSort s = OF $ Sort $ readSort s
 
 mkTag ∷  String → CmdLineFlag

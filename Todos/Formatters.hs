@@ -107,11 +107,21 @@ printM ∷ (RuntimeConfig (PrintConfig c)) ⇒ TodoItem → Formatter c
 printM item = askBase outputFormat >>= printf
   where
     printf :: (RuntimeConfig (PrintConfig c)) ⇒ String → Formatter c
-    printf ""         = return []
-    printf [c]        = return [OutString [c]]
-    printf ('%':c:xs) = liftM2 (⧺) (itemPart c) (printf xs)
-    printf (x:xs)     = do r ← printf xs
-                           return $ (OutString [x]):r
+    printf ""          = return []
+    printf [c]         = return [OutString [c]]
+    printf ('%':c:xs)  = liftM2 (⧺) (itemPart c) (printf xs)
+    printf ('\\':c:xs) = liftM2 (:) (outChar $ escape c) (printf xs)
+    printf (x:xs)      = do r ← printf xs
+                            return $ (OutString [x]):r
+    
+    outChar c = return (OutString [c])
+
+    escape '\\' = '\\'
+    escape 't'  = '\t'
+    escape 'n'  = '\n'
+    escape 'b'  = '\b'
+    escape 'v'  = '\v'
+    escape c    = c
 
     tags = filter (not ∘ null) $ itemTags item
     string s = return [OutString s]
@@ -123,11 +133,13 @@ printM item = askBase outputFormat >>= printf
                      then return []
                      else string ("[" ⧺ unwords tags ⧺ "] ")
     itemPart 's' = colorStatus (itemStatus item)
+    itemPart 'p' = string (itemPrefix item)
     itemPart 'd' = string (itemDescr item)
     itemPart 'f' = string (fileName item)
     itemPart 'l' = string (show $ lineNr item)
     itemPart 'D' | null dates' = return []
                  | otherwise = string $ "(" ⧺ dates' ⧺ ") "
+    itemPart '#' = string $ show $ itemNumber item
     itemPart c   = string [c]
 
     dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]

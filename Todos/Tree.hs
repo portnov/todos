@@ -1,21 +1,28 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
 module Todos.Tree 
-  (delTag,
+  (delTag, addTag,
+   flattern,
    pruneSelector,
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
-   forT, mapT)
+   forT, mapT,
+   treeLines, enumerateTodos, itemByNumber,
+   spawnWith)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Control.Monad
+import qualified Data.Traversable as T
+import Data.Maybe
 import Data.Generics
 import Data.List
 import Data.Tree
 import Text.Regex.PCRE
+import System.Cmd (system)
 
 import Todos.Types
 import Todos.Unicode
 import Todos.Config
+import Todos.CommandParser
 
 mapTags ∷  (Data a) ⇒ ([String] → [String]) → [a] → [a]
 mapTags f = map ⋄ everywhere ⋄ mkT changeTags
@@ -43,9 +50,7 @@ pruneSelector' n m pred = select n 0 False
                                        | k > 0       = concatMap (select (k-1) (t+1) False) trees
                                        | otherwise   = []                                               
 
-addS ∷  (Show a) ⇒ a → TodoItem → TodoItem
-addS s item@(Item {itemName=name}) = item {itemName = name ⧺ " — " ⧺ show s}
-
+-- | Check if item has given tag
 -- | Check if item has given tag
 tagPred ∷  String → TodoItem → 𝔹
 tagPred tag = \item → tag ∈ itemTags item
@@ -100,4 +105,29 @@ mapT ∷ (t → t) → [Tree t] → [Tree t]
 mapT f todos = map mapT' todos
   where
     mapT' (Node item trees) = Node (f item) (mapT f trees)
+
+treeLines ∷ [Tree t] → ℤ
+treeLines todos = sum $ map treeLines' todos
+  where
+    treeLines' (Node _ children) = 1 + (sum $ map treeLines' children)
+    
+enumerateTodos ∷ [Todo] → [Todo]
+enumerateTodos list = snd $ T.mapAccumL enumTree 1 list
+  where
+    enumTree ∷ ℤ → Todo → (ℤ, Todo)
+    enumTree i tree = T.mapAccumL enum i tree
+
+    enum ∷ ℤ → TodoItem → (ℤ, TodoItem)
+    enum i item = (i + 1, item{itemNumber = i})
+
+itemByNumber ∷ [Todo] → ℤ → Maybe TodoItem
+itemByNumber todos i = listToMaybe $ everything (⧺) (listify check) todos
+  where
+    check ∷ TodoItem → 𝔹
+    check item = itemNumber item == i
+
+spawnWith ∷ String → TodoItem → IO ()
+spawnWith format item = do
+  system $ printfItem format item
+  return ()
 
