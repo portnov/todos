@@ -28,6 +28,7 @@ printfItem pattern item = printf pattern
     itemPart 'n' = itemName item
     itemPart 't' = unwords $ itemTags item
     itemPart 's' = itemStatus item
+    itemPart 'p' = itemPrefix item
     itemPart 'd' = itemDescr item
     itemPart 'f' = fileName item
     itemPart 'l' = show $ lineNr item

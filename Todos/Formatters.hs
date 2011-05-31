@@ -133,6 +133,7 @@ printM item = askBase outputFormat >>= printf
                      then return []
                      else string ("[" ⧺ unwords tags ⧺ "] ")
     itemPart 's' = colorStatus (itemStatus item)
+    itemPart 'p' = string (itemPrefix item)
     itemPart 'd' = string (itemDescr item)
     itemPart 'f' = string (fileName item)
     itemPart 'l' = string (show $ lineNr item)
