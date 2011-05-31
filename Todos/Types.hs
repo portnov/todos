@@ -63,9 +63,9 @@ showMonth ∷  Int → String
 showMonth i = capitalize $ months !! (i-1)
 
 instance Show DateTime where
-  show (DateTime y m d h min s) = 
+  show (DateTime y m d h mins s) = 
     show d ⧺ " " ⧺ showMonth m ⧺ " " ⧺ show y ⧺ ", " ⧺
-      show h ⧺ ":" ⧺ show min ⧺ ":" ⧺ show s
+      show h ⧺ ":" ⧺ show mins ⧺ ":" ⧺ show s
 
 -- | Only time, without date
 data Time = 

@@ -17,8 +17,10 @@ import Todos.Unicode
 word ∷ Parser String
 word = choice $ map try [quotedOption, simpleOption, quoted, simpleWord]
 
+simpleWord ∷ Parser String
 simpleWord = many1 $ noneOf " \t\r\n=\"'"
 
+quotedOption ∷ Parser String
 quotedOption = (try quotedLongOption) <|> quotedShortOption
 
 quotedLongOption ∷ Parser String
@@ -36,25 +38,27 @@ quotedShortOption = do
   v ← quoted
   return ("-" ⧺ o ⧺ v)
 
+simpleOption ∷ Parser String
 simpleOption = do
   o ← simpleWord
   optional $ char '='
   v ← simpleWord
   return (o ⧺ "=" ⧺ v)
 
+quoted ∷ Parser String
 quoted = quoted1 <|> quoted2
+  where
+    quoted1 = do
+      char '\''
+      s ← many1 $ noneOf "'"
+      char '\''
+      return s
 
-quoted1 = do
-  char '\''
-  s ← many1 $ noneOf "'"
-  char '\''
-  return s
-
-quoted2 = do
-  char '"'
-  s ← many1 $ noneOf "\""
-  char '"'
-  return s
+    quoted2 = do
+      char '"'
+      s ← many1 $ noneOf "\""
+      char '"'
+      return s
 
 pConfig ∷ Parser [String]
 pConfig = word `sepBy` space

@@ -22,9 +22,9 @@ getCurrentDateTime = do
       ltod = localTimeOfDay lt
       (y,m,d) = toGregorian ld
       h = todHour ltod
-      min = todMin ltod
+      mins = todMin ltod
       s = round $ todSec ltod
-  return $ DateTime (fromIntegral y) m d h min s
+  return $ DateTime (fromIntegral y) m d h mins s
 
 uppercase ∷ String → String
 uppercase = map toUpper
@@ -164,7 +164,7 @@ time12 = do
   x ← optionMaybe $ char ':'
   s ← case x of
             Nothing → return 0
-            Just s' → number 2 59
+            Just _  → number 2 59
   optional space
   hd ← ampm
   return $ Time (h+hd) m s

@@ -70,7 +70,7 @@ cursesPrintTodos cfg lst = do
 todoLines ∷ [Todo] → Int
 todoLines todos = sum $ map todoLines' todos
   where
-    todoLines' (Node item children) = 1 + (sum $ map todoLines' children)
+    todoLines' (Node _ children) = 1 + (sum $ map todoLines' children)
     
 scrollPad ∷ Window → Int → Int → Int → IO ()
 scrollPad pad padLines lines cols = do

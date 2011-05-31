@@ -24,9 +24,6 @@ todoName todo = itemName ⋄ rootLabel todo
 getDepends ∷ TodoMap → TodoItem → [Todo]
 getDepends m item = catMaybes [M.lookup name m | name ← depends item] 
 
-normalizeItem ∷ TodoMap → TodoItem → Todo
-normalizeItem m item = Node item (map (normalize m) ⋄ getDepends m item)
-
 normalize ∷ TodoMap → Todo → Todo 
 normalize m todo = Node item' ((map (normalize m) subTodos) ⧺ (map (normalize m) deps))
   where

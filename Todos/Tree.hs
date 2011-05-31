@@ -1,6 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
 module Todos.Tree 
-  (delTag,
+  (delTag, addTag,
+   flattern,
    pruneSelector,
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
    forT, mapT)
@@ -42,9 +43,6 @@ pruneSelector' n m pred = select n 0 False
                                        | (k > 0) ∧ b = [Node item ⋄ concatMap (select (k-1) (t+1) True) trees]
                                        | k > 0       = concatMap (select (k-1) (t+1) False) trees
                                        | otherwise   = []                                               
-
-addS ∷  (Show a) ⇒ a → TodoItem → TodoItem
-addS s item@(Item {itemName=name}) = item {itemName = name ⧺ " — " ⧺ show s}
 
 -- | Check if item has given tag
 tagPred ∷  String → TodoItem → 𝔹
