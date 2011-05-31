@@ -88,7 +88,8 @@ data TodoItem = Item {
     endDate ∷ Maybe DateTime,    -- ^ Date when TODO is planned to end
     deadline ∷ Maybe DateTime,   -- ^ Deadline for this TODO
     fileName ∷ FilePath,         -- ^ Path to the source file
-    lineNr ∷ Line                -- ^ Line in the source file, where this item was defined
+    lineNr ∷ Line,               -- ^ Line in the source file, where this item was defined
+    itemNumber ∷ ℤ               -- ^ Raw number of item
   }
   deriving (Eq,Data,Typeable)
 

@@ -139,6 +139,7 @@ printM item = askBase outputFormat >>= printf
     itemPart 'l' = string (show $ lineNr item)
     itemPart 'D' | null dates' = return []
                  | otherwise = string $ "(" ⧺ dates' ⧺ ") "
+    itemPart '#' = string $ show $ itemNumber item
     itemPart c   = string [c]
 
     dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]

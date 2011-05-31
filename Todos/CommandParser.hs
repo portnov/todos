@@ -32,4 +32,5 @@ printfItem pattern item = printf pattern
     itemPart 'd' = itemDescr item
     itemPart 'f' = fileName item
     itemPart 'l' = show $ lineNr item
+    itemPart '#' = show $ itemNumber item
     itemPart x   = [x]

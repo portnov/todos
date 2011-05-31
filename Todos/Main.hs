@@ -54,7 +54,7 @@ realTodos tcfg = do
       let bc = toBaseConfig q
       files ← glob files'
       todos ← loadTodo bc currDate files
-      let queried  = (filterTodos tcfg) currDate q todos
+      let queried  = enumerateTodos $ (filterTodos tcfg) currDate q todos
       case commandToRun bc of
         JustShow  → printTodos tcfg (mkPrintConfig currDate q tcfg) queried
         ShowAsDot → 

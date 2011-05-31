@@ -4,13 +4,13 @@ module Todos.Default.Curses (cursesPrintTodos) where
 
 import Control.Monad
 import Control.Monad.Reader
-import Data.Tree
 import System.IO
 import System.Console.ANSI as ANSI
 import UI.HSCurses.Curses  as Curses
 import System.Locale.SetLocale
 
 import Todos.Types
+import Todos.Tree
 import Todos.Default.Config
 import Todos.Default.Print (showTodos, defaultPrintTodos)
 import Todos.Formatters hiding (outItem)
@@ -77,11 +77,6 @@ cursesPrintTodos cfg lst = do
           endWin
           defaultPrintTodos cfg lst
   
-todoLines ∷ [Todo] → Int
-todoLines todos = sum $ map todoLines' todos
-  where
-    todoLines' (Node _ children) = 1 + (sum $ map todoLines' children)
-    
 scrollPad ∷ Window → Int → Int → Int → IO ()
 scrollPad pad padLines lines cols = do
     wMove pad 0 0

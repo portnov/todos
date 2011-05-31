@@ -89,7 +89,8 @@ pItem prefix date = do
         endDate = lookup EndDate dates,
         deadline = lookup Deadline dates,
         fileName = sourceName pos,
-        lineNr = sourceLine pos }
+        lineNr = sourceLine pos,
+        itemNumber = 0}
 
 pWord ∷ TParser String
 pWord = do

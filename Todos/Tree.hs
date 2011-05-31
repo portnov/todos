@@ -4,11 +4,13 @@ module Todos.Tree
    flattern,
    pruneSelector,
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
-   forT, mapT)
+   forT, mapT,
+   todoLines, enumerateTodos)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Control.Monad
+import qualified Data.Traversable as T
 import Data.Generics
 import Data.List
 import Data.Tree
@@ -99,3 +101,16 @@ mapT f todos = map mapT' todos
   where
     mapT' (Node item trees) = Node (f item) (mapT f trees)
 
+todoLines ∷ [Todo] → Int
+todoLines todos = sum $ map todoLines' todos
+  where
+    todoLines' (Node _ children) = 1 + (sum $ map todoLines' children)
+    
+enumerateTodos ∷ [Todo] → [Todo]
+enumerateTodos list = snd $ T.mapAccumL enumTree 1 list
+  where
+    enumTree ∷ ℤ → Todo → (ℤ, Todo)
+    enumTree i tree = T.mapAccumL enum i tree
+
+    enum ∷ ℤ → TodoItem → (ℤ, TodoItem)
+    enum i item = (i + 1, item{itemNumber = i})

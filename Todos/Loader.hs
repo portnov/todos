@@ -146,7 +146,8 @@ tagTodo tag todos = Node item $ grepByTag tag todos
       endDate = Nothing,
       deadline = Nothing,
       fileName = "(no file)",
-      lineNr = 0 }
+      lineNr = 0,
+      itemNumber = 0}
 
 groupByTag' ∷ [Todo] → [Todo]
 groupByTag' todos = 
@@ -167,7 +168,8 @@ statusTodo st todos = Node item $ grepByStatus st todos
       endDate = Nothing,
       deadline = Nothing,
       fileName = "(no file)",
-      lineNr = 0 }
+      lineNr = 0,
+      itemNumber = 0}
 
 groupByStatus' ∷ [Todo] → [Todo]
 groupByStatus' todos =
@@ -192,7 +194,8 @@ fileTodo path = Item {
   endDate = Nothing,
   deadline = Nothing,
   fileName = path,
-  lineNr = 0 }
+  lineNr = 0,
+  itemNumber = 0}
 
 todosGroup ∷ FilePath → [TodoItem] -> [TodoItem]
 todosGroup path items =
