@@ -50,6 +50,7 @@ library
   if flag(with_curses)
     Exposed-Modules: Todos.Default.Curses
     Build-Depends:   hscurses, setlocale
+    cpp-options:     -DWITH_CURSES
 
   ghc-options: -fwarn-unused-imports
 
