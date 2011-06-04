@@ -1,6 +1,6 @@
 {-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
 module Todos.Tree 
-  (delTag, addTag,
+  (delTag, addTag, mapTags,
    flattern,
    pruneSelector,
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
@@ -24,15 +24,16 @@ import Todos.Unicode
 import Todos.Config
 import Todos.CommandParser
 
-mapTags ∷  (Data a) ⇒ ([String] → [String]) → [a] → [a]
-mapTags f = map ⋄ everywhere ⋄ mkT changeTags
+mapTags ∷  ([String] → [String]) → [Todo] → [Todo]
+mapTags f = map ⋄ everywhere (mkT changeTags :: Data a => a -> a)
   where
+    changeTags ∷ TodoItem → TodoItem
     changeTags item@(Item {itemTags=ts}) = item {itemTags = f ts}
         
-addTag ∷  (Data a) ⇒ String → [a] → [a]
+addTag ∷ String → [Todo] → [Todo]
 addTag t = mapTags (t:)
 
-delTag ∷  (Data a) ⇒ String → [a] → [a]
+delTag ∷ String → [Todo] → [Todo]
 delTag t = mapTags (delete t)
 
 pruneSelector ∷  BaseConfig → (TodoItem → 𝔹) → (Todo → [Todo])
