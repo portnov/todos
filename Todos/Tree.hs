@@ -4,18 +4,21 @@ module Todos.Tree
    flattern,
    pruneSelector,
    tagPred, statusPred, grepPred, descPred, datePred, idPred,
+   hasCycles,
    forT, mapT,
-   treeLines, enumerateTodos, itemByNumber,
+   treeLines, enumerateTodos, itemByNumber, markLevels,
    spawn)
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Control.Monad
+import Control.Monad.State
 import qualified Data.Traversable as T
 import Data.Maybe
 import Data.Generics
 import Data.List
 import Data.Tree
+import Data.Hash
 import Text.Regex.PCRE
 import System.Cmd (system)
 
@@ -91,6 +94,29 @@ flattern = concatMap flat
         flat ∷ Todo → [Todo]
         flat (Node item trees) = (Node item []):(concatMap flat trees)
 
+untilM ∷ (Monad m) ⇒ (a → m Bool) → [a] → m Bool
+untilM fn [] = return False
+untilM fn (x:xs) = do
+  y ← fn x
+  if y
+    then return True
+    else untilM fn xs
+
+-- | Check if trees contain cycles
+hasCycles ∷ (Hashable a) ⇒ [Tree a] → 𝔹
+hasCycles trees = any cycled trees
+  where
+    cycled (Node z trees) = evalState (untilM test trees) [hash z]
+
+    test (Node item children) = do
+      old ← get
+      let h = hash item
+      if h ∈ old
+        then return True
+        else do
+          put (h: old)
+          untilM test children
+
 -- | For each item in the tree, execute given monadic action (this is similar
 -- to forM, but for trees instead of lists).
 forT ∷ (Monad m, Eq t) ⇒ [Tree t] → (t → m a) → m [b]
@@ -126,6 +152,12 @@ itemByNumber todos i = listToMaybe $ everything (⧺) (listify check) todos
   where
     check ∷ TodoItem → 𝔹
     check item = itemNumber item == i
+
+markLevels ∷ [Todo] → [Todo]
+markLevels todos = map (mark 0) todos
+  where
+    mark i (Node item children) =
+            Node (item {itemLevel=i}) $ map (mark $ i+1) children
 
 spawn ∷ String → TodoItem → IO ()
 spawn format item = do

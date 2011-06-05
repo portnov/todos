@@ -108,8 +108,6 @@ specified. Following substitution sequences are supported:
 %f :: name of file, in which record was found
 %l :: number of line in source file
 %D :: dates of item
-%L :: item nesting level
-%# :: number of output line
 
 Backslash-escaping is supported too. Supported sequences are: `\t \n \v \b`.
 
