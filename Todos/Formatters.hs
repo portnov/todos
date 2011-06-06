@@ -98,10 +98,15 @@ colorStatus ∷ (RuntimeConfig (PrintConfig c)) ⇒ String → Formatter c
 colorStatus st = do
   getclr ← asks printStatusColor
   let (int, clr) = getclr st
+  colored int clr st
+
+-- | Output string in specified color
+colored ∷ (RuntimeConfig (PrintConfig c)) ⇒ ColorIntensity → Color → String → Formatter c
+colored int clr str = do
   col ← askBase outColors
   if col
-    then return [OutSetColor int clr, OutString st, ResetAll]
-    else return [OutString st]
+    then return [OutSetColor int clr, OutString str, ResetAll]
+    else return [OutString str]
 
 printM ∷ (RuntimeConfig (PrintConfig c)) ⇒ TodoItem → Formatter c
 printM item = askBase outputFormat >>= printf
@@ -127,7 +132,6 @@ printM item = askBase outputFormat >>= printf
     string s = return [OutString s]
 
     itemPart ∷ (RuntimeConfig (PrintConfig c)) ⇒ Char → Formatter c
-    itemPart 'L' = string (show $ itemLevel item)
     itemPart 'n' = bold item 
     itemPart 't' = if null tags
                      then return []
@@ -136,10 +140,10 @@ printM item = askBase outputFormat >>= printf
     itemPart 'p' = string (itemPrefix item)
     itemPart 'd' = string (itemDescr item)
     itemPart 'f' = string (fileName item)
+    itemPart 'i' = colored Dull Yellow (makeId item)
     itemPart 'l' = string (show $ lineNr item)
     itemPart 'D' | null dates' = return []
                  | otherwise = string $ "(" ⧺ dates' ⧺ ") "
-    itemPart '#' = string $ show $ itemNumber item
     itemPart c   = string [c]
 
     dates' = showDates [StartDate `is` startDate item, EndDate `is` endDate item, Deadline `is` deadline item]

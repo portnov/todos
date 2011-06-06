@@ -24,15 +24,14 @@ printfItem pattern item = printf pattern
     escape 'v'  = '\v'
     escape c    = c
 
-    itemPart 'L' = show $ itemLevel item
     itemPart 'n' = itemName item
     itemPart 't' = unwords $ itemTags item
     itemPart 's' = itemStatus item
     itemPart 'p' = itemPrefix item
     itemPart 'd' = itemDescr item
     itemPart 'f' = fileName item
+    itemPart 'i' = makeId item
     itemPart 'l' = show $ lineNr item
-    itemPart '#' = show $ itemNumber item
     itemPart 'D' | null dates = ""
                  | otherwise  = "(" ⧺ dates ⧺ ") "
     itemPart x   = [x]

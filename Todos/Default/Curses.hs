@@ -55,10 +55,15 @@ cursesPrintTodos run cfg lst = do
   if not tty
     then defaultPrintTodos cfg lst
     else do
+      todos <- if hasCycles lst
+                then do
+                  hPutStrLn stderr "Warning: cycles in TODOs; `execute' will not work"
+                  return lst
+                else return $ markLevels $ enumerateTodos lst
       setLocale LC_ALL Nothing
       initCurses
       (lines,cols) ← scrSize
-      let nLines = fromIntegral $ treeLines lst
+      let nLines = fromIntegral $ treeLines todos
       if nLines >= lines
         then do
           np ← colorPairs
@@ -67,10 +72,10 @@ cursesPrintTodos run cfg lst = do
           forM_ [0..m-1] $ \i →
             initPair (Pair i) (Curses.Color i) (Curses.Color (-1))
           pad ← newPad nLines cols
-          let lst' = runReader (showTodos lst) cfg
+          let lst' = runReader (showTodos todos) cfg
           forM lst' (outItem pad)
           echo False
-          scrollPad pad nLines lines cols (runByNumber run lst)
+          scrollPad pad nLines lines cols (runByNumber run todos)
           delWin pad
           endWin
         else do
