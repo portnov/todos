@@ -11,13 +11,13 @@ module Todos.Default.CmdLine
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import Todos.IO
+import Prelude.Unicode
 import System.Console.GetOpt
 import System.FilePath.Glob
 import Data.Maybe
 import Data.List (sort)
 
-import Todos.Unicode
+import Todos.IO
 import Todos.Types
 import Todos.Tree
 import Todos.Default.Config

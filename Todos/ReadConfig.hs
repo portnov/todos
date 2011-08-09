@@ -6,13 +6,13 @@ module Todos.ReadConfig
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import Todos.IO
+import Prelude.Unicode
 import System.Environment
 import System.FilePath 
 import System.Directory (doesFileExist, getCurrentDirectory)
 import Text.ParserCombinators.Parsec
 
-import Todos.Unicode
+import Todos.IO
 
 word ∷ Parser String
 word = choice $ map try [quotedOption, simpleOption, quoted, simpleWord]

@@ -3,6 +3,7 @@
 module Todos.Types where
 
 import Prelude hiding (putStr, putStrLn,readFile,getContents,print)
+import Prelude.Unicode
 import Data.Hash
 
 import Data.Function 
@@ -15,7 +16,7 @@ import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
 import Numeric
 
-import Todos.Unicode
+type 𝔹 = Bool
 
 -- | Kind of date
 data DateType = StartDate

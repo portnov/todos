@@ -2,7 +2,8 @@
 -- | This module contains instances of RuntimeConfig class for DefaultConfig and PrintConfig
 module Todos.Default.Instances where
 
-import Todos.Unicode
+import Prelude.Unicode
+
 import Todos.Config
 import Todos.Default.Config
 import Todos.Default.CmdLine

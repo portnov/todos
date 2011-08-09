@@ -5,6 +5,7 @@ module Todos.Dates
    pSpecDates)
   where
 
+import Prelude.Unicode
 import Data.Char (toUpper)
 import Data.List
 import Data.Time.Calendar
@@ -12,7 +13,6 @@ import Data.Time.LocalTime
 import Text.ParserCombinators.Parsec
 
 import Todos.Types
-import Todos.Unicode
 
 getCurrentDateTime ∷  IO DateTime
 getCurrentDateTime = do

@@ -4,12 +4,12 @@ module Todos.Parser
     where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
+import Prelude.Unicode
 import Data.List
 import Text.ParserCombinators.Parsec
 import Data.Char
 import Text.Regex.PCRE
 
-import Todos.Unicode
 import Todos.Types
 import Todos.Dates
 import Todos.Config
@@ -35,7 +35,7 @@ pSpaces = many pSpace
 pDeps ∷ TParser [String]
 pDeps = do
     string "("
-    ws ← (many1 ⋄ noneOf ",)\n\r") `sepBy` (char ',')
+    ws ← (many1 $ noneOf ",)\n\r") `sepBy` (char ',')
     string ")"
     return $ map strip ws
 
@@ -76,8 +76,8 @@ pItem prefix date = do
     pSpaces
     descr ← many (noneOf "\n\r")
     pSpaces
-    many ⋄ oneOf "\n\r"
-    return ⋄ Item {
+    many $ oneOf "\n\r"
+    return $ Item {
         itemLevel = fromIntegral $ length s,
         itemPrefix = pr,
         itemName = unwords namew,

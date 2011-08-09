@@ -4,11 +4,11 @@ module Todos.Dot.Render
   (showAsDot)
   where
 
+import Prelude.Unicode
 import Data.List
 import Data.Tree
 import Text.Printf
 
-import Todos.Unicode
 import Todos.Types
 import Todos.Dot.Color
 import Todos.Dot.Shapes

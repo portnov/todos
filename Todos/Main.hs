@@ -8,6 +8,7 @@ module Todos.Main
   ) where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
+import Prelude.Unicode
 import IO
 import Data.Tree
 import System.Exit
@@ -16,7 +17,6 @@ import System.Environment
 import Config.Dyre
 
 import Todos.Types
-import Todos.Unicode
 import Todos.Dates
 import Todos.Dot
 import Todos.Tree
