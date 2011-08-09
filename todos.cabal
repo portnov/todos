@@ -40,12 +40,11 @@ library
                    Todos.Loader
                    Todos.Tree
                    Todos.Types
-                   Todos.Unicode
                    Todos.Formatters
 
   Build-Depends:  base >= 3 && <= 5, haskell98, containers, parsec >= 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
-                  process, data-hash, dyre, utf8-string
+                  process, data-hash, dyre, utf8-string, base-unicode-symbols >= 0.2.2.1
 
   if flag(with_curses)
     Exposed-Modules: Todos.Default.Curses
@@ -77,7 +76,6 @@ Executable todos
                  Todos.Loader
                  Todos.Tree
                  Todos.Types
-                 Todos.Unicode
                  Todos.Formatters
 
 Source-repository head

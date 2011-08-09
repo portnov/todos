@@ -2,9 +2,9 @@
 
 module Todos.Config where
 
+import Prelude.Unicode
 import Control.Monad.Reader
 
-import Todos.Unicode
 import Todos.Types
 import Todos.Dot
 import qualified System.Console.ANSI as ANSI

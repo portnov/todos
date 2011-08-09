@@ -5,7 +5,7 @@ module Todos.Loader
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
-import Todos.IO
+import Prelude.Unicode
 import Control.Monad (forM)
 import qualified Data.Map as M
 import System.FilePath
@@ -13,13 +13,13 @@ import Data.Maybe
 import Data.Tree
 import Data.List (nub, sort)
 
-import Todos.Unicode
+import Todos.IO
 import Todos.Types
 import Todos.Config
 import Todos.Parser
 
 todoName ∷ Todo → String
-todoName todo = itemName ⋄ rootLabel todo
+todoName todo = itemName $ rootLabel todo
 
 getDepends ∷ TodoMap → TodoItem → [Todo]
 getDepends m item = catMaybes [M.lookup name m | name ← depends item] 
@@ -84,7 +84,7 @@ mkTodo = (map mkTodo') ∘ group'
 mkTodo' ∷ [TodoItem] → Todo
 mkTodo' [] = error "Internal error: mkTodo' does not sense for empty list!"
 mkTodo' (x:xs) = Node x other
-    where other = mkTodo ⋄ map (~-lvl) xs
+    where other = mkTodo $ map (~-lvl) xs
           lvl = itemLevel (head xs)
           
 consTodoMap ∷ [Todo] → TodoMap

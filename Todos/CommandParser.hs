@@ -2,7 +2,8 @@
 
 module Todos.CommandParser where
 
-import Todos.Unicode
+import Prelude.Unicode
+
 import Todos.Types
 
 -- | Format item info

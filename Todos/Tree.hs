@@ -11,6 +11,7 @@ module Todos.Tree
   where
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
+import Prelude.Unicode
 import Control.Monad
 import Control.Monad.State
 import qualified Data.Traversable as T
@@ -23,12 +24,11 @@ import Text.Regex.PCRE
 import System.Cmd (system)
 
 import Todos.Types
-import Todos.Unicode
 import Todos.Config
 import Todos.CommandParser
 
 mapTags ∷  ([String] → [String]) → [Todo] → [Todo]
-mapTags f = map ⋄ everywhere (mkT changeTags :: Data a => a -> a)
+mapTags f = map $ everywhere (mkT changeTags :: Data a => a -> a)
   where
     changeTags ∷ TodoItem → TodoItem
     changeTags item@(Item {itemTags=ts}) = item {itemTags = f ts}
@@ -48,9 +48,9 @@ pruneSelector bc pred =
 pruneSelector' ∷ ℤ → ℤ → (TodoItem → 𝔹) → (Todo → [Todo])
 pruneSelector' n m pred = select n 0 False
     where
-        select k t b (Node item trees) | t < m       = [Node item ⋄ concatMap (select (n-1) (t+1) True) trees]
-                                       | pred item   = [Node item ⋄ concatMap (select (n-1) (t+1) True) trees]
-                                       | (k > 0) ∧ b = [Node item ⋄ concatMap (select (k-1) (t+1) True) trees]
+        select k t b (Node item trees) | t < m       = [Node item $ concatMap (select (n-1) (t+1) True) trees]
+                                       | pred item   = [Node item $ concatMap (select (n-1) (t+1) True) trees]
+                                       | (k > 0) ∧ b = [Node item $ concatMap (select (k-1) (t+1) True) trees]
                                        | k > 0       = concatMap (select (k-1) (t+1) False) trees
                                        | otherwise   = []                                               
 

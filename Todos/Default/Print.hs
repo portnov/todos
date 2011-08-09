@@ -5,6 +5,7 @@ module Todos.Default.Print
   (defaultPrintTodos, showTodos)
   where
 
+import Prelude.Unicode
 import Control.Monad
 import Control.Monad.Reader
 import Data.List
@@ -12,7 +13,6 @@ import Data.Tree
 import Data.Function (on)
 import System.Console.ANSI
 
-import Todos.Unicode
 import Todos.Types
 import Todos.Default.Config
 import Todos.Default.Instances ()

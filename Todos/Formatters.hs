@@ -8,11 +8,11 @@ module Todos.Formatters
    ConfigAdd (..)
   ) where
 
+import Prelude.Unicode
 import Control.Monad
 import Control.Monad.Reader
 import System.Console.ANSI
 
-import Todos.Unicode
 import Todos.Types
 import Todos.Config
 -- import Todos.Default.ConfigInstances ()
