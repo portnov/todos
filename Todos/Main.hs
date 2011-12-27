@@ -9,7 +9,7 @@ module Todos.Main
 
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Prelude.Unicode
-import IO
+import System.IO
 import Data.Tree
 import System.Exit
 

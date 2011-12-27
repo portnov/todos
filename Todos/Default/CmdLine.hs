@@ -13,7 +13,7 @@ module Todos.Default.CmdLine
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Prelude.Unicode
 import System.Console.GetOpt
-import System.FilePath.Glob
+import System.FilePath.Glob hiding (glob)
 import Data.Maybe
 import Data.List (sort)
 
