@@ -6,15 +6,16 @@ module Todos.Parser
 import Prelude hiding (putStrLn,readFile,getContents,print)
 import Prelude.Unicode
 import Data.List
-import Text.ParserCombinators.Parsec
+import Text.Parsec
 import Data.Char
+import Data.Dates
 import Text.Regex.PCRE
 
 import Todos.Types
 import Todos.Dates
 import Todos.Config
 
-type TParser a = GenParser Char BaseConfig a
+type TParser a = Parsec String BaseConfig a
 
 strip ∷  String → String
 strip = reverse ∘ p ∘ reverse ∘ p

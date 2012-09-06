@@ -4,6 +4,7 @@ module Todos.Config where
 
 import Prelude.Unicode
 import Control.Monad.Reader
+import Data.Dates
 
 import Todos.Types
 import Todos.Dot

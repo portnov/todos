@@ -12,6 +12,7 @@ import System.FilePath
 import Data.Maybe
 import Data.Tree
 import Data.List (nub, sort)
+import Data.Dates
 
 import Todos.IO
 import Todos.Types

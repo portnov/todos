@@ -1,6 +1,6 @@
 Name:           todos
-Version:        0.5.2
-Cabal-Version:  >= 1.6
+Version:        0.5.3
+Cabal-Version:  >= 1.8
 License:        BSD3
 License-File:   LICENSE
 Author:         Ilya V. Portnov
@@ -44,7 +44,8 @@ library
 
   Build-Depends:  base >= 3 && <= 5, containers, parsec >= 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
-                  process, data-hash, dyre, utf8-string, base-unicode-symbols >= 0.2.2.1
+                  process, data-hash, dyre, utf8-string, base-unicode-symbols >= 0.2.2.1,
+                  dates ==0.1.*
 
   if flag(with_curses)
     Exposed-Modules: Todos.Default.Curses
@@ -77,6 +78,11 @@ Executable todos
                  Todos.Tree
                  Todos.Types
                  Todos.Formatters
+
+  Build-Depends:  base >= 3 && <= 5, containers, parsec >= 3,
+                  syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
+                  process, data-hash, dyre, utf8-string, base-unicode-symbols >= 0.2.2.1,
+                  dates >=0.1.1.0
 
 Source-repository head
   type:     git

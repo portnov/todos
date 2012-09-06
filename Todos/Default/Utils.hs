@@ -3,6 +3,7 @@
 module Todos.Default.Utils where
 
 import System.Console.ANSI
+import Data.Dates
 
 import Todos.Types
 import Todos.Dot

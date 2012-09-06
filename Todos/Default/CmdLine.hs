@@ -16,12 +16,12 @@ import System.Console.GetOpt
 import System.FilePath.Glob hiding (glob)
 import Data.Maybe
 import Data.List (sort)
+import Data.Dates
 
 import Todos.IO
 import Todos.Types
 import Todos.Tree
 import Todos.Default.Config
-import Todos.Dates (parseDate)
 
 -- | Compose predicate from Composed
 compose ∷ DateTime       -- ^ Current date/time

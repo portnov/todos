@@ -12,8 +12,9 @@ import Data.Char (toUpper)
 import Data.Maybe
 import Data.Tree
 import Data.List
+import Data.Dates
 import qualified Data.Map as M
-import Text.ParserCombinators.Parsec
+import Text.Parsec
 import Numeric
 
 type 𝔹 = Bool
@@ -29,52 +30,10 @@ instance Show DateType where
   show EndDate = "end"
   show Deadline = "deadline"
 
-data DateTime =
-  DateTime {
-    year ∷ Int,
-    month ∷ Int,
-    day ∷ Int,
-    hour ∷ Int,
-    minute ∷ Int,
-    second ∷ Int }
-  deriving (Eq,Ord,Data,Typeable)
-
--- | 12 months names.
-months ∷ [String]
-months = ["january",
-          "february",
-          "march",
-          "april",
-          "may",
-          "june",
-          "july",
-          "august",
-          "september",
-          "october",
-          "november",
-          "december"]
-
 -- | capitalize first letter of the string
 capitalize ∷ String → String
 capitalize [] = []
 capitalize (x:xs) = (toUpper x):xs
-
--- | Show name of given month
-showMonth ∷  Int → String
-showMonth i = capitalize $ months !! (i-1)
-
-instance Show DateTime where
-  show (DateTime y m d h mins s) = 
-    show d ⧺ " " ⧺ showMonth m ⧺ " " ⧺ show y ⧺ ", " ⧺
-      show h ⧺ ":" ⧺ show mins ⧺ ":" ⧺ show s
-
--- | Only time, without date
-data Time = 
-  Time {
-    tHour ∷ Int,
-    tMinute ∷ Int,
-    tSecond ∷ Int }
-  deriving (Eq,Ord,Show,Data,Typeable)
 
 -- | TODO item itself.
 data TodoItem = Item {
