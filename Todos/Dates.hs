@@ -21,7 +21,7 @@ pSpecDate ∷ DateTime → Parsec String st (DateType, DateTime)
 pSpecDate date = do
   tp ← choice $ map string ["start","end","deadline"]
   string ": "
-  dt ← pDate date
+  dt ← pDateTime date
   return (dateType tp, dt)
 
 -- | Parse set of dates with types (in parenthesis)
