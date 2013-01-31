@@ -198,7 +198,7 @@ parseCmdLine' ∷ DateTime             -- ^ Current date/time
              → [String]              -- ^ Command line args
              → Either String (Options, [FilePath]) -- ^ Error message or (Options, list of files)
 parseCmdLine' currDate args = 
-  case getOpt Permute (options currDate) (map decodeString args) of
+  case getOpt Permute (options currDate) (map ensureUnicode args) of
         (flags, [],      [])     → Right (parseFlags flags, ["TODO"])
         (flags, nonOpts, [])     → Right (parseFlags flags, nonOpts)
         (_,     _,       msgs)   → Left $ concat msgs ⧺ usage

@@ -1,4 +1,4 @@
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE UnicodeSyntax, CPP #-}
 
 module Todos.Main
   (module Todos.Default,
@@ -73,6 +73,11 @@ todos ∷ (RuntimeConfig c) ⇒ TodosConfig c → IO ()
 todos = wrapMain $ defaultParams {
     projectName = "todos",
     realMain    = realTodos,
+    ghcOpts     = [
+#ifdef PROFILE
+                   "-prof", "-auto-all"
+#endif
+                  ],
     statusOut   = const (return ())
     }
 
