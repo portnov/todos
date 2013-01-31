@@ -1,5 +1,5 @@
 Name:           todos
-Version:        0.5.3.1
+Version:        0.5.3.2
 Cabal-Version:  >= 1.8
 License:        BSD3
 License-File:   LICENSE
@@ -17,6 +17,7 @@ Extra-source-files: Makefile README README.ru TODO
 
 flag with_curses
   Description: Build Todos.Default.Curses module, for ncurses output.
+  Default: False
 
 library
   Exposed-Modules: Todos
@@ -45,7 +46,7 @@ library
   Build-Depends:  base >= 3 && <= 5, containers, parsec >= 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
                   process, data-hash, dyre, utf8-string, base-unicode-symbols >= 0.2.2.1,
-                  dates ==0.1.*
+                  dates >= 0.1.2.0
 
   if flag(with_curses)
     Exposed-Modules: Todos.Default.Curses
