@@ -82,7 +82,7 @@ Executable todos
   Build-Depends:  base >= 3 && <= 5, containers, parsec >= 3,
                   syb, mtl, ansi-terminal, Glob, time, regex-pcre, directory, filepath,
                   process, data-hash, dyre, utf8-string, base-unicode-symbols >= 0.2.2.1,
-                  dates >=0.1.1.0
+                  dates >=0.1.2.0
 
 Source-repository head
   type:     git
