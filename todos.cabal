@@ -5,7 +5,7 @@ License:        BSD3
 License-File:   LICENSE
 Author:         Ilya V. Portnov
 Maintainer:     portnov84@rambler.ru
-Homepage:       http://gitorious.org/todos
+Homepage:       https://github.com/portnov/todos
 Synopsis:       Easy-to-use TODOs manager.
 Category:       Utils,Desktop
 Build-Type:     Simple
@@ -87,5 +87,5 @@ Executable todos
 
 Source-repository head
   type:     git
-  location: git://gitorious.org/todos/todos.git
+  location: https://github.com/portnov/todos.git
 
