@@ -3,3 +3,6 @@
 *~
 *.swp
 todos
+.hpc
+.stack-work
+*.log
