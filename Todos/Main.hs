@@ -70,9 +70,11 @@ realTodos tcfg = do
 -- | Main function to run. User can specify TodosConfig with any runtime config
 -- type. By default (in todos.hs) defaultConfig is used, which uses DefaultConfig type.
 todos ∷ (RuntimeConfig c) ⇒ TodosConfig c → IO ()
-todos = wrapMain $ defaultParams {
+todos = do
+  wrapMain $ defaultParams {
     projectName = "todos",
     realMain    = realTodos,
+    showError = \c err -> c,
     ghcOpts     = [
 #ifdef PROFILE
                    "-prof", "-auto-all"

@@ -1,4 +1,4 @@
-{-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, TypeSynonymInstances, DeriveDataTypeable #-}
+{-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, TypeSynonymInstances, DeriveDataTypeable, FlexibleContexts #-}
 module Todos.Parser
     (parsePlain, parseAlternate)
     where

@@ -211,7 +211,7 @@ glob ∷ [FilePath] → IO [FilePath]
 glob list = do
   let patterns = filter isPattern list
       files = filter (not ∘ isPattern) list
-  (matches, _) ← globDir (map compile patterns) "." 
+  matches ← globDir (map compile patterns) "." 
   return $ sort $ files ⧺ concat matches
 
 -- | Usage help for default command line options

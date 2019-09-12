@@ -1,4 +1,4 @@
-{-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE UnicodeSyntax, NoMonomorphismRestriction, FlexibleInstances, TypeSynonymInstances, FlexibleContexts #-}
 module Todos.Tree 
   (delTag, addTag, mapTags,
    flattern,
@@ -21,7 +21,7 @@ import Data.List
 import Data.Tree
 import Data.Hash
 import Text.Regex.PCRE
-import System.Cmd (system)
+import System.Process (system)
 
 import Todos.Types
 import Todos.Config
