@@ -100,14 +100,24 @@ indentation at all.
 For `--format` and `--exec` options, printf-style format strings should be
 specified. Following substitution sequences are supported:
 
-%n :: title of the record
-%t :: list of record's tags
-%s :: status of the record
-%p :: prefix before record in source file
-%d :: description of the record
-%f :: name of file, in which record was found
-%l :: number of line in source file
-%D :: dates of item
+<dl>
+  <dt>%n</dt>
+  <dd>title of the record</dd>
+  <dt>%t</dt>
+  <dd>list of record's tags</dd>
+  <dt>%s</dt>
+  <dd>status of the record</dd>
+  <dt>%p</dt>
+  <dd>prefix before record in source file</dd>
+  <dt>%d</dt>
+  <dd>description of the record</dd>
+  <dt>%f</dt>
+  <dd>name of file, in which record was found</dd>
+  <dt>%l</dt>
+  <dd>number of line in source file</dd>
+  <dt>%D</dt>
+  <dd>dates of item</dd>
+</dl>
 
 Backslash-escaping is supported too. Supported sequences are: `\t \n \v \b`.
 
